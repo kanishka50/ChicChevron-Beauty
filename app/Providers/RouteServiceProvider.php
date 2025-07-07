@@ -11,7 +11,9 @@ use Illuminate\Support\Facades\Route;
 class RouteServiceProvider extends ServiceProvider
 {
     /**
-     * The path to the "home" route for your application.
+     * The path to your application's "home" route.
+     *
+     * Typically, users are redirected here after authentication.
      *
      * @var string
      */
@@ -33,7 +35,7 @@ class RouteServiceProvider extends ServiceProvider
 
             Route::middleware('web')
                 ->group(base_path('routes/web.php'));
-                
+
             Route::middleware('web')
                 ->prefix('admin')
                 ->name('admin.')

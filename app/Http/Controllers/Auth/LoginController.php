@@ -14,25 +14,21 @@ class LoginController extends Controller
         return view('auth.login');
     }
 
-    public function store(Request $request)
-{
-    $credentials = $request->validate([
-        'email' => ['required', 'email'],
-        'password' => ['required'],
-    ]);
+    public function store(LoginRequest $request)
+    {
+        $credentials = $request->validated();
+        $remember = $request->boolean('remember');
 
-    $remember = $request->has('remember');
+        if (Auth::attempt($credentials, $remember)) {
+            $request->session()->regenerate();
 
-    if (Auth::attempt($credentials, $remember)) {
-        $request->session()->regenerate();
+            return redirect()->intended(route('home'));
+        }
 
-        return redirect()->intended(route('home'));
+        return back()->withErrors([
+            'email' => 'The provided credentials do not match our records.',
+        ])->onlyInput('email');
     }
-
-    return back()->withErrors([
-        'email' => 'The provided credentials do not match our records.',
-    ])->onlyInput('email');
-}
 
     public function destroy(Request $request)
     {

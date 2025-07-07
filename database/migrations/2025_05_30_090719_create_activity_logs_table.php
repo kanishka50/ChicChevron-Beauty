@@ -14,6 +14,9 @@ return new class extends Migration
             $table->bigInteger('user_id')->nullable();
             $table->string('action');
             $table->text('description')->nullable();
+            $table->json('properties')->nullable(); // Store additional data as JSON
+            $table->string('subject_type')->nullable(); // For polymorphic relation
+            $table->bigInteger('subject_id')->nullable(); // For polymorphic relation
             $table->string('ip_address', 45)->nullable();
             $table->text('user_agent')->nullable();
             $table->timestamp('created_at')->useCurrent();
@@ -21,6 +24,7 @@ return new class extends Migration
             $table->index('log_type');
             $table->index('user_id');
             $table->index('action');
+            $table->index(['subject_type', 'subject_id']);
             $table->index('created_at');
         });
     }
