@@ -11,6 +11,11 @@ class User extends Authenticatable implements MustVerifyEmail
 {
     use HasFactory, Notifiable;
 
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array<int, string>
+     */
     protected $fillable = [
         'name',
         'email',
@@ -18,46 +23,103 @@ class User extends Authenticatable implements MustVerifyEmail
         'phone',
     ];
 
+    /**
+     * The attributes that should be hidden for serialization.
+     *
+     * @var array<int, string>
+     */
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    protected function casts(): array
-    {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
-    }
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array<string, string>
+     */
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'password' => 'hashed',
+    ];
 
+    /**
+     * Get the user's addresses.
+     */
     public function addresses()
     {
         return $this->hasMany(UserAddress::class);
     }
 
+    /**
+     * Get the user's default address.
+     */
+    public function defaultAddress()
+    {
+        return $this->hasOne(UserAddress::class)->where('is_default', true);
+    }
+
+    /**
+     * Get the user's orders.
+     */
     public function orders()
     {
         return $this->hasMany(Order::class);
     }
 
+    /**
+     * Get the user's cart items.
+     */
+    public function cartItems()
+    {
+        return $this->hasMany(CartItem::class);
+    }
+
+    /**
+     * Get the user's wishlist items.
+     */
     public function wishlist()
     {
         return $this->hasMany(Wishlist::class);
     }
 
+    /**
+     * Get the user's reviews.
+     */
     public function reviews()
     {
         return $this->hasMany(Review::class);
     }
 
+    /**
+     * Get the user's complaints.
+     */
     public function complaints()
     {
         return $this->hasMany(Complaint::class);
     }
 
-    public function cartItems()
+    /**
+     * Get the user's promotion usage.
+     */
+    public function promotionUsage()
     {
-        return $this->hasMany(CartItem::class);
+        return $this->hasMany(PromotionUsage::class);
+    }
+
+    /**
+     * Check if user has used a specific promotion.
+     */
+    public function hasUsedPromotion($promotionId)
+    {
+        return $this->promotionUsage()->where('promotion_id', $promotionId)->exists();
+    }
+
+    /**
+     * Get count of how many times user used a promotion.
+     */
+    public function getPromotionUsageCount($promotionId)
+    {
+        return $this->promotionUsage()->where('promotion_id', $promotionId)->count();
     }
 }

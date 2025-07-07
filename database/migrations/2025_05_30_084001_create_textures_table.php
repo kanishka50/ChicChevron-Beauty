@@ -8,18 +8,18 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('admins', function (Blueprint $table) {
+        Schema::create('textures', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->string('email')->unique();
-            $table->string('password');
-            $table->rememberToken();
+            $table->string('name', 100); // Cream, Gel, Lotion, Oil, Serum, Foam
+            $table->boolean('is_default')->default(false);
             $table->timestamps();
+            
+            $table->index('name');
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('admins');
+        Schema::dropIfExists('textures');
     }
 };

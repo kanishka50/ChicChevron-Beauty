@@ -6,5 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class ProductIngredient extends Model
 {
-    //
+    protected $fillable = ['product_id', 'ingredient_name'];
+
+    public function product()
+    {
+        return $this->belongsTo(Product::class);
+    }
 }

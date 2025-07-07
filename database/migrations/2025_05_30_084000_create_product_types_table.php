@@ -10,9 +10,11 @@ return new class extends Migration
     {
         Schema::create('product_types', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
+            $table->string('name'); // Skin Care, Hair Care, Baby Care
             $table->string('slug')->unique();
             $table->timestamps();
+            
+            $table->index('slug');
         });
     }
 

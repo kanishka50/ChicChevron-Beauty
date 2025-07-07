@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use App\Traits\HasSlug;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Product extends Model
 {
-    use HasFactory;
+    use HasFactory, HasSlug;
 
     protected $fillable = [
         'name',
@@ -36,77 +37,223 @@ class Product extends Model
         'discount_price' => 'decimal:2',
         'has_variants' => 'boolean',
         'is_active' => 'boolean',
+        'views_count' => 'integer',
     ];
 
+    /**
+     * Get the sluggable field for the trait.
+     */
+    public function getSlugSourceField(): string
+    {
+        return 'name';
+    }
+
+    /**
+     * Get the brand that owns the product.
+     */
     public function brand()
     {
         return $this->belongsTo(Brand::class);
     }
 
+    /**
+     * Get the category that owns the product.
+     */
     public function category()
     {
         return $this->belongsTo(Category::class);
     }
 
+    /**
+     * Get the product type.
+     */
     public function productType()
     {
         return $this->belongsTo(ProductType::class);
     }
 
+    /**
+     * Get the texture.
+     */
     public function texture()
     {
         return $this->belongsTo(Texture::class);
     }
 
+    /**
+     * Get the product images.
+     */
     public function images()
     {
-        return $this->hasMany(ProductImage::class);
+        return $this->hasMany(ProductImage::class)->orderBy('sort_order');
     }
 
+    /**
+     * Get the product ingredients.
+     */
     public function ingredients()
     {
         return $this->hasMany(ProductIngredient::class);
     }
 
+    /**
+     * Get the product colors.
+     */
     public function colors()
     {
         return $this->belongsToMany(Color::class, 'product_colors');
     }
 
+    /**
+     * Get the product variants.
+     */
     public function variants()
     {
         return $this->hasMany(ProductVariant::class);
     }
 
+    /**
+     * Get the variant combinations.
+     */
     public function variantCombinations()
     {
         return $this->hasMany(VariantCombination::class);
     }
 
+    /**
+     * Get the inventory records.
+     */
     public function inventory()
     {
         return $this->hasMany(Inventory::class);
     }
 
+    /**
+     * Get the reviews.
+     */
     public function reviews()
     {
         return $this->hasMany(Review::class);
     }
 
+    /**
+     * Get approved reviews.
+     */
+    public function approvedReviews()
+    {
+        return $this->hasMany(Review::class)->where('is_approved', true);
+    }
+
+    /**
+     * Get the promotions.
+     */
+    public function promotions()
+    {
+        return $this->belongsToMany(Promotion::class, 'promotion_products');
+    }
+
+    /**
+     * Get active promotions.
+     */
+    public function activePromotions()
+    {
+        return $this->belongsToMany(Promotion::class, 'promotion_products')
+            ->where('is_active', true);
+    }
+
+    /**
+     * Get the current price (considering discount).
+     */
     public function getCurrentPriceAttribute()
     {
         return $this->discount_price ?? $this->selling_price;
     }
 
+    /**
+     * Get the discount percentage.
+     */
+    public function getDiscountPercentageAttribute()
+    {
+        if (!$this->discount_price || $this->discount_price >= $this->selling_price) {
+            return 0;
+        }
+
+        return round((($this->selling_price - $this->discount_price) / $this->selling_price) * 100);
+    }
+
+    /**
+     * Get the profit margin.
+     */
     public function getProfitMarginAttribute()
     {
-        $sellingPrice = $this->current_price;
-        $costPrice = $this->cost_price;
-        
-        if ($costPrice > 0) {
-            return round((($sellingPrice - $costPrice) / $costPrice) * 100, 2);
+        $currentPrice = $this->current_price;
+        if ($this->cost_price <= 0) {
+            return 0;
         }
-        
-        return 0;
+
+        return round((($currentPrice - $this->cost_price) / $currentPrice) * 100, 2);
+    }
+
+    /**
+     * Check if product is in stock.
+     */
+    public function getInStockAttribute()
+    {
+        if ($this->has_variants) {
+            return $this->inventory()->where('current_stock', '>', 0)->exists();
+        }
+
+        return $this->inventory()->where('variant_combination_id', null)
+            ->where('current_stock', '>', 0)->exists();
+    }
+
+    /**
+     * Get total stock across all variants.
+     */
+    public function getTotalStockAttribute()
+    {
+        return $this->inventory()->sum('current_stock');
+    }
+
+    /**
+     * Get average rating.
+     */
+    public function getAverageRatingAttribute()
+    {
+        return $this->approvedReviews()->avg('rating') ?? 0;
+    }
+
+    /**
+     * Get review count.
+     */
+    public function getReviewCountAttribute()
+    {
+        return $this->approvedReviews()->count();
+    }
+
+    /**
+     * Increment view count.
+     */
+    public function incrementViewCount()
+    {
+        $this->increment('views_count');
+    }
+
+    /**
+     * Scope for active products.
+     */
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
+
+    /**
+     * Scope for products with stock.
+     */
+    public function scopeInStock($query)
+    {
+        return $query->whereHas('inventory', function ($q) {
+            $q->where('current_stock', '>', 0);
+        });
     }
 }

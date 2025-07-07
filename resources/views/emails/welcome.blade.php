@@ -1,40 +1,83 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="utf-8">
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Welcome to ChicChevron Beauty</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            border-radius: 5px;
+        }
+        .content {
+            padding: 20px 0;
+        }
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e9ecef;
+            text-align: center;
+            font-size: 0.9em;
+            color: #666;
+        }
+    </style>
 </head>
-<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-    <div style="background-color: #dc2626; padding: 30px; text-align: center;">
-        <h1 style="color: white; margin: 0;">ChicChevron Beauty</h1>
+<body>
+    <div class="header">
+        <h1>Welcome to ChicChevron Beauty!</h1>
     </div>
     
-    <div style="background-color: #f9fafb; padding: 30px;">
-        <h2 style="color: #dc2626;">Welcome, {{ $user->name }}!</h2>
+    <div class="content">
+        <p>Hi {{ $user->name }},</p>
         
-        <p>Thank you for joining ChicChevron Beauty. We're excited to have you as part of our community!</p>
+        <p>Thank you for joining ChicChevron Beauty! We're excited to have you as part of our beauty community.</p>
         
-        <p>At ChicChevron Beauty, we offer:</p>
+        <p>With your new account, you can:</p>
         <ul>
-            <li>Premium beauty products for skin care, hair care, and baby care</li>
-            <li>100% authentic products from trusted brands</li>
-            <li>Fast delivery across Sri Lanka</li>
-            <li>Secure payment options including Cash on Delivery</li>
+            <li>Shop from our wide range of skin care, hair care, and baby care products</li>
+            <li>Track your orders and delivery status</li>
+            <li>Save your favorite products to your wishlist</li>
+            <li>Leave reviews and help other customers</li>
+            <li>Enjoy exclusive member-only offers</li>
         </ul>
         
-        <div style="text-align: center; margin: 30px 0;">
-            <a href="{{ route('products.index') }}" style="background-color: #dc2626; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">Start Shopping</a>
-        </div>
+        @if(!$user->hasVerifiedEmail())
+        <p>Please verify your email address to get started:</p>
+        <center>
+            <a href="{{ route('verification.verify', ['id' => $user->id, 'hash' => sha1($user->email)]) }}" class="button">
+                Verify Email Address
+            </a>
+        </center>
+        @endif
         
-        <p>If you have any questions, feel free to contact us at info@chicchevronbeauty.com</p>
+        <p>If you have any questions, feel free to contact us.</p>
         
-        <p>Best regards,<br>
-        The ChicChevron Beauty Team</p>
+        <p>Happy shopping!</p>
+        <p>The ChicChevron Beauty Team</p>
     </div>
     
-    <div style="background-color: #1f2937; color: #9ca3af; padding: 20px; text-align: center; font-size: 14px;">
-        <p style="margin: 0;">© {{ date('Y') }} ChicChevron Beauty. All rights reserved.</p>
+    <div class="footer">
+        <p>&copy; {{ date('Y') }} ChicChevron Beauty. All rights reserved.</p>
+        <p>This email was sent to {{ $user->email }}</p>
     </div>
 </body>
 </html>

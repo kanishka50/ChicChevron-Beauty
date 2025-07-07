@@ -8,16 +8,20 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('textures', function (Blueprint $table) {
+        Schema::create('admins', function (Blueprint $table) {
             $table->id();
-            $table->string('name', 100);
-            $table->boolean('is_default')->default(false);
+            $table->string('name');
+            $table->string('email')->unique();
+            $table->string('password');
+            $table->rememberToken();
             $table->timestamps();
+            
+            $table->index('email');
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('textures');
+        Schema::dropIfExists('admins');
     }
 };
