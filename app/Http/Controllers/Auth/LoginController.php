@@ -19,12 +19,19 @@ class LoginController extends Controller
         $credentials = $request->validated();
         $remember = $request->boolean('remember');
 
-        if (Auth::attempt($credentials, $remember)) {
+        // First, try to login as admin
+        if (Auth::guard('admin')->attempt($credentials, $remember)) {
             $request->session()->regenerate();
+            return redirect()->intended(route('admin.dashboard'));
+        }
 
+        // If not admin, try regular user login
+        if (Auth::guard('web')->attempt($credentials, $remember)) {
+            $request->session()->regenerate();
             return redirect()->intended(route('home'));
         }
 
+        // If both failed, return error
         return back()->withErrors([
             'email' => 'The provided credentials do not match our records.',
         ])->onlyInput('email');
@@ -32,7 +39,12 @@ class LoginController extends Controller
 
     public function destroy(Request $request)
     {
-        Auth::guard('web')->logout();
+        // Check which guard is logged in and logout accordingly
+        if (Auth::guard('admin')->check()) {
+            Auth::guard('admin')->logout();
+        } else {
+            Auth::guard('web')->logout();
+        }
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();

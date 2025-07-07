@@ -36,10 +36,16 @@ class RouteServiceProvider extends ServiceProvider
             Route::middleware('web')
                 ->group(base_path('routes/web.php'));
 
+            // Admin routes with web middleware
             Route::middleware('web')
                 ->prefix('admin')
                 ->name('admin.')
                 ->group(base_path('routes/admin.php'));
+        });
+        
+        // Register admin routes separately if above doesn't work
+        $this->app->booted(function () {
+            require base_path('routes/admin.php');
         });
     }
 }
