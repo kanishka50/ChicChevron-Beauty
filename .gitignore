@@ -1,0 +1,100 @@
+# Laravel & PHP
+/vendor/
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Laravel specific
+.env
+.env.backup
+.env.production
+.phpunit.result.cache
+Homestead.json
+Homestead.yaml
+auth.json
+
+# Storage (except structure)
+/storage/*.key
+/storage/app/*
+!/storage/app/public/
+/storage/app/public/*
+!/storage/app/public/banners/.gitkeep
+!/storage/app/public/brands/.gitkeep
+!/storage/app/public/categories/.gitkeep
+!/storage/app/public/products/.gitkeep
+/storage/framework/cache/*
+!/storage/framework/cache/data/
+/storage/framework/cache/data/*
+!/storage/framework/cache/data/.gitignore
+/storage/framework/sessions/*
+!/storage/framework/sessions/.gitignore
+/storage/framework/testing/*
+!/storage/framework/testing/.gitignore
+/storage/framework/views/*
+!/storage/framework/views/.gitignore
+/storage/logs/*
+!/storage/logs/.gitignore
+
+# Public uploads
+/public/storage
+/public/hot
+/public/uploads
+
+# Build files
+/public/build
+/public/css/app.css
+/public/js/app.js
+/public/mix-manifest.json
+/public/manifest.json
+
+# Database
+*.sqlite
+*.sqlite-journal
+database/database.sqlite
+
+# IDE and Editor files
+.idea
+.vscode
+*.swp
+*.swo
+*~
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+*.sublime-project
+.history
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Testing
+.phpunit.cache
+.phpunit.result.cache
+coverage/
+.coverage
+
+# Composer
+composer.phar
+
+# Package managers
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Vite
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
+
+# Misc
+.sass-cache/
+.rnd
+.fleet
+.phpstorm.meta.php
+_ide_helper.php
+_ide_helper_models.php
+.php-cs-fixer.cache
