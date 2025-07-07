@@ -43,9 +43,7 @@ class RouteServiceProvider extends ServiceProvider
                 ->group(base_path('routes/admin.php'));
         });
         
-        // Register admin routes separately if above doesn't work
-        $this->app->booted(function () {
-            require base_path('routes/admin.php');
-        });
+        // DO NOT ADD ANY OTHER ROUTE LOADING HERE
+        // The above configuration is sufficient
     }
 }

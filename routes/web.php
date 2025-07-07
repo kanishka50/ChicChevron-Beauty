@@ -7,12 +7,12 @@ use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\Auth\VerificationController;
 use Illuminate\Support\Facades\Route;
 
-// Public routes
+// Public routes (accessible by everyone)
 Route::get('/', function () {
     return view('welcome');
 })->name('home');
 
-// Public shop routes (placeholder for now)
+// Public shop routes
 Route::get('/products', function () {
     return view('welcome');
 })->name('products.index');
@@ -49,13 +49,13 @@ Route::get('/search', function () {
     return view('welcome');
 })->name('search');
 
-// Guest only routes
+// Guest only routes (only for non-logged-in users)
 Route::middleware('guest')->group(function () {
     // Registration
     Route::get('register', [RegisterController::class, 'create'])->name('register');
     Route::post('register', [RegisterController::class, 'store']);
     
-    // Login
+    // Login (unified for both users and admins)
     Route::get('login', [LoginController::class, 'create'])->name('login');
     Route::post('login', [LoginController::class, 'store']);
     
@@ -66,9 +66,9 @@ Route::middleware('guest')->group(function () {
     Route::post('reset-password', [ResetPasswordController::class, 'store'])->name('password.update');
 });
 
-// Authenticated routes (for both regular users and admins)
-Route::middleware(['auth:web,admin'])->group(function () {
-    // Logout - works for both users and admins
+// Authenticated routes (for logged-in users only - both regular and admin)
+Route::middleware('auth:web')->group(function () {
+    // Logout
     Route::post('logout', [LoginController::class, 'destroy'])->name('logout');
     
     // Email Verification
@@ -80,14 +80,13 @@ Route::middleware(['auth:web,admin'])->group(function () {
         ->middleware('throttle:6,1')
         ->name('verification.send');
     
-    // Wishlist (authenticated users only)
+    // Wishlist
     Route::get('/wishlist', function () {
         return view('welcome');
     })->name('wishlist.index');
     
     // Verified user routes
     Route::middleware('verified')->group(function () {
-        // User account routes
         Route::get('/account', function () {
             return 'My Account';
         })->name('account.index');
@@ -102,11 +101,7 @@ Route::middleware(['auth:web,admin'])->group(function () {
     });
 });
 
-// Guest or Auth routes (accessible by both)
-Route::middleware('guest.or.auth')->group(function () {
-    Route::get('/cart', function () {
-        return 'Shopping Cart';
-    })->name('cart.index');
-});
-
-// Admin routes are loaded separately in routes/admin.php
+// Cart route (accessible by both guests and authenticated users)
+Route::get('/cart', function () {
+    return 'Shopping Cart';
+})->name('cart.index');

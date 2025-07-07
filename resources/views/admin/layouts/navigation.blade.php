@@ -30,7 +30,7 @@
                  x-transition
                  class="absolute right-0 mt-2 w-48 bg-white rounded-md overflow-hidden shadow-xl z-10" 
                  style="display: none;">
-                <form method="POST" action="{{ route('admin.logout') }}">
+                <form method="POST" action="{{ route('logout') }}">
                     @csrf
                     <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Logout</button>
                 </form>
