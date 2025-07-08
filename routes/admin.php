@@ -6,6 +6,8 @@ use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\BrandController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ProductVariantController;
+use App\Http\Controllers\Admin\TextureController;
+use App\Http\Controllers\Admin\ColorController;
 
 // All routes in this file are prefixed with 'admin' and use 'admin.' name prefix
 // Only admin users can access these routes
@@ -173,4 +175,26 @@ Route::prefix('brands')->name('brands.')->group(function () {
             return 'FAQs Management'; 
         })->name('faqs');
     });
+
+
+    // Texture management (simple)
+Route::prefix('textures')->name('textures.')->group(function () {
+    Route::get('/', [TextureController::class, 'index'])->name('index');
+    Route::post('/', [TextureController::class, 'store'])->name('store');
+    Route::put('/{texture}', [TextureController::class, 'update'])->name('update');
+    Route::delete('/{texture}', [TextureController::class, 'destroy'])->name('destroy');
+});
+
+
+// Color management
+Route::prefix('colors')->name('colors.')->group(function () {
+    Route::get('/', [ColorController::class, 'index'])->name('index');
+    Route::post('/', [ColorController::class, 'store'])->name('store');
+    Route::put('/{color}', [ColorController::class, 'update'])->name('update');
+    Route::delete('/{color}', [ColorController::class, 'destroy'])->name('destroy');
+});
+
+
+
+
 });
