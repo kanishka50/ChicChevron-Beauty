@@ -2,6 +2,10 @@
 
 use App\Http\Controllers\Admin\AdminDashboardController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\BrandController;
+use App\Http\Controllers\Admin\ProductController;
+use App\Http\Controllers\Admin\ProductVariantController;
 
 // All routes in this file are prefixed with 'admin' and use 'admin.' name prefix
 // Only admin users can access these routes
@@ -12,27 +16,23 @@ Route::middleware('admin')->group(function () {
     Route::get('/dashboard/refresh-stats', [AdminDashboardController::class, 'refreshStats'])->name('dashboard.refresh');
     
     // Product management
-    Route::prefix('products')->name('products.')->group(function () {
-        Route::get('/', function () { 
-            return 'Products Management'; 
-        })->name('index');
-        Route::get('/create', function () { 
-            return 'Create Product'; 
-        })->name('create');
-        Route::post('/', function () { 
-            return 'Store Product'; 
-        })->name('store');
-        Route::get('/{product}/edit', function ($product) { 
-            return 'Edit Product'; 
-        })->name('edit');
-        Route::put('/{product}', function ($product) { 
-            return 'Update Product'; 
-        })->name('update');
-        Route::delete('/{product}', function ($product) { 
-            return 'Delete Product'; 
-        })->name('destroy');
-
-    });
+Route::prefix('products')->name('products.')->group(function () {
+    Route::get('/', [ProductController::class, 'index'])->name('index');
+    Route::get('/create', [ProductController::class, 'create'])->name('create');
+    Route::post('/', [ProductController::class, 'store'])->name('store');
+    Route::get('/{product}', [ProductController::class, 'show'])->name('show');
+    Route::get('/{product}/edit', [ProductController::class, 'edit'])->name('edit');
+    Route::put('/{product}', [ProductController::class, 'update'])->name('update');
+    Route::delete('/{product}', [ProductController::class, 'destroy'])->name('destroy');
+    Route::post('/{product}/toggle-status', [ProductController::class, 'toggleStatus'])->name('toggle-status');
+    Route::delete('/images/{image}', [ProductController::class, 'deleteImage'])->name('images.destroy');
+    
+    // Variant management routes (for later)
+    Route::get('/{product}/variants', [ProductVariantController::class, 'index'])->name('variants');
+    Route::post('/{product}/variants', [ProductVariantController::class, 'store'])->name('variants.store');
+    Route::put('/variants/{variant}', [ProductVariantController::class, 'update'])->name('variants.update');
+    Route::delete('/variants/{variant}', [ProductVariantController::class, 'destroy'])->name('variants.destroy');
+});
         
     // Promotions management
     Route::prefix('promotions')->name('promotions.')->group(function () {
@@ -57,48 +57,26 @@ Route::middleware('admin')->group(function () {
     });
     
     // Category management
-    Route::prefix('categories')->name('categories.')->group(function () {
-        Route::get('/', function () { 
-            return 'Categories Management'; 
-        })->name('index');
-        Route::get('/create', function () { 
-            return 'Create Category'; 
-        })->name('create');
-        Route::post('/', function () { 
-            return 'Store Category'; 
-        })->name('store');
-        Route::get('/{category}/edit', function ($category) { 
-            return 'Edit Category'; 
-        })->name('edit');
-        Route::put('/{category}', function ($category) { 
-            return 'Update Category'; 
-        })->name('update');
-        Route::delete('/{category}', function ($category) { 
-            return 'Delete Category'; 
-        })->name('destroy');
-    });
+Route::prefix('categories')->name('categories.')->group(function () {
+    Route::get('/', [CategoryController::class, 'index'])->name('index');
+    Route::get('/create', [CategoryController::class, 'create'])->name('create');
+    Route::post('/', [CategoryController::class, 'store'])->name('store');
+    Route::get('/{category}/edit', [CategoryController::class, 'edit'])->name('edit');
+    Route::put('/{category}', [CategoryController::class, 'update'])->name('update');
+    Route::delete('/{category}', [CategoryController::class, 'destroy'])->name('destroy');
+    Route::post('/{category}/toggle-status', [CategoryController::class, 'toggleStatus'])->name('toggle-status');
+});
     
     // Brand management
-    Route::prefix('brands')->name('brands.')->group(function () {
-        Route::get('/', function () { 
-            return 'Brands Management'; 
-        })->name('index');
-        Route::get('/create', function () { 
-            return 'Create Brand'; 
-        })->name('create');
-        Route::post('/', function () { 
-            return 'Store Brand'; 
-        })->name('store');
-        Route::get('/{brand}/edit', function ($brand) { 
-            return 'Edit Brand'; 
-        })->name('edit');
-        Route::put('/{brand}', function ($brand) { 
-            return 'Update Brand'; 
-        })->name('update');
-        Route::delete('/{brand}', function ($brand) { 
-            return 'Delete Brand'; 
-        })->name('destroy');
-    });
+Route::prefix('brands')->name('brands.')->group(function () {
+    Route::get('/', [BrandController::class, 'index'])->name('index');
+    Route::get('/create', [BrandController::class, 'create'])->name('create');
+    Route::post('/', [BrandController::class, 'store'])->name('store');
+    Route::get('/{brand}/edit', [BrandController::class, 'edit'])->name('edit');
+    Route::put('/{brand}', [BrandController::class, 'update'])->name('update');
+    Route::delete('/{brand}', [BrandController::class, 'destroy'])->name('destroy');
+    Route::post('/{brand}/toggle-status', [BrandController::class, 'toggleStatus'])->name('toggle-status');
+});
     
     // Order management
     Route::prefix('orders')->name('orders.')->group(function () {
