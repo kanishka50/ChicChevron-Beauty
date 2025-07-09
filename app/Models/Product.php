@@ -161,38 +161,7 @@ class Product extends Model
             ->where('is_active', true);
     }
 
-    /**
-     * Get the current price (considering discount).
-     */
-    public function getCurrentPriceAttribute()
-    {
-        return $this->discount_price ?? $this->selling_price;
-    }
 
-    /**
-     * Get the discount percentage.
-     */
-    public function getDiscountPercentageAttribute()
-    {
-        if (!$this->discount_price || $this->discount_price >= $this->selling_price) {
-            return 0;
-        }
-
-        return round((($this->selling_price - $this->discount_price) / $this->selling_price) * 100);
-    }
-
-    /**
-     * Get the profit margin.
-     */
-    public function getProfitMarginAttribute()
-    {
-        $currentPrice = $this->current_price;
-        if ($this->cost_price <= 0) {
-            return 0;
-        }
-
-        return round((($currentPrice - $this->cost_price) / $currentPrice) * 100, 2);
-    }
 
     /**
      * Check if product is in stock.
@@ -255,5 +224,67 @@ class Product extends Model
         return $query->whereHas('inventory', function ($q) {
             $q->where('current_stock', '>', 0);
         });
+    }
+
+
+    /**
+     * Get the current price (considering discount).
+     * discount_price should be treated as discount AMOUNT, not final price
+     */
+    public function getCurrentPriceAttribute()
+    {
+        if ($this->discount_price && $this->discount_price > 0) {
+            // discount_price is the discount AMOUNT to subtract
+            $finalPrice = $this->selling_price - $this->discount_price;
+            // Make sure final price doesn't go below 0
+            return max(0, $finalPrice);
+        }
+        
+        return $this->selling_price;
+    }
+
+    /**
+     * Get the discount percentage.
+     */
+    public function getDiscountPercentageAttribute()
+    {
+        if (!$this->discount_price || $this->discount_price <= 0) {
+            return 0;
+        }
+
+        // Calculate percentage based on discount amount
+        return round(($this->discount_price / $this->selling_price) * 100, 2);
+    }
+
+    /**
+     * Get the profit margin.
+     * Formula: ((Selling Price - Cost Price) / Cost Price) * 100
+     */
+    public function getProfitMarginAttribute()
+    {
+        if ($this->cost_price <= 0) {
+            return 0;
+        }
+
+        $currentPrice = $this->current_price;
+        
+        // Correct formula: profit margin based on cost price
+        return round((($currentPrice - $this->cost_price) / $this->cost_price) * 100, 2);
+    }
+
+    /**
+     * Get the profit amount.
+     */
+    public function getProfitAmountAttribute()
+    {
+        return max(0, $this->current_price - $this->cost_price);
+    }
+
+    /**
+     * Check if product is profitable.
+     */
+    public function getIsProfitableAttribute()
+    {
+        return $this->current_price > $this->cost_price;
     }
 }
