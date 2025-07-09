@@ -607,4 +607,144 @@ class Product extends Model
             ->limit($limit)
             ->get();
     }
+
+
+
+
+    // =====================================================
+    // CART-SPECIFIC METHODS (ADD TO EXISTING MODEL)
+    // =====================================================
+
+    /**
+     * Check if product has any stock available (enhanced for cart)
+     */
+    public function hasStock()
+    {
+        return $this->getStockLevel() > 0;
+    }
+
+    /**
+     * Get available stock for specific variant or main product
+     */
+    public function getAvailableStock($variantCombinationId = null)
+    {
+        if ($variantCombinationId) {
+            $inventory = $this->allInventory()
+                             ->where('variant_combination_id', $variantCombinationId)
+                             ->first();
+        } else {
+            $inventory = $this->inventory;
+        }
+
+        if (!$inventory) {
+            return 0;
+        }
+
+        return max(0, $inventory->current_stock - $inventory->reserved_stock);
+    }
+
+    /**
+     * Get the effective selling price (considering discount)
+     */
+    public function getEffectivePriceAttribute()
+    {
+        return $this->display_price; // This already exists in your model
+    }
+
+    /**
+     * Get formatted effective price
+     */
+    public function getFormattedPriceAttribute()
+    {
+        return 'Rs. ' . number_format($this->effective_price, 2);
+    }
+
+    /**
+     * Get formatted original price
+     */
+    public function getFormattedOriginalPriceAttribute()
+    {
+        return 'Rs. ' . number_format($this->selling_price, 2);
+    }
+
+    /**
+     * Check if product is on discount
+     */
+    public function getIsOnSaleAttribute()
+    {
+        return $this->discount_percentage > 0; // Uses your existing method
+    }
+
+    /**
+     * Check if product can be added to cart
+     */
+    public function canBeAddedToCart($variantCombinationId = null, $quantity = 1)
+    {
+        // Check if product is active
+        if (!$this->is_active) {
+            return [
+                'can_add' => false,
+                'message' => 'This product is no longer available.'
+            ];
+        }
+
+        // Check if variant is required but not provided
+        if ($this->has_variants && !$variantCombinationId) {
+            return [
+                'can_add' => false,
+                'message' => 'Please select product options.'
+            ];
+        }
+
+        // Check stock availability
+        $availableStock = $this->getAvailableStock($variantCombinationId);
+        
+        if ($availableStock < $quantity) {
+            return [
+                'can_add' => false,
+                'message' => $availableStock > 0 
+                    ? "Only {$availableStock} items available in stock."
+                    : 'This item is out of stock.',
+                'available_stock' => $availableStock
+            ];
+        }
+
+        return [
+            'can_add' => true,
+            'message' => 'Product can be added to cart.',
+            'available_stock' => $availableStock
+        ];
+    }
+
+    // =====================================================
+    // ADDITIONAL SCOPES FOR CART (ADD TO EXISTING MODEL)
+    // =====================================================
+
+    /**
+     * Scope for new arrivals (products created in last 30 days)
+     */
+    public function scopeNewArrivals($query)
+    {
+        return $query->where('created_at', '>=', now()->subDays(30));
+    }
+
+    /**
+     * Scope for best sellers (based on order count)
+     */
+    public function scopeBestSellers($query)
+    {
+        return $query->withCount(['orderItems'])
+                     ->orderBy('order_items_count', 'desc');
+    }
+
+    /**
+     * Scope for on sale products
+     */
+    public function scopeOnSale($query)
+    {
+        return $query->whereNotNull('discount_price')
+                     ->whereRaw('discount_price < selling_price');
+    }
+
+    
 }

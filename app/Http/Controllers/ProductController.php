@@ -359,14 +359,19 @@ class ProductController extends Controller
                     'max' => Product::active()->inStock()->max('selling_price') ?? 1000,
                 ],
 
-                'ingredientsList' => DB::table('product_ingredients')
-                    ->whereHas('product', function ($query) {
-                        $query->active()->inStock();
-                    })
-                    ->distinct()
-                    ->pluck('ingredient_name')
-                    ->sort()
-                    ->values(),
+                'ingredients' => DB::table('product_ingredients')
+                ->join('products', 'product_ingredients.product_id', '=', 'products.id')
+                ->where('products.is_active', true)
+                ->whereExists(function ($query) {
+                    $query->select(DB::raw(1))
+                        ->from('inventory')
+                        ->whereRaw('inventory.product_id = products.id')
+                        ->whereRaw('(inventory.current_stock - inventory.reserved_stock) > 0');
+                })
+                ->distinct()
+                ->pluck('ingredient_name')
+                ->sort()
+                ->values(),
             ];
         });
     }

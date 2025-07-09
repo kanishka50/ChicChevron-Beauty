@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\SearchController;
+use App\Http\Controllers\CartController;
 
 // Public routes (accessible by everyone)
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -167,10 +168,40 @@ Route::middleware('auth:web')->group(function () {
     });
 });
 
-// Cart route (accessible by both guests and authenticated users)
-Route::get('/cart', function () {
-    return 'Shopping Cart';
-})->name('cart.index');
+
+
+// =====================================================
+// CART ROUTES
+// =====================================================
+Route::prefix('cart')->name('cart.')->group(function () {
+    // Display cart
+    Route::get('/', [CartController::class, 'index'])->name('index');
+    
+    // Add to cart (AJAX)
+    Route::post('/add', [CartController::class, 'addToCart'])->name('add');
+    
+    // Update cart item quantity (AJAX)
+    Route::post('/update-quantity', [CartController::class, 'updateQuantity'])->name('update-quantity');
+    
+    // Remove cart item (AJAX)
+    Route::post('/remove', [CartController::class, 'removeItem'])->name('remove');
+    
+    // Clear entire cart (AJAX)
+    Route::post('/clear', [CartController::class, 'clearCart'])->name('clear');
+    
+    // Get cart count for header (AJAX)
+    Route::get('/count', [CartController::class, 'getCartCount'])->name('count');
+    
+    // Get cart summary for dropdown (AJAX)
+    Route::get('/summary', [CartController::class, 'getCartSummary'])->name('summary');
+    
+    // Promotion code handling (AJAX)
+    Route::post('/apply-promotion', [CartController::class, 'applyPromotion'])->name('apply-promotion');
+    Route::post('/remove-promotion', [CartController::class, 'removePromotion'])->name('remove-promotion');
+});
+
+
+
 
 // =====================================================
 // GUEST ORDER TRACKING ROUTES (NEW)
