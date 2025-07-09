@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\ProductVariantController;
 use App\Http\Controllers\Admin\TextureController;
 use App\Http\Controllers\Admin\ColorController;
 use App\Http\Controllers\Admin\InventoryController;
+use App\Http\Controllers\Admin\OrderController;
 
 // All routes in this file are prefixed with 'admin' and use 'admin.' name prefix
 // Only admin users can access these routes
@@ -19,29 +20,26 @@ Route::middleware('admin')->group(function () {
     Route::get('/dashboard/refresh-stats', [AdminDashboardController::class, 'refreshStats'])->name('dashboard.refresh');
     
     // Product management
-Route::prefix('products')->name('products.')->group(function () {
-    Route::get('/', [ProductController::class, 'index'])->name('index');
-    Route::get('/create', [ProductController::class, 'create'])->name('create');
-    Route::post('/', [ProductController::class, 'store'])->name('store');
-    Route::get('/{product}', [ProductController::class, 'show'])->name('show');
-    Route::get('/{product}/edit', [ProductController::class, 'edit'])->name('edit');
-    Route::put('/{product}', [ProductController::class, 'update'])->name('update');
-    Route::delete('/{product}', [ProductController::class, 'destroy'])->name('destroy');
-    Route::post('/{product}/toggle-status', [ProductController::class, 'toggleStatus'])->name('toggle-status');
-    Route::delete('/images/{image}', [ProductController::class, 'deleteImage'])->name('images.destroy');
-    
-    // Variant management routes (for later)
-    Route::get('/{product}/variants', [ProductVariantController::class, 'index'])->name('variants');
-    Route::post('/{product}/variants', [ProductVariantController::class, 'store'])->name('variants.store');
-    Route::put('/variants/{variant}', [ProductVariantController::class, 'update'])->name('variants.update');
-    Route::delete('/variants/{variant}', [ProductVariantController::class, 'destroy'])->name('variants.destroy');
-    // Add these to your existing variant routes
-    Route::get('/variants/{variant}', [ProductVariantController::class, 'show'])->name('products.variants.show');
+    Route::prefix('products')->name('products.')->group(function () {
+        Route::get('/', [ProductController::class, 'index'])->name('index');
+        Route::get('/create', [ProductController::class, 'create'])->name('create');
+        Route::post('/', [ProductController::class, 'store'])->name('store');
+        Route::get('/{product}', [ProductController::class, 'show'])->name('show');
+        Route::get('/{product}/edit', [ProductController::class, 'edit'])->name('edit');
+        Route::put('/{product}', [ProductController::class, 'update'])->name('update');
+        Route::delete('/{product}', [ProductController::class, 'destroy'])->name('destroy');
+        Route::post('/{product}/toggle-status', [ProductController::class, 'toggleStatus'])->name('toggle-status');
+        Route::delete('/images/{image}', [ProductController::class, 'deleteImage'])->name('images.destroy');
+        
+        // Variant management routes
+        Route::get('/{product}/variants', [ProductVariantController::class, 'index'])->name('variants');
+        Route::post('/{product}/variants', [ProductVariantController::class, 'store'])->name('variants.store');
+        Route::put('/variants/{variant}', [ProductVariantController::class, 'update'])->name('variants.update');
+        Route::delete('/variants/{variant}', [ProductVariantController::class, 'destroy'])->name('variants.destroy');
+        Route::get('/variants/{variant}', [ProductVariantController::class, 'show'])->name('variants.show');
+    });
 
-});
-
-
- // Inventory Management Routes
+    // Inventory Management Routes
     Route::prefix('inventory')->name('inventory.')->group(function () {
         Route::get('/', [InventoryController::class, 'index'])->name('index');
         Route::get('/movements', [InventoryController::class, 'movements'])->name('movements');
@@ -51,11 +49,75 @@ Route::prefix('products')->name('products.')->group(function () {
         Route::get('/low-stock-alerts', [InventoryController::class, 'getLowStockAlerts'])->name('low-stock-alerts');
         Route::get('/export', [InventoryController::class, 'exportReport'])->name('export');
         
-        // Existing combination routes (already implemented)
+        // Combination routes
         Route::get('/combinations/{combination}', [InventoryController::class, 'getCombination'])->name('combinations.show');
         Route::put('/combinations/{combination}', [InventoryController::class, 'updateCombination'])->name('combinations.update');
     });
+
+    // =====================================================
+    // ORDER MANAGEMENT ROUTES (NEW)
+    // =====================================================
+    Route::prefix('orders')->name('orders.')->group(function () {
+        // Order listing and management
+        Route::get('/', [OrderController::class, 'index'])->name('index');
+        Route::get('/{order}', [OrderController::class, 'show'])->name('show');
         
+        // Order status management
+        Route::put('/{order}/status', [OrderController::class, 'updateStatus'])->name('update-status');
+        Route::post('/bulk-update', [OrderController::class, 'bulkUpdate'])->name('bulk-update');
+        
+        // Invoice generation
+        Route::get('/{order}/invoice', [OrderController::class, 'generateInvoice'])->name('invoice');
+        
+        // Order export and statistics
+        Route::get('-export', [OrderController::class, 'export'])->name('export');
+        Route::get('-statistics', [OrderController::class, 'statistics'])->name('statistics');
+        
+        // Order search and additional features
+        Route::get('-search', [OrderController::class, 'search'])->name('search');
+        Route::post('/{order}/add-note', [OrderController::class, 'addNote'])->name('add-note');
+        Route::post('/{order}/mark-priority', [OrderController::class, 'markPriority'])->name('mark-priority');
+    });
+    // =====================================================
+        
+    // Category management
+    Route::prefix('categories')->name('categories.')->group(function () {
+        Route::get('/', [CategoryController::class, 'index'])->name('index');
+        Route::get('/create', [CategoryController::class, 'create'])->name('create');
+        Route::post('/', [CategoryController::class, 'store'])->name('store');
+        Route::get('/{category}/edit', [CategoryController::class, 'edit'])->name('edit');
+        Route::put('/{category}', [CategoryController::class, 'update'])->name('update');
+        Route::delete('/{category}', [CategoryController::class, 'destroy'])->name('destroy');
+        Route::post('/{category}/toggle-status', [CategoryController::class, 'toggleStatus'])->name('toggle-status');
+    });
+    
+    // Brand management
+    Route::prefix('brands')->name('brands.')->group(function () {
+        Route::get('/', [BrandController::class, 'index'])->name('index');
+        Route::get('/create', [BrandController::class, 'create'])->name('create');
+        Route::post('/', [BrandController::class, 'store'])->name('store');
+        Route::get('/{brand}/edit', [BrandController::class, 'edit'])->name('edit');
+        Route::put('/{brand}', [BrandController::class, 'update'])->name('update');
+        Route::delete('/{brand}', [BrandController::class, 'destroy'])->name('destroy');
+        Route::post('/{brand}/toggle-status', [BrandController::class, 'toggleStatus'])->name('toggle-status');
+    });
+    
+    // Texture management
+    Route::prefix('textures')->name('textures.')->group(function () {
+        Route::get('/', [TextureController::class, 'index'])->name('index');
+        Route::post('/', [TextureController::class, 'store'])->name('store');
+        Route::put('/{texture}', [TextureController::class, 'update'])->name('update');
+        Route::delete('/{texture}', [TextureController::class, 'destroy'])->name('destroy');
+    });
+
+    // Color management
+    Route::prefix('colors')->name('colors.')->group(function () {
+        Route::get('/', [ColorController::class, 'index'])->name('index');
+        Route::post('/', [ColorController::class, 'store'])->name('store');
+        Route::put('/{color}', [ColorController::class, 'update'])->name('update');
+        Route::delete('/{color}', [ColorController::class, 'destroy'])->name('destroy');
+    });
+    
     // Promotions management
     Route::prefix('promotions')->name('promotions.')->group(function () {
         Route::get('/', function () { 
@@ -76,41 +138,6 @@ Route::prefix('products')->name('products.')->group(function () {
         Route::delete('/{promotion}', function ($promotion) { 
             return 'Delete Promotion'; 
         })->name('destroy');
-    });
-    
-    // Category management
-Route::prefix('categories')->name('categories.')->group(function () {
-    Route::get('/', [CategoryController::class, 'index'])->name('index');
-    Route::get('/create', [CategoryController::class, 'create'])->name('create');
-    Route::post('/', [CategoryController::class, 'store'])->name('store');
-    Route::get('/{category}/edit', [CategoryController::class, 'edit'])->name('edit');
-    Route::put('/{category}', [CategoryController::class, 'update'])->name('update');
-    Route::delete('/{category}', [CategoryController::class, 'destroy'])->name('destroy');
-    Route::post('/{category}/toggle-status', [CategoryController::class, 'toggleStatus'])->name('toggle-status');
-});
-    
-    // Brand management
-Route::prefix('brands')->name('brands.')->group(function () {
-    Route::get('/', [BrandController::class, 'index'])->name('index');
-    Route::get('/create', [BrandController::class, 'create'])->name('create');
-    Route::post('/', [BrandController::class, 'store'])->name('store');
-    Route::get('/{brand}/edit', [BrandController::class, 'edit'])->name('edit');
-    Route::put('/{brand}', [BrandController::class, 'update'])->name('update');
-    Route::delete('/{brand}', [BrandController::class, 'destroy'])->name('destroy');
-    Route::post('/{brand}/toggle-status', [BrandController::class, 'toggleStatus'])->name('toggle-status');
-});
-    
-    // Order management
-    Route::prefix('orders')->name('orders.')->group(function () {
-        Route::get('/', function () { 
-            return 'Orders Management'; 
-        })->name('index');
-        Route::get('/{order}', function ($order) { 
-            return 'View Order'; 
-        })->name('show');
-        Route::put('/{order}/status', function ($order) { 
-            return 'Update Order Status'; 
-        })->name('update-status');
     });
     
     // Reports
@@ -164,28 +191,6 @@ Route::prefix('brands')->name('brands.')->group(function () {
         })->name('respond');
     });
     
-    // Promotions management
-    Route::prefix('promotions')->name('promotions.')->group(function () {
-        Route::get('/', function () { 
-            return 'Promotions Management'; 
-        })->name('index');
-        Route::get('/create', function () { 
-            return 'Create Promotion'; 
-        })->name('create');
-        Route::post('/', function () { 
-            return 'Store Promotion'; 
-        })->name('store');
-        Route::get('/{promotion}/edit', function ($promotion) { 
-            return 'Edit Promotion'; 
-        })->name('edit');
-        Route::put('/{promotion}', function ($promotion) { 
-            return 'Update Promotion'; 
-        })->name('update');
-        Route::delete('/{promotion}', function ($promotion) { 
-            return 'Delete Promotion'; 
-        })->name('destroy');
-    });
-    
     // Content management
     Route::prefix('content')->name('content.')->group(function () {
         Route::get('/pages', function () { 
@@ -195,26 +200,4 @@ Route::prefix('brands')->name('brands.')->group(function () {
             return 'FAQs Management'; 
         })->name('faqs');
     });
-
-
-    // Texture management (simple)
-Route::prefix('textures')->name('textures.')->group(function () {
-    Route::get('/', [TextureController::class, 'index'])->name('index');
-    Route::post('/', [TextureController::class, 'store'])->name('store');
-    Route::put('/{texture}', [TextureController::class, 'update'])->name('update');
-    Route::delete('/{texture}', [TextureController::class, 'destroy'])->name('destroy');
-});
-
-
-// Color management
-Route::prefix('colors')->name('colors.')->group(function () {
-    Route::get('/', [ColorController::class, 'index'])->name('index');
-    Route::post('/', [ColorController::class, 'store'])->name('store');
-    Route::put('/{color}', [ColorController::class, 'update'])->name('update');
-    Route::delete('/{color}', [ColorController::class, 'destroy'])->name('destroy');
-});
-
-
-
-
 });
