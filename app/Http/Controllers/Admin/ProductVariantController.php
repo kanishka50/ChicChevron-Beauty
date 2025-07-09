@@ -341,4 +341,23 @@ class ProductVariantController extends Controller
         // For now, we'll just note that combinations with inactive variants should be handled
         // You could add an 'is_active' field to variant_combinations table
     }
+
+
+    /**
+ * Show a specific variant (for editing)
+ */
+public function show(ProductVariant $variant)
+{
+    try {
+        return response()->json([
+            'success' => true,
+            'variant' => $variant
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Error loading variant: ' . $e->getMessage()
+        ], 500);
+    }
+}
 }

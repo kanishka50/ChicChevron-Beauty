@@ -5,10 +5,12 @@ namespace App\Models;
 use App\Traits\HasSlug;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\ManagesInventory;
 
 class Product extends Model
 {
     use HasFactory, HasSlug;
+     use ManagesInventory;
 
     protected $fillable = [
         'name',
@@ -121,14 +123,6 @@ class Product extends Model
     }
 
     /**
-     * Get the inventory records.
-     */
-    public function inventory()
-    {
-        return $this->hasMany(Inventory::class);
-    }
-
-    /**
      * Get the reviews.
      */
     public function reviews()
@@ -176,14 +170,7 @@ class Product extends Model
             ->where('current_stock', '>', 0)->exists();
     }
 
-    /**
-     * Get total stock across all variants.
-     */
-    public function getTotalStockAttribute()
-    {
-        return $this->inventory()->sum('current_stock');
-    }
-
+ 
     /**
      * Get average rating.
      */
@@ -286,5 +273,76 @@ class Product extends Model
     public function getIsProfitableAttribute()
     {
         return $this->current_price > $this->cost_price;
+    }
+
+
+
+
+
+
+    /**
+     * Get total stock across all variants or simple product
+     */
+    public function getTotalStockAttribute()
+    {
+        if ($this->has_variants) {
+            return $this->variantCombinations->sum(function($combination) {
+                return $combination->inventory ? $combination->inventory->current_stock : 0;
+            });
+        } else {
+            return $this->inventory ? $this->inventory->current_stock : 0;
+        }
+    }
+    
+    /**
+     * Get available stock (current - reserved)
+     */
+    public function getAvailableStockAttribute()
+    {
+        if ($this->has_variants) {
+            return $this->variantCombinations->sum(function($combination) {
+                $inventory = $combination->inventory;
+                return $inventory ? ($inventory->current_stock - $inventory->reserved_stock) : 0;
+            });
+        } else {
+            $inventory = $this->inventory;
+            return $inventory ? ($inventory->current_stock - $inventory->reserved_stock) : 0;
+        }
+    }
+    
+    /**
+     * Check if product is low on stock
+     */
+    public function getIsLowStockAttribute()
+    {
+        if ($this->has_variants) {
+            return $this->variantCombinations->some(function($combination) {
+                $inventory = $combination->inventory;
+                if (!$inventory) return false;
+                $available = $inventory->current_stock - $inventory->reserved_stock;
+                return $available <= $inventory->low_stock_threshold && $available > 0;
+            });
+        } else {
+            $inventory = $this->inventory;
+            if (!$inventory) return false;
+            $available = $inventory->current_stock - $inventory->reserved_stock;
+            return $available <= $inventory->low_stock_threshold && $available > 0;
+        }
+    }
+    
+    /**
+     * Check if product is out of stock
+     */
+    public function getIsOutOfStockAttribute()
+    {
+        return $this->available_stock <= 0;
+    }
+    
+    /**
+     * Get inventory relationship
+     */
+    public function inventory()
+    {
+        return $this->hasOne(Inventory::class)->where('variant_combination_id', null);
     }
 }

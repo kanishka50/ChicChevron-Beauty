@@ -103,5 +103,10 @@
                 </svg>
                 <span class="mx-3">Colors</span>
             </a>
+
+        <a href="{{ route('admin.inventory.index') }}" class="nav-link">
+            📦 Inventory Management
+        </a>
+
     </nav>
 </div>

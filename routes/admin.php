@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ProductVariantController;
 use App\Http\Controllers\Admin\TextureController;
 use App\Http\Controllers\Admin\ColorController;
+use App\Http\Controllers\Admin\InventoryController;
 
 // All routes in this file are prefixed with 'admin' and use 'admin.' name prefix
 // Only admin users can access these routes
@@ -34,7 +35,26 @@ Route::prefix('products')->name('products.')->group(function () {
     Route::post('/{product}/variants', [ProductVariantController::class, 'store'])->name('variants.store');
     Route::put('/variants/{variant}', [ProductVariantController::class, 'update'])->name('variants.update');
     Route::delete('/variants/{variant}', [ProductVariantController::class, 'destroy'])->name('variants.destroy');
+    // Add these to your existing variant routes
+    Route::get('/variants/{variant}', [ProductVariantController::class, 'show'])->name('products.variants.show');
+
 });
+
+
+ // Inventory Management Routes
+    Route::prefix('inventory')->name('inventory.')->group(function () {
+        Route::get('/', [InventoryController::class, 'index'])->name('index');
+        Route::get('/movements', [InventoryController::class, 'movements'])->name('movements');
+        Route::post('/add-stock', [InventoryController::class, 'addStock'])->name('add-stock');
+        Route::post('/adjust-stock', [InventoryController::class, 'adjustStock'])->name('adjust-stock');
+        Route::post('/stock-details', [InventoryController::class, 'getStockDetails'])->name('stock-details');
+        Route::get('/low-stock-alerts', [InventoryController::class, 'getLowStockAlerts'])->name('low-stock-alerts');
+        Route::get('/export', [InventoryController::class, 'exportReport'])->name('export');
+        
+        // Existing combination routes (already implemented)
+        Route::get('/combinations/{combination}', [InventoryController::class, 'getCombination'])->name('combinations.show');
+        Route::put('/combinations/{combination}', [InventoryController::class, 'updateCombination'])->name('combinations.update');
+    });
         
     // Promotions management
     Route::prefix('promotions')->name('promotions.')->group(function () {

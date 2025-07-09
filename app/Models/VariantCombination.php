@@ -4,10 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\ManagesInventory;
 
 class VariantCombination extends Model
 {
     use HasFactory;
+    use ManagesInventory;
 
     protected $fillable = [
         'product_id',
@@ -144,15 +146,34 @@ class VariantCombination extends Model
         return $this->inventory && $this->inventory->current_stock > 0;
     }
 
-    /**
-     * Get available stock.
+
+
+
+     /**
+     * Get available stock for this combination
      */
     public function getAvailableStockAttribute()
     {
-        if (!$this->inventory) {
-            return 0;
-        }
-
-        return $this->inventory->current_stock - $this->inventory->reserved_stock;
+        $inventory = $this->inventory;
+        return $inventory ? ($inventory->current_stock - $inventory->reserved_stock) : 0;
+    }
+    
+    /**
+     * Check if this combination is low on stock
+     */
+    public function getIsLowStockAttribute()
+    {
+        $inventory = $this->inventory;
+        if (!$inventory) return false;
+        $available = $inventory->current_stock - $inventory->reserved_stock;
+        return $available <= $inventory->low_stock_threshold && $available > 0;
+    }
+    
+    /**
+     * Check if this combination is out of stock
+     */
+    public function getIsOutOfStockAttribute()
+    {
+        return $this->available_stock <= 0;
     }
 }
