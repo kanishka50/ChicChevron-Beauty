@@ -58,31 +58,14 @@
                     @endif
                 </div>
 
-                <!-- Stock Information -->
+                <!-- Stock Information with Visual Indicators -->
                 <div class="bg-white rounded-lg shadow-md p-6 mt-6">
                     <h2 class="text-xl font-semibold text-gray-800 mb-4">Stock Information</h2>
-                    
-                    @if($product->has_variants)
-                        <div class="space-y-2">
-                            @foreach($product->variantCombinations as $combination)
-                                <div class="flex justify-between items-center py-2 border-b">
-                                    <span class="text-sm">{{ $combination->variant_details }}</span>
-                                    <span class="text-sm font-medium">{{ $combination->inventory->current_stock ?? 0 }} units</span>
-                                </div>
-                            @endforeach
-                        </div>
-                        <div class="mt-4 pt-4 border-t">
-                            <div class="flex justify-between items-center">
-                                <span class="font-medium">Total Stock:</span>
-                                <span class="font-bold text-lg">{{ $product->total_stock }} units</span>
-                            </div>
-                        </div>
-                    @else
-                        <div class="flex justify-between items-center">
-                            <span class="font-medium">Current Stock:</span>
-                            <span class="font-bold text-lg">{{ $product->total_stock }} units</span>
-                        </div>
-                    @endif
+                    @include('admin.products.partials.stock-indicators', [
+                        'product' => $product, 
+                        'detailed' => true, 
+                        'showActions' => true
+                    ])
                 </div>
             </div>
 
@@ -228,6 +211,75 @@
                                     <span class="text-sm">{{ $color->name }}</span>
                                 </div>
                             @endforeach
+                        </div>
+                    </div>
+                @endif
+
+                <!-- Product Variants (if has variants) -->
+                @if($product->has_variants && $product->variants->isNotEmpty())
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-xl font-semibold text-gray-800">Product Variants</h2>
+                            <a href="{{ route('admin.products.variants', $product) }}" 
+                               class="text-sm bg-purple-500 hover:bg-purple-600 text-white px-3 py-1 rounded">
+                                Manage All Variants
+                            </a>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <!-- Size Variants -->
+                            @php $sizeVariants = $product->variants->where('variant_type', 'size'); @endphp
+                            @if($sizeVariants->isNotEmpty())
+                                <div>
+                                    <h4 class="text-sm font-medium text-gray-700 mb-2">Size Variants</h4>
+                                    <div class="space-y-1">
+                                        @foreach($sizeVariants->take(3) as $variant)
+                                            <div class="text-sm bg-blue-50 text-blue-800 px-2 py-1 rounded">
+                                                {{ $variant->variant_value }} - LKR {{ number_format($variant->price, 2) }}
+                                            </div>
+                                        @endforeach
+                                        @if($sizeVariants->count() > 3)
+                                            <div class="text-xs text-gray-500">+{{ $sizeVariants->count() - 3 }} more</div>
+                                        @endif
+                                    </div>
+                                </div>
+                            @endif
+
+                            <!-- Color Variants -->
+                            @php $colorVariants = $product->variants->where('variant_type', 'color'); @endphp
+                            @if($colorVariants->isNotEmpty())
+                                <div>
+                                    <h4 class="text-sm font-medium text-gray-700 mb-2">Color Variants</h4>
+                                    <div class="space-y-1">
+                                        @foreach($colorVariants->take(3) as $variant)
+                                            <div class="text-sm bg-pink-50 text-pink-800 px-2 py-1 rounded">
+                                                {{ $variant->variant_value }} - LKR {{ number_format($variant->price, 2) }}
+                                            </div>
+                                        @endforeach
+                                        @if($colorVariants->count() > 3)
+                                            <div class="text-xs text-gray-500">+{{ $colorVariants->count() - 3 }} more</div>
+                                        @endif
+                                    </div>
+                                </div>
+                            @endif
+
+                            <!-- Scent Variants -->
+                            @php $scentVariants = $product->variants->where('variant_type', 'scent'); @endphp
+                            @if($scentVariants->isNotEmpty())
+                                <div>
+                                    <h4 class="text-sm font-medium text-gray-700 mb-2">Scent Variants</h4>
+                                    <div class="space-y-1">
+                                        @foreach($scentVariants->take(3) as $variant)
+                                            <div class="text-sm bg-green-50 text-green-800 px-2 py-1 rounded">
+                                                {{ $variant->variant_value }} - LKR {{ number_format($variant->price, 2) }}
+                                            </div>
+                                        @endforeach
+                                        @if($scentVariants->count() > 3)
+                                            <div class="text-xs text-gray-500">+{{ $scentVariants->count() - 3 }} more</div>
+                                        @endif
+                                    </div>
+                                </div>
+                            @endif
                         </div>
                     </div>
                 @endif

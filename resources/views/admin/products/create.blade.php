@@ -224,54 +224,8 @@
             </div>
 
             <!-- Product Images -->
-            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-                <h2 class="text-xl font-semibold text-gray-800 mb-4">Product Images</h2>
-                
-                <!-- Main Image -->
-                <div class="mb-6">
-                    <label for="main_image" class="block text-sm font-medium text-gray-700 mb-2">
-                        Main Image <span class="text-red-500">*</span>
-                    </label>
-                    <input type="file" 
-                           name="main_image" 
-                           id="main_image"
-                           accept="image/jpeg,image/png,image/jpg,image/webp"
-                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @error('main_image') border-red-500 @enderror"
-                           onchange="previewMainImage(event)"
-                           required>
-                    @error('main_image')
-                        <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-                    @enderror
-                    <p class="mt-1 text-sm text-gray-500">Maximum file size: 2MB. Supported formats: JPEG, PNG, JPG, WebP</p>
-                    
-                    <div id="main-image-preview" class="mt-4 hidden">
-                        <img src="#" alt="Main image preview" class="h-32 w-32 object-cover rounded-lg border border-gray-300">
-                    </div>
-                </div>
-
-                <!-- Additional Images -->
-                <div>
-                    <label for="additional_images" class="block text-sm font-medium text-gray-700 mb-2">
-                        Additional Images (Maximum 4)
-                    </label>
-                    <input type="file" 
-                           name="additional_images[]" 
-                           id="additional_images"
-                           accept="image/jpeg,image/png,image/jpg,image/webp"
-                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @error('additional_images.*') border-red-500 @enderror"
-                           onchange="previewAdditionalImages(event)"
-                           multiple>
-                    @error('additional_images.*')
-                        <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-                    @enderror
-                    <p class="mt-1 text-sm text-gray-500">You can select up to 4 additional images</p>
-                    
-                    <div id="additional-images-preview" class="mt-4 grid grid-cols-4 gap-4 hidden">
-                        <!-- Preview images will be inserted here -->
-                    </div>
-                </div>
-            </div>
-
+            @include('admin.products.partials.image-upload')
+            @include('admin.products.partials.ingredients-form')
             @include('admin.products.partials.create-attributes')
 
             <!-- Submit Buttons -->

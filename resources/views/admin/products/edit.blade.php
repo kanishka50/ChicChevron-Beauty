@@ -270,52 +270,10 @@
                 </div>
 
                 <!-- Current Additional Images -->
-                @if($product->images->isNotEmpty())
-                    <div class="mb-6">
-                        <p class="block text-sm font-medium text-gray-700 mb-2">Current Additional Images</p>
-                        <div class="grid grid-cols-4 gap-4">
-                            @foreach($product->images as $image)
-                                <div class="relative group">
-                                    <img src="{{ Storage::url($image->image_path) }}" 
-                                         alt="Product image" 
-                                         class="h-32 w-32 object-cover rounded-lg border border-gray-300">
-                                    <button type="button" 
-                                            onclick="deleteImage({{ $image->id }})"
-                                            class="absolute top-0 right-0 bg-red-500 text-white p-1 rounded-bl-lg opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                        </svg>
-                                    </button>
-                                </div>
-                            @endforeach
-                        </div>
-                    </div>
-                @endif
+                @include('admin.products.partials.image-upload')
+                @include('admin.products.partials.ingredients-form')
+                @include('admin.products.partials.edit-attributes')
 
-                <!-- Add Additional Images -->
-                <div>
-                    <label for="additional_images" class="block text-sm font-medium text-gray-700 mb-2">
-                        Add More Images (Maximum {{ 4 - $product->images->count() }} remaining)
-                    </label>
-                    <input type="file" 
-                           name="additional_images[]" 
-                           id="additional_images"
-                           accept="image/jpeg,image/png,image/jpg,image/webp"
-                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @error('additional_images.*') border-red-500 @enderror"
-                           onchange="previewAdditionalImages(event)"
-                           multiple
-                           {{ $product->images->count() >= 4 ? 'disabled' : '' }}>
-                    @error('additional_images.*')
-                        <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-                    @enderror
-                    
-                    <div id="additional-images-preview" class="mt-4 grid grid-cols-4 gap-4 hidden">
-                        <!-- Preview images will be inserted here -->
-                    </div>
-                </div>
-            </div>
-
-            @include('admin.products.partials.edit-attributes')
 
             <!-- Submit Buttons -->
             <div class="flex justify-end space-x-3">

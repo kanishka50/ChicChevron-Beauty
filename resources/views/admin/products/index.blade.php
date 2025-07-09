@@ -76,7 +76,7 @@
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Brand</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock Level</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
@@ -117,22 +117,11 @@
                             @endif
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            @php
-                                $totalStock = $product->total_stock;
-                                $stockClass = 'bg-green-100 text-green-800';
-                                $stockText = 'In Stock';
-                                
-                                if ($totalStock == 0) {
-                                    $stockClass = 'bg-red-100 text-red-800';
-                                    $stockText = 'Out of Stock';
-                                } elseif ($totalStock < 10) {
-                                    $stockClass = 'bg-yellow-100 text-yellow-800';
-                                    $stockText = 'Low Stock';
-                                }
-                            @endphp
-                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ $stockClass }}">
-                                {{ $stockText }} ({{ $totalStock }})
-                            </span>
+                            @include('admin.products.partials.stock-indicators', [
+                                'product' => $product, 
+                                'detailed' => false, 
+                                'showActions' => false
+                            ])
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <button onclick="toggleStatus({{ $product->id }})"
