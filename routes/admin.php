@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\TextureController;
 use App\Http\Controllers\Admin\ColorController;
 use App\Http\Controllers\Admin\InventoryController;
 use App\Http\Controllers\Admin\OrderController;
+use App\Http\Controllers\HomeController;
 
 // All routes in this file are prefixed with 'admin' and use 'admin.' name prefix
 // Only admin users can access these routes
@@ -18,6 +19,9 @@ Route::middleware('admin')->group(function () {
     // Dashboard
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard/refresh-stats', [AdminDashboardController::class, 'refreshStats'])->name('dashboard.refresh');
+
+     // Homepage cache management
+    Route::post('/clear-homepage-cache', [HomeController::class, 'clearCache'])->name('clear-homepage-cache');
     
     // Product management
     Route::prefix('products')->name('products.')->group(function () {
@@ -78,6 +82,8 @@ Route::middleware('admin')->group(function () {
         Route::post('/{order}/add-note', [OrderController::class, 'addNote'])->name('add-note');
         Route::post('/{order}/mark-priority', [OrderController::class, 'markPriority'])->name('mark-priority');
     });
+
+
     // =====================================================
         
     // Category management

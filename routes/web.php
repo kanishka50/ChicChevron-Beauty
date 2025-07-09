@@ -10,24 +10,67 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\ProductController;
+use App\Http\Controllers\SearchController;
 
 // Public routes (accessible by everyone)
-Route::get('/', function () {
-    return view('welcome');
-})->name('home');
+Route::get('/', [HomeController::class, 'index'])->name('home');
 
 // Public shop routes
-Route::get('/products', function () {
-    return view('welcome');
-})->name('products.index');
+
+Route::get('/products', [ProductController::class, 'index'])->name('products.index');
+Route::get('/products/{product:slug}', [ProductController::class, 'show'])->name('products.show');
+// Product variant details for AJAX
+Route::get('/products/{product}/variant-details', [ProductController::class, 'getVariantDetails'])->name('products.variant-details');
+
+
+// Search functionality (Replace existing search route)
+Route::get('/search', [SearchController::class, 'index'])->name('search');
+Route::get('/search/suggestions', [SearchController::class, 'suggestions'])->name('search.suggestions');
+Route::get('/search/ingredients', [SearchController::class, 'ingredients'])->name('search.ingredients');
+Route::get('/search/trending', [SearchController::class, 'trending'])->name('search.trending');
+
 
 Route::get('/categories', function () {
-    return view('welcome');
+    $categories = \App\Models\Category::active()
+        ->ordered()
+        ->whereHas('products', function ($query) {
+            $query->active();
+        })
+        ->withCount(['products' => function ($query) {
+            $query->active();
+        }])
+        ->get();
+    
+    return view('categories.index', compact('categories'));
 })->name('categories.index');
 
-Route::get('/categories/{category}', function ($category) {
-    return view('welcome');
+Route::get('/categories/{category:slug}', function (\App\Models\Category $category) {
+    return redirect()->route('products.index', ['category' => $category->id]);
 })->name('categories.show');
+
+// Brand browsing
+Route::get('/brands', function () {
+    $brands = \App\Models\Brand::active()
+        ->whereHas('products', function ($query) {
+            $query->active();
+        })
+        ->withCount(['products' => function ($query) {
+            $query->active();
+        }])
+        ->orderBy('name')
+        ->get();
+    
+    return view('brands.index', compact('brands'));
+})->name('brands.index');
+
+Route::get('/brands/{brand:slug}', function (\App\Models\Brand $brand) {
+    return redirect()->route('products.index', ['brands' => [$brand->id]]);
+})->name('brands.show');
+
+
+
 
 Route::get('/about', function () {
     return view('welcome');
@@ -48,10 +91,6 @@ Route::get('/terms', function () {
 Route::get('/privacy', function () {
     return view('welcome');
 })->name('privacy');
-
-Route::get('/search', function () {
-    return view('welcome');
-})->name('search');
 
 // Guest only routes (only for non-logged-in users)
 Route::middleware('guest')->group(function () {
@@ -204,20 +243,21 @@ Route::redirect('/user/orders', '/my-orders', 301);
 // =====================================================
 
 // API routes for mobile app or AJAX requests
-Route::prefix('api/v1')->middleware(['auth:sanctum'])->group(function () {
+Route::prefix('api/v1')->group(function () {
     
-    // Customer API endpoints
-    Route::get('/orders', [OrderController::class, 'index'])->name('api.orders.index');
-    Route::get('/orders/{order}', [OrderController::class, 'show'])->name('api.orders.show');
-    Route::get('/orders/{order}/track', [OrderController::class, 'trackOrder'])->name('api.orders.track');
-    Route::post('/orders/{order}/complete', [OrderController::class, 'markComplete'])->name('api.orders.complete');
+    // Public API endpoints (NO auth required)
+    Route::get('/products/{product}/variants', [ProductController::class, 'getVariantDetails'])->name('api.products.variants');
+    Route::get('/search/autocomplete', [SearchController::class, 'suggestions'])->name('api.search.autocomplete');
     
-    // Admin API endpoints
-    Route::middleware(['admin'])->prefix('admin')->group(function () {
-        Route::get('/orders', [\App\Http\Controllers\Admin\OrderController::class, 'index'])->name('api.admin.orders.index');
-        Route::get('/orders/{order}', [\App\Http\Controllers\Admin\OrderController::class, 'show'])->name('api.admin.orders.show');
-        Route::put('/orders/{order}/status', [\App\Http\Controllers\Admin\OrderController::class, 'updateStatus'])->name('api.admin.orders.update-status');
-        Route::get('/orders-statistics', [\App\Http\Controllers\Admin\OrderController::class, 'statistics'])->name('api.admin.orders.statistics');
+    // Authenticated API endpoints
+    Route::middleware(['auth:sanctum'])->group(function () {
+        // Customer API endpoints
+        Route::get('/orders', [OrderController::class, 'index'])->name('api.orders.index');
+        Route::get('/orders/{order}', [OrderController::class, 'show'])->name('api.orders.show');
+        Route::get('/orders/{order}/track', [OrderController::class, 'trackOrder'])->name('api.orders.track');
+        Route::post('/orders/{order}/complete', [OrderController::class, 'markComplete'])->name('api.orders.complete');
+        
+        
     });
 });
 
@@ -245,4 +285,19 @@ Route::bind('order', function ($value) {
     }
     
     abort(403, 'Unauthorized access to this order.');
+});
+
+
+// Enhanced route model binding for products to handle view tracking
+Route::bind('product', function ($value, $route) {
+    $product = \App\Models\Product::where('slug', $value)
+        ->orWhere('id', $value)
+        ->firstOrFail();
+    
+    // Only increment views for product show pages, not API calls
+    if ($route->getName() === 'products.show') {
+        $product->increment('views_count');
+    }
+    
+    return $product;
 });
