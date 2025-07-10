@@ -579,8 +579,7 @@
             }
         }
 
-        // Add to cart
-        function addToCart() {
+        async function addToCart() {
             const productId = {{ $product->id }};
             const quantity = parseInt(document.getElementById('quantity').value);
             const variantCombinationId = currentCombination?.combination_id || null;
@@ -592,28 +591,102 @@
                 return;
             }
 
-            // Here you would typically make an AJAX call to add to cart
-            console.log('Adding to cart:', {
-                productId,
-                variantCombinationId,
-                quantity
-            });
-
-            // Show success feedback
+            // Show loading state
             const button = document.getElementById('add-to-cart-btn');
             const originalText = button.textContent;
-            button.textContent = 'Added to Cart!';
-            button.classList.add('bg-green-600');
-            button.classList.remove('bg-pink-600');
+            button.disabled = true;
+            button.textContent = 'Adding...';
 
-            setTimeout(() => {
-                button.textContent = originalText;
-                button.classList.remove('bg-green-600');
-                button.classList.add('bg-pink-600');
-            }, 2000);
+            try {
+                const response = await fetch('/cart/add', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify({
+                        product_id: productId,
+                        variant_combination_id: variantCombinationId,
+                        quantity: quantity
+                    })
+                });
 
-            // TODO: Update cart count in header
-            // updateCartCount();
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Success state
+                    button.textContent = 'Added to Cart!';
+                    button.classList.add('bg-green-600');
+                    button.classList.remove('bg-pink-600');
+                    
+                    // Show success message
+                    showToast(data.message, 'success');
+                    
+                    // Update cart counter if it exists
+                    updateCartCounter();
+                    
+                    // Ask if user wants to go to cart
+                    setTimeout(() => {
+                        if (confirm('Item added to cart! Would you like to view your cart?')) {
+                            window.location.href = '/cart';
+                        } else {
+                            // Reset button
+                            button.textContent = originalText;
+                            button.classList.remove('bg-green-600');
+                            button.classList.add('bg-pink-600');
+                            button.disabled = false;
+                        }
+                    }, 1500);
+                } else {
+                    // Error state
+                    button.textContent = 'Error';
+                    button.classList.add('bg-red-600');
+                    button.classList.remove('bg-pink-600');
+                    
+                    showToast(data.message, 'error');
+                    
+                    // Reset button after 2 seconds
+                    setTimeout(() => {
+                        button.textContent = originalText;
+                        button.classList.remove('bg-red-600');
+                        button.classList.add('bg-pink-600');
+                        button.disabled = false;
+                    }, 2000);
+                }
+            } catch (error) {
+                console.error('Error adding to cart:', error);
+                
+                // Error state
+                button.textContent = 'Error';
+                button.classList.add('bg-red-600');
+                button.classList.remove('bg-pink-600');
+                
+                showToast('Error adding item to cart. Please try again.', 'error');
+                
+                // Reset button after 2 seconds
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.classList.remove('bg-red-600');
+                    button.classList.add('bg-pink-600');
+                    button.disabled = false;
+                }, 2000);
+            }
+        }
+
+
+        async function updateCartCounter() {
+            try {
+                const response = await fetch('/cart/count');
+                const data = await response.json();
+                
+                // Update cart counter in navigation
+                const cartCounters = document.querySelectorAll('.cart-counter');
+                cartCounters.forEach(counter => {
+                    counter.textContent = data.count || 0;
+                });
+            } catch (error) {
+                console.error('Error updating cart counter:', error);
+            }
         }
 
         // Add to wishlist

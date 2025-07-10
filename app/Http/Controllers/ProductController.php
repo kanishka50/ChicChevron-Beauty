@@ -16,231 +16,234 @@ use Illuminate\Support\Facades\DB;
 class ProductController extends Controller
 {
     /**
- * Display product catalog with filtering and sorting
- */
-public function index(Request $request)
-{
-    $query = Product::active()
-        ->with(['brand', 'category', 'images', 'inventory', 'colors', 'texture']);
+     * Display product catalog with filtering and sorting
+     */
+    public function index(Request $request)
+    {
+        $query = Product::active()
+            ->with(['brand', 'category', 'images', 'inventory', 'colors', 'texture']);
 
-    // Apply filters
-    $this->applyFilters($query, $request);
+        // Apply filters
+        $this->applyFilters($query, $request);
 
-    // Apply sorting
-    $this->applySorting($query, $request);
+        // Apply sorting
+        $this->applySorting($query, $request);
 
-    // Paginate results FIRST
-    $products = $query->paginate(20)->withQueryString();
+        // Paginate results FIRST
+        $products = $query->paginate(20)->withQueryString();
 
-    // THEN load reviews with proper aggregation
-    $products->getCollection()->load([
-        'reviews' => function($query) {
-            $query->where('is_approved', true);
-        }
-    ]);
+        // THEN load reviews with proper aggregation
+        $products->getCollection()->load([
+            'reviews' => function($query) {
+                $query->where('is_approved', true);
+            }
+        ]);
 
-    // Calculate averages manually to avoid GROUP BY issues
-    $products->getCollection()->each(function ($product) {
-        $product->reviews_avg_rating = $product->reviews->avg('rating') ?: 0;
-        $product->reviews_count = $product->reviews->count();
-    });
+        // Calculate averages manually to avoid GROUP BY issues
+        $products->getCollection()->each(function ($product) {
+            $product->reviews_avg_rating = $product->reviews->avg('rating') ?: 0;
+            $product->reviews_count = $product->reviews->count();
+        });
 
-    // Get filter data
-    $filterData = $this->getFilterData($request);
+        // Get filter data
+        $filterData = $this->getFilterData($request);
 
-    return view('products.index', [
-        'products' => $products,
-        'filters' => $filterData,
-        'currentFilters' => $request->all(),
-        'totalProducts' => $products->total(),
-    ]);
-}
+        return view('products.index', [
+            'products' => $products,
+            'filters' => $filterData,
+            'currentFilters' => $request->all(),
+            'totalProducts' => $products->total(),
+        ]);
+    }
 
     /**
- * Display individual product details
- */
-public function show(Product $product)
-{
-    // Increment view count
-    $product->increment('views_count');
+     * Display the specified product
+     */
+    public function show(Product $product)
+    {
+        // Load necessary relationships - FIXED: Removed 'ingredients.ingredient'
+        $product->load([
+            'brand',
+            'category',
+            'productType',
+            'texture',
+            'images' => function ($query) {
+                $query->orderBy('sort_order');
+            },
+            'ingredients', // Just load ingredients, not ingredients.ingredient
+            'colors',
+            'variants' => function ($query) {
+                $query->where('is_active', true)->orderBy('variant_type')->orderBy('variant_value');
+            },
+            'variantCombinations' => function ($query) {
+                $query->with(['sizeVariant', 'colorVariant', 'scentVariant', 'inventory']);
+            },
+            'reviews' => function ($query) {
+                $query->where('is_approved', true)->latest();
+            },
+            'reviews.user'
+        ]);
 
-    // Load all necessary relationships
-    $product->load([
-        'brand',
-        'category',
-        'productType',
-        'texture',
-        'images',
-        'ingredients',
-        'colors',
-        'variants',
-        'variantCombinations.sizeVariant',
-        'variantCombinations.colorVariant',
-        'variantCombinations.scentVariant',
-        'variantCombinations.inventory',
-        'reviews.user',
-        'promotions' => function ($query) {
-            $query->active();
+        // Get available variants grouped by type
+        $availableVariants = null;
+        if ($product->has_variants) {
+            $availableVariants = [
+                'sizes' => $product->variants()->ofType('size')->active()->get(),
+                'colors' => $product->variants()->ofType('color')->active()->get(),
+                'scents' => $product->variants()->ofType('scent')->active()->get(),
+            ];
         }
-    ]);
 
-    // Get related products WITHOUT withAvg
-    $relatedProducts = Product::active()
-        ->where('id', '!=', $product->id)
-        ->where(function ($query) use ($product) {
-            $query->where('category_id', $product->category_id)
-                  ->orWhere('brand_id', $product->brand_id);
-        })
-        ->with(['brand', 'images'])
-        ->inStock()
-        ->limit(8)
-        ->get();
+        // Calculate price range for products with variants
+        $priceRange = null;
+        if ($product->has_variants && $product->variantCombinations->isNotEmpty()) {
+            $prices = $product->variantCombinations->pluck('combination_price');
+            $priceRange = [
+                'min' => $prices->min(),
+                'max' => $prices->max()
+            ];
+        }
 
-    // Load reviews separately for related products
-    $relatedProducts->load('reviews');
-    $relatedProducts->each(function ($relatedProduct) {
-        $relatedProduct->reviews_avg_rating = $relatedProduct->reviews->avg('rating') ?: 0;
-        $relatedProduct->reviews_count = $relatedProduct->reviews->count();
-    });
+        // Get related products (same category, excluding current product)
+        $relatedProducts = Product::where('category_id', $product->category_id)
+            ->where('id', '!=', $product->id)
+            ->where('is_active', true)
+            ->with(['brand', 'images'])
+            ->inRandomOrder()
+            ->limit(4)
+            ->get();
 
-    // Get available variants for selection
-    $availableVariants = $this->getAvailableVariants($product);
-
-    // Calculate price range for variants
-    $priceRange = $this->getPriceRange($product);
-
-    return view('products.show', [
-        'product' => $product,
-        'relatedProducts' => $relatedProducts,
-        'availableVariants' => $availableVariants,
-        'priceRange' => $priceRange,
-        'currentVariant' => null, // Will be set by JavaScript
-    ]);
-}
+        return view('products.show', compact(
+            'product',
+            'availableVariants',
+            'priceRange',
+            'relatedProducts'
+        ));
+    }
 
     /**
      * Search products with advanced filtering
      */
     public function search(Request $request)
-{
-    $query = $request->get('q', '');
-    $ingredientSearch = $request->get('ingredient_search', 'include'); // include or exclude
+    {
+        $query = $request->get('q', '');
+        $ingredientSearch = $request->get('ingredient_search', 'include'); // include or exclude
 
-    if (empty($query)) {
-        return redirect()->route('products.index');
-    }
-
-    $productQuery = Product::active()
-        ->with(['brand', 'category', 'images', 'inventory']);
-
-    // Search in product name, description, and brand
-    $productQuery->where(function ($q) use ($query) {
-        $q->where('name', 'like', "%{$query}%")
-          ->orWhere('description', 'like', "%{$query}%")
-          ->orWhereHas('brand', function ($brandQuery) use ($query) {
-              $brandQuery->where('name', 'like', "%{$query}%");
-          });
-    });
-
-    // Ingredient-based search
-    if ($request->filled('ingredients')) {
-        $ingredients = is_array($request->ingredients) 
-            ? $request->ingredients 
-            : explode(',', $request->ingredients);
-
-        if ($ingredientSearch === 'exclude') {
-            // Find products WITHOUT these ingredients
-            $productQuery->whereDoesntHave('ingredients', function ($ingredientQuery) use ($ingredients) {
-                $ingredientQuery->whereIn('ingredient_name', $ingredients);
-            });
-        } else {
-            // Find products WITH these ingredients
-            $productQuery->whereHas('ingredients', function ($ingredientQuery) use ($ingredients) {
-                $ingredientQuery->whereIn('ingredient_name', $ingredients);
-            });
+        if (empty($query)) {
+            return redirect()->route('products.index');
         }
+
+        $productQuery = Product::active()
+            ->with(['brand', 'category', 'images', 'inventory']);
+
+        // Search in product name, description, and brand
+        $productQuery->where(function ($q) use ($query) {
+            $q->where('name', 'like', "%{$query}%")
+              ->orWhere('description', 'like', "%{$query}%")
+              ->orWhereHas('brand', function ($brandQuery) use ($query) {
+                  $brandQuery->where('name', 'like', "%{$query}%");
+              });
+        });
+
+        // Ingredient-based search
+        if ($request->filled('ingredients')) {
+            $ingredients = is_array($request->ingredients) 
+                ? $request->ingredients 
+                : explode(',', $request->ingredients);
+
+            if ($ingredientSearch === 'exclude') {
+                // Find products WITHOUT these ingredients
+                $productQuery->whereDoesntHave('ingredients', function ($ingredientQuery) use ($ingredients) {
+                    $ingredientQuery->whereIn('ingredient_name', $ingredients);
+                });
+            } else {
+                // Find products WITH these ingredients
+                $productQuery->whereHas('ingredients', function ($ingredientQuery) use ($ingredients) {
+                    $ingredientQuery->whereIn('ingredient_name', $ingredients);
+                });
+            }
+        }
+
+        // Apply other filters
+        $this->applyFilters($productQuery, $request);
+
+        // Apply sorting
+        $this->applySorting($productQuery, $request);
+
+        // Paginate results
+        $products = $productQuery->paginate(20)->withQueryString();
+
+        // Load reviews separately and calculate averages
+        $products->getCollection()->load('reviews');
+        $products->getCollection()->each(function ($product) {
+            $product->reviews_avg_rating = $product->reviews->avg('rating') ?: 0;
+            $product->reviews_count = $product->reviews->count();
+        });
+
+        // Get filter data
+        $filterData = $this->getFilterData($request);
+
+        return view('search.results', [
+            'products' => $products,
+            'query' => $query,
+            'filters' => $filterData,
+            'currentFilters' => $request->all(),
+            'totalProducts' => $products->total(),
+        ]);
     }
-
-    // Apply other filters
-    $this->applyFilters($productQuery, $request);
-
-    // Apply sorting
-    $this->applySorting($productQuery, $request);
-
-    // Paginate results
-    $products = $productQuery->paginate(20)->withQueryString();
-
-    // Load reviews separately and calculate averages
-    $products->getCollection()->load('reviews');
-    $products->getCollection()->each(function ($product) {
-        $product->reviews_avg_rating = $product->reviews->avg('rating') ?: 0;
-        $product->reviews_count = $product->reviews->count();
-    });
-
-    // Get filter data
-    $filterData = $this->getFilterData($request);
-
-    return view('search.results', [
-        'products' => $products,
-        'query' => $query,
-        'filters' => $filterData,
-        'currentFilters' => $request->all(),
-        'totalProducts' => $products->total(),
-    ]);
-}
 
     /**
- * Get variant details for AJAX requests
- */
-public function getVariantDetails(Request $request, Product $product)
-{
-    $sizeId = $request->get('size_id');
-    $colorId = $request->get('color_id');
-    $scentId = $request->get('scent_id');
+     * Get variant details for AJAX requests
+     */
+    public function getVariantDetails(Request $request, Product $product)
+    {
+        $sizeId = $request->get('size_id');
+        $colorId = $request->get('color_id');
+        $scentId = $request->get('scent_id');
 
-    // Handle null values properly
-    if ($sizeId === 'null') $sizeId = null;
-    if ($colorId === 'null') $colorId = null;
-    if ($scentId === 'null') $scentId = null;
+        // Handle null values properly
+        if ($sizeId === 'null') $sizeId = null;
+        if ($colorId === 'null') $colorId = null;
+        if ($scentId === 'null') $scentId = null;
 
-    // Find the specific variant combination
-    $combination = $product->variantCombinations()
-        ->where(function ($query) use ($sizeId, $colorId, $scentId) {
-            if ($sizeId) $query->where('size_variant_id', $sizeId);
-            else $query->whereNull('size_variant_id');
-            
-            if ($colorId) $query->where('color_variant_id', $colorId);
-            else $query->whereNull('color_variant_id');
-            
-            if ($scentId) $query->where('scent_variant_id', $scentId);
-            else $query->whereNull('scent_variant_id');
-        })
-        ->with(['inventory', 'sizeVariant', 'colorVariant', 'scentVariant'])
-        ->first();
+        // Find the specific variant combination
+        $combination = $product->variantCombinations()
+            ->where(function ($query) use ($sizeId, $colorId, $scentId) {
+                if ($sizeId) $query->where('size_variant_id', $sizeId);
+                else $query->whereNull('size_variant_id');
+                
+                if ($colorId) $query->where('color_variant_id', $colorId);
+                else $query->whereNull('color_variant_id');
+                
+                if ($scentId) $query->where('scent_variant_id', $scentId);
+                else $query->whereNull('scent_variant_id');
+            })
+            ->with(['inventory', 'sizeVariant', 'colorVariant', 'scentVariant'])
+            ->first();
 
-    if (!$combination) {
+        if (!$combination) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Variant combination not found'
+            ], 404);
+        }
+
+        $stockLevel = $combination->inventory 
+            ? $combination->inventory->current_stock - $combination->inventory->reserved_stock 
+            : 0;
+
         return response()->json([
-            'success' => false,
-            'message' => 'Variant combination not found'
-        ], 404);
+            'success' => true,
+            'data' => [
+                'combination_id' => $combination->id,
+                'sku' => $combination->combination_sku,
+                'price' => number_format($combination->combination_price, 2),
+                'stock_level' => $stockLevel,
+                'in_stock' => $stockLevel > 0,
+                'variant_details' => $combination->variant_details ?? 'No variant details',
+            ]
+        ]);
     }
-
-    $stockLevel = $combination->inventory 
-        ? $combination->inventory->current_stock - $combination->inventory->reserved_stock 
-        : 0;
-
-    return response()->json([
-        'success' => true,
-        'data' => [
-            'combination_id' => $combination->id,
-            'sku' => $combination->combination_sku,
-            'price' => number_format($combination->combination_price, 2),
-            'stock_level' => $stockLevel,
-            'in_stock' => $stockLevel > 0,
-            'variant_details' => $combination->variant_details ?? 'No variant details',
-        ]
-    ]);
-}
 
     /**
      * Apply filters to the product query
@@ -337,78 +340,78 @@ public function getVariantDetails(Request $request, Product $product)
     }
 
     private function getFilterData(Request $request)
-{
-    return Cache::remember('product_filters_' . md5(serialize($request->except(['page']))), 300, function () {
-        return [
-            'categories' => Category::active()
-                ->ordered()
-                ->whereHas('products', function ($query) {
-                    $query->active()->inStock();
-                })
-                ->get()
-                ->map(function ($category) {
-                    // Count products manually to avoid GROUP BY issues
-                    $category->products_count = Product::active()
-                        ->inStock()
-                        ->where('category_id', $category->id)
-                        ->count();
-                    return $category;
-                }),
+    {
+        return Cache::remember('product_filters_' . md5(serialize($request->except(['page']))), 300, function () {
+            return [
+                'categories' => Category::active()
+                    ->ordered()
+                    ->whereHas('products', function ($query) {
+                        $query->active()->inStock();
+                    })
+                    ->get()
+                    ->map(function ($category) {
+                        // Count products manually to avoid GROUP BY issues
+                        $category->products_count = Product::active()
+                            ->inStock()
+                            ->where('category_id', $category->id)
+                            ->count();
+                        return $category;
+                    }),
 
-            'brands' => Brand::active()
-                ->whereHas('products', function ($query) {
-                    $query->active()->inStock();
-                })
-                ->orderBy('name')
-                ->get()
-                ->map(function ($brand) {
-                    // Count products manually to avoid GROUP BY issues
-                    $brand->products_count = Product::active()
-                        ->inStock()
-                        ->where('brand_id', $brand->id)
-                        ->count();
-                    return $brand;
-                }),
+                'brands' => Brand::active()
+                    ->whereHas('products', function ($query) {
+                        $query->active()->inStock();
+                    })
+                    ->orderBy('name')
+                    ->get()
+                    ->map(function ($brand) {
+                        // Count products manually to avoid GROUP BY issues
+                        $brand->products_count = Product::active()
+                            ->inStock()
+                            ->where('brand_id', $brand->id)
+                            ->count();
+                        return $brand;
+                    }),
 
-            'colors' => Color::whereHas('products', function ($query) {
-                    $query->active()->inStock();
-                })
-                ->orderBy('name')
-                ->get(),
+                'colors' => Color::whereHas('products', function ($query) {
+                        $query->active()->inStock();
+                    })
+                    ->orderBy('name')
+                    ->get(),
 
-            'textures' => Texture::whereHas('products', function ($query) {
-                    $query->active()->inStock();
-                })
-                ->orderBy('name')
-                ->get(),
+                'textures' => Texture::whereHas('products', function ($query) {
+                        $query->active()->inStock();
+                    })
+                    ->orderBy('name')
+                    ->get(),
 
-            'productTypes' => ProductType::whereHas('products', function ($query) {
-                    $query->active()->inStock();
-                })
-                ->orderBy('name')
-                ->get(),
+                'productTypes' => ProductType::whereHas('products', function ($query) {
+                        $query->active()->inStock();
+                    })
+                    ->orderBy('name')
+                    ->get(),
 
-            'priceRange' => [
-                'min' => Product::active()->inStock()->min('selling_price') ?? 0,
-                'max' => Product::active()->inStock()->max('selling_price') ?? 1000,
-            ],
+                'priceRange' => [
+                    'min' => Product::active()->inStock()->min('selling_price') ?? 0,
+                    'max' => Product::active()->inStock()->max('selling_price') ?? 1000,
+                ],
 
-            'ingredients' => DB::table('product_ingredients')
-                ->join('products', 'product_ingredients.product_id', '=', 'products.id')
-                ->where('products.is_active', true)
-                ->whereExists(function ($query) {
-                    $query->select(DB::raw(1))
-                        ->from('inventory')
-                        ->whereRaw('inventory.product_id = products.id')
-                        ->whereRaw('(inventory.current_stock - inventory.reserved_stock) > 0');
-                })
-                ->distinct()
-                ->pluck('ingredient_name')
-                ->sort()
-                ->values(),
-        ];
-    });
-}
+                'ingredients' => DB::table('product_ingredients')
+                    ->join('products', 'product_ingredients.product_id', '=', 'products.id')
+                    ->where('products.is_active', true)
+                    ->whereExists(function ($query) {
+                        $query->select(DB::raw(1))
+                            ->from('inventory')
+                            ->whereRaw('inventory.product_id = products.id')
+                            ->whereRaw('(inventory.current_stock - inventory.reserved_stock) > 0');
+                    })
+                    ->distinct()
+                    ->pluck('ingredient_name')
+                    ->sort()
+                    ->values(),
+            ];
+        });
+    }
 
     /**
      * Get available variants for a product

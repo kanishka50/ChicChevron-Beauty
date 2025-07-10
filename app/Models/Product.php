@@ -281,25 +281,7 @@ class Product extends Model
         return asset('images/placeholder-product.jpg');
     }
 
-    /**
-     * Get the stock level.
-     */
-    public function getStockLevel()
-    {
-        if ($this->has_variants) {
-            // For variant products, sum up all variant stock levels
-            return $this->allInventory->sum(function ($inventory) {
-                return max(0, $inventory->current_stock - $inventory->reserved_stock);
-            });
-        } else {
-            // For simple products, get main inventory stock
-            $inventory = $this->inventory;
-            if ($inventory) {
-                return max(0, $inventory->current_stock - $inventory->reserved_stock);
-            }
-            return 0;
-        }
-    }
+    
 
     /**
      * Check if product is in stock.
@@ -612,10 +594,34 @@ public static function getBestSellers($limit = 8)
     /**
      * Check if product has any stock available (enhanced for cart)
      */
-    public function hasStock()
-    {
-        return $this->getStockLevel() > 0;
+public function getStockLevel()
+{
+    if ($this->has_variants) {
+        // For variant products, return total stock across all combinations
+        return $this->variantCombinations()
+            ->with('inventory')
+            ->get()
+            ->sum(function ($combination) {
+                return $combination->inventory 
+                    ? ($combination->inventory->current_stock - $combination->inventory->reserved_stock)
+                    : 0;
+            });
+    } else {
+        // For simple products, return inventory stock
+        $inventory = $this->inventory()->first();
+        return $inventory 
+            ? ($inventory->current_stock - $inventory->reserved_stock)
+            : 0;
     }
+}
+
+/**
+ * Check if product has stock
+ */
+public function hasStock()
+{
+    return $this->getStockLevel() > 0;
+}
 
     /**
      * Get available stock for specific variant or main product
@@ -641,9 +647,11 @@ public static function getBestSellers($limit = 8)
      * Get the effective selling price (considering discount)
      */
     public function getEffectivePriceAttribute()
-    {
-        return $this->display_price; // This already exists in your model
-    }
+{
+    return $this->discount_price && $this->discount_price < $this->selling_price 
+        ? $this->discount_price 
+        : $this->selling_price;
+}
 
     /**
      * Get formatted effective price
@@ -664,10 +672,12 @@ public static function getBestSellers($limit = 8)
     /**
      * Check if product is on discount
      */
+    
     public function getIsOnSaleAttribute()
-    {
-        return $this->discount_percentage > 0; // Uses your existing method
-    }
+{
+    return $this->discount_price && $this->discount_price < $this->selling_price;
+}
+    
 
     /**
      * Check if product can be added to cart

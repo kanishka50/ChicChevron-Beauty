@@ -275,6 +275,10 @@
             mobileMenu.classList.toggle('hidden');
         });
 
+        document.addEventListener('DOMContentLoaded', function() {
+            updateCartCounter();
+        });
+
         // Search suggestions
         const searchInput = document.getElementById('search-input');
         const suggestionsDiv = document.getElementById('search-suggestions');
@@ -328,13 +332,35 @@
         }
 
         // Load cart and wishlist counts
-        function updateCartCount() {
-            // This will be implemented when cart functionality is added
+        async function updateCartCounter() {
+            try {
+                const response = await fetch('/cart/count');
+                const data = await response.json();
+                
+                // Update all cart counters on the page
+                document.querySelectorAll('.cart-counter').forEach(counter => {
+                    counter.textContent = data.count || 0;
+                    
+                    // Hide counter if count is 0
+                    if (data.count > 0) {
+                        counter.style.display = 'flex';
+                    } else {
+                        counter.style.display = 'none';
+                    }
+                });
+            } catch (error) {
+                console.error('Error updating cart counter:', error);
+            }
         }
 
         function updateWishlistCount() {
             // This will be implemented when wishlist functionality is added
         }
+
+        // Listen for cart updates from other parts of the application
+        window.addEventListener('cart-updated', function() {
+            updateCartCounter();
+        });
 
         // Initialize counts
         updateCartCount();
