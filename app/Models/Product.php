@@ -565,48 +565,42 @@ class Product extends Model
     // =====================================================
 
     /**
-     * Get featured products for homepage.
-     */
-    public static function getFeaturedProducts($limit = 8)
-    {
-        return static::active()
-            ->with(['brand', 'category', 'images', 'inventory', 'reviews'])
-            ->withAvg('reviews', 'rating')
-            ->featured()
-            ->inStock()
-            ->limit($limit)
-            ->get();
-    }
+ * Get featured products for homepage.
+ */
+public static function getFeaturedProducts($limit = 8)
+{
+    return static::active()
+        ->with(['brand', 'category', 'images', 'inventory'])
+        ->featured()
+        ->inStock()
+        ->limit($limit)
+        ->get();
+}
 
     /**
-     * Get new arrivals for homepage.
-     */
-    public static function getNewArrivals($limit = 8)
-    {
-        return static::active()
-            ->with(['brand', 'category', 'images', 'inventory', 'reviews'])
-            ->withAvg('reviews', 'rating')
-            ->latest('created_at')
-            ->inStock()
-            ->limit($limit)
-            ->get();
-    }
+ * Get new arrivals for homepage.
+ */
+public static function getNewArrivals($limit = 8)
+{
+    return static::active()
+        ->with(['brand', 'category', 'images', 'inventory'])
+        ->latest('created_at')
+        ->inStock()
+        ->limit($limit)
+        ->get();
+}
 
-    /**
-     * Get best sellers for homepage.
-     */
-    public static function getBestSellers($limit = 8)
-    {
-        return static::active()
-            ->with(['brand', 'category', 'images', 'inventory', 'reviews'])
-            ->withAvg('reviews', 'rating')
-            ->withCount(['orderItems'])
-            ->having('order_items_count', '>', 0)
-            ->orderBy('order_items_count', 'desc')
-            ->inStock()
-            ->limit($limit)
-            ->get();
-    }
+/**
+ * Get best sellers for homepage.
+ */
+public static function getBestSellers($limit = 8)
+{
+    return static::active()
+        ->with(['brand', 'category', 'images', 'inventory'])
+        ->inStock()
+        ->limit($limit)
+        ->get();
+}
 
 
 

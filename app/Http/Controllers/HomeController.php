@@ -19,36 +19,63 @@ class HomeController extends Controller
     {
         // Cache homepage data for better performance (cache for 30 minutes)
         $data = Cache::remember('homepage_data', 1800, function () {
+            
+            // Get featured products without withAvg
+            $featuredProducts = Product::active()
+                ->with(['brand', 'category', 'images', 'inventory'])
+                ->featured()
+                ->inStock()
+                ->limit(8)
+                ->get();
+
+            // Load reviews separately and calculate averages
+            $featuredProducts->load('reviews');
+            $featuredProducts->each(function ($product) {
+                $product->reviews_avg_rating = $product->reviews->avg('rating') ?: 0;
+                $product->reviews_count = $product->reviews->count();
+            });
+            
+            // Get new arrivals without withAvg
+            $newArrivals = Product::active()
+                ->with(['brand', 'category', 'images', 'inventory'])
+                ->latest('created_at')
+                ->inStock()
+                ->limit(8)
+                ->get();
+
+            // Load reviews separately
+            $newArrivals->load('reviews');
+            $newArrivals->each(function ($product) {
+                $product->reviews_avg_rating = $product->reviews->avg('rating') ?: 0;
+                $product->reviews_count = $product->reviews->count();
+            });
+            
+            // Get best sellers without withAvg and withCount
+            $bestSellers = Product::active()
+                ->with(['brand', 'category', 'images', 'inventory'])
+                ->inStock()
+                ->limit(8)
+                ->get();
+
+            // Load reviews and order items separately
+            $bestSellers->load(['reviews', 'orderItems']);
+            $bestSellers->each(function ($product) {
+                $product->reviews_avg_rating = $product->reviews->avg('rating') ?: 0;
+                $product->reviews_count = $product->reviews->count();
+                $product->order_items_count = $product->orderItems->count();
+            });
+
+            // Sort best sellers by order count
+            $bestSellers = $bestSellers->sortByDesc('order_items_count')->take(8);
+            
             return [
                 'banners' => Banner::active()
                     ->orderBy('sort_order')
                     ->get(),
                 
-                'featuredProducts' => Product::active()
-                    ->with(['brand', 'category', 'images', 'inventory', 'reviews'])
-                    ->withAvg('reviews', 'rating')
-                    ->featured()
-                    ->inStock()
-                    ->limit(8)
-                    ->get(),
-                
-                'newArrivals' => Product::active()
-                    ->with(['brand', 'category', 'images', 'inventory', 'reviews'])
-                    ->withAvg('reviews', 'rating')
-                    ->latest('created_at')
-                    ->inStock()
-                    ->limit(8)
-                    ->get(),
-                
-                'bestSellers' => Product::active()
-                    ->with(['brand', 'category', 'images', 'inventory', 'reviews'])
-                    ->withAvg('reviews', 'rating')
-                    ->withCount(['orderItems'])
-                    ->having('order_items_count', '>', 0)
-                    ->orderBy('order_items_count', 'desc')
-                    ->inStock()
-                    ->limit(8)
-                    ->get(),
+                'featuredProducts' => $featuredProducts,
+                'newArrivals' => $newArrivals,
+                'bestSellers' => $bestSellers,
                 
                 'categories' => Category::active()
                     ->ordered()
@@ -68,7 +95,7 @@ class HomeController extends Controller
                     ->withCount(['products' => function ($query) {
                         $query->active()->inStock();
                     }])
-                    ->orderBy('products_count', 'desc')
+                    ->orderBy('name')
                     ->limit(8)
                     ->get(),
             ];
@@ -78,12 +105,16 @@ class HomeController extends Controller
     }
 
     /**
-     * Clear homepage cache (useful for admin after updating products/banners)
+     * Clear homepage cache (for admin use)
      */
     public function clearCache()
     {
         Cache::forget('homepage_data');
-        return response()->json(['message' => 'Homepage cache cleared successfully']);
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Homepage cache cleared successfully!'
+        ]);
     }
 
     /**
