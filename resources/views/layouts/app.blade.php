@@ -279,6 +279,11 @@
             updateCartCounter();
         });
 
+        // Update wishlist counter on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            updateWishlistCounter();
+        });
+
         // Search suggestions
         const searchInput = document.getElementById('search-input');
         const suggestionsDiv = document.getElementById('search-suggestions');
@@ -353,9 +358,23 @@
             }
         }
 
-        function updateWishlistCount() {
-            // This will be implemented when wishlist functionality is added
-        }
+        async function updateWishlistCounter() {
+    try {
+        const response = await fetch('/wishlist/count');
+        const data = await response.json();
+        
+        document.querySelectorAll('.wishlist-counter').forEach(counter => {
+            counter.textContent = data.count || 0;
+            if (data.count > 0) {
+                counter.classList.remove('hidden');
+            } else {
+                counter.classList.add('hidden');
+            }
+        });
+    } catch (error) {
+        console.error('Error updating wishlist counter:', error);
+    }
+}
 
         // Listen for cart updates from other parts of the application
         window.addEventListener('cart-updated', function() {

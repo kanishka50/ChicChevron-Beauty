@@ -258,7 +258,10 @@ async function addToWishlist(productId) {
             // Update wishlist icon
             const button = event.target.closest('button');
             const svg = button.querySelector('svg');
-            svg.classList.add('text-pink-600', 'fill-current');
+            svg.classList.add('text-pink-600');
+            
+            // Update wishlist counter
+            updateWishlistCounter();
             
             showToast(data.message, 'success');
         } else {
@@ -269,7 +272,6 @@ async function addToWishlist(productId) {
         showToast('Error adding to wishlist. Please try again.', 'error');
     }
 }
-
 // Quick view functionality
 function quickView(productId) {
     // For now, redirect to product page

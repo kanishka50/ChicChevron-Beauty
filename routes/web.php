@@ -125,10 +125,6 @@ Route::middleware('auth:web')->group(function () {
         ->middleware('throttle:6,1')
         ->name('verification.send');
     
-    // Wishlist
-    Route::get('/wishlist', function () {
-        return view('welcome');
-    })->name('wishlist.index');
     
     // Verified user routes
     Route::middleware('verified')->group(function () {
@@ -209,6 +205,18 @@ Route::middleware('auth')->prefix('checkout')->name('checkout.')->group(function
     Route::post('/', [CheckoutController::class, 'store'])->name('store');
     Route::get('/{order}/payment', [CheckoutController::class, 'payment'])->name('payment');
     Route::get('/{order}/success', [CheckoutController::class, 'success'])->name('success');
+});
+
+// =====================================================
+// WISHLIST ROUTES
+// =====================================================
+Route::middleware('auth')->prefix('wishlist')->name('wishlist.')->group(function () {
+    Route::get('/', [App\Http\Controllers\WishlistController::class, 'index'])->name('index');
+    Route::post('/add', [App\Http\Controllers\WishlistController::class, 'add'])->name('add');
+    Route::post('/remove', [App\Http\Controllers\WishlistController::class, 'remove'])->name('remove');
+    Route::post('/clear', [App\Http\Controllers\WishlistController::class, 'clear'])->name('clear');
+    Route::get('/count', [App\Http\Controllers\WishlistController::class, 'getCount'])->name('count');
+    Route::post('/check', [App\Http\Controllers\WishlistController::class, 'check'])->name('check');
 });
 
 

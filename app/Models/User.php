@@ -146,4 +146,22 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->promotionUsage()->where('promotion_id', $promotionId)->count();
     }
+
+
+
+    /**
+ * Get the user's wishlist items
+ */
+public function wishlists()
+{
+    return $this->hasMany(Wishlist::class);
+}
+
+/**
+ * Get wishlist products
+ */
+public function wishlistProducts()
+{
+    return $this->belongsToMany(Product::class, 'wishlists');
+}
 }
