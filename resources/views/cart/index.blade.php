@@ -186,7 +186,7 @@
                         <!-- Checkout Button -->
                         <div class="mt-6">
                             <a href="{{ route('checkout.index') }}" 
-                               class="w-full bg-pink-600 text-white py-3 px-4 rounded-lg hover:bg-pink-700 transition-colors text-center font-medium block">
+                            class="w-full bg-pink-600 text-white py-3 px-4 rounded-lg hover:bg-pink-700 text-center font-medium block">
                                 Proceed to Checkout
                             </a>
                         </div>

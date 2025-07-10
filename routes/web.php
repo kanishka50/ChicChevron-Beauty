@@ -14,6 +14,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\CheckoutController;
 
 // Public routes (accessible by everyone)
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -198,6 +199,16 @@ Route::prefix('cart')->name('cart.')->group(function () {
     // Promotion code handling (AJAX)
     Route::post('/apply-promotion', [CartController::class, 'applyPromotion'])->name('apply-promotion');
     Route::post('/remove-promotion', [CartController::class, 'removePromotion'])->name('remove-promotion');
+});
+
+// =====================================================
+// CHECKOUT ROUTES (NEW)
+// =====================================================
+Route::middleware('auth')->prefix('checkout')->name('checkout.')->group(function () {
+    Route::get('/', [CheckoutController::class, 'index'])->name('index');
+    Route::post('/', [CheckoutController::class, 'store'])->name('store');
+    Route::get('/{order}/payment', [CheckoutController::class, 'payment'])->name('payment');
+    Route::get('/{order}/success', [CheckoutController::class, 'success'])->name('success');
 });
 
 

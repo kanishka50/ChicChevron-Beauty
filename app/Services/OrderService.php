@@ -21,7 +21,7 @@ class OrderService
     }
 
     /**
-     * Create order from cart items
+     * Create order from cart items (your existing method - keep as is)
      */
     public function createFromCart($user, $cartItems, $shippingData, $paymentMethod, $promotionCode = null)
     {
@@ -92,7 +92,171 @@ class OrderService
     }
 
     /**
-     * Create individual order item with inventory cost tracking
+     * NEW: Create order for CheckoutController (simpler format)
+     * This method adapts your existing logic to work with the checkout form
+     */
+    public function createOrder(array $orderData, $cartItems)
+    {
+        DB::beginTransaction();
+        
+        try {
+            // Generate unique order number if not provided
+            if (!isset($orderData['order_number'])) {
+                $orderData['order_number'] = $this->generateOrderNumber();
+            }
+
+            // Calculate totals from cart items
+            $totals = $this->calculateSimpleOrderTotals($cartItems);
+            
+            // Merge totals with order data
+            $orderData = array_merge($orderData, [
+                'subtotal' => $totals['subtotal'],
+                'total_amount' => $totals['total_amount'],
+                'shipping_amount' => $totals['shipping_amount'],
+                'discount_amount' => $totals['discount_amount'],
+            ]);
+
+            // Map checkout form fields to your database structure
+            $mappedOrderData = $this->mapCheckoutDataToOrderFormat($orderData);
+
+            // Create the order
+            $order = Order::create($mappedOrderData);
+
+            // Create order items
+            foreach ($cartItems as $cartItem) {
+                $this->createOrderItemFromCart($order, $cartItem);
+            }
+
+            // Reserve stock for the order
+            $this->reserveStockForOrder($order);
+
+            // Add initial status history
+            if (method_exists($order, 'addStatusHistory')) {
+                $order->addStatusHistory($order->status, 'Order created via checkout');
+            }
+
+            DB::commit();
+
+            return $order;
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Checkout order creation failed: ' . $e->getMessage(), [
+                'order_data' => $orderData,
+                'cart_items' => $cartItems->count(),
+                'error' => $e->getMessage()
+            ]);
+            
+            throw $e;
+        }
+    }
+
+    /**
+     * NEW: Map checkout form data to your order database structure
+     */
+    protected function mapCheckoutDataToOrderFormat(array $checkoutData)
+    {
+        return [
+            'order_number' => $checkoutData['order_number'],
+            'user_id' => $checkoutData['user_id'],
+            'status' => $checkoutData['status'],
+            'payment_method' => $checkoutData['payment_method'],
+            'payment_status' => $checkoutData['payment_status'],
+            
+            // Map customer fields to shipping fields (your DB structure)
+            'shipping_name' => $checkoutData['customer_name'],
+            'shipping_phone' => $checkoutData['customer_phone'],
+            'shipping_address_line_1' => $checkoutData['delivery_address'],
+            'shipping_address_line_2' => null, // Not in checkout form
+            'shipping_city' => $checkoutData['delivery_city'],
+            'shipping_district' => $checkoutData['delivery_city'], // Use city as district if no separate field
+            'shipping_postal_code' => $checkoutData['delivery_postal_code'],
+            
+            // Totals
+            'subtotal' => $checkoutData['subtotal'],
+            'discount_amount' => $checkoutData['discount_amount'],
+            'shipping_amount' => $checkoutData['shipping_amount'],
+            'total_amount' => $checkoutData['total_amount'],
+            
+            // Notes
+            'notes' => $checkoutData['notes'] ?? $checkoutData['delivery_notes'] ?? null,
+            
+            // Additional fields that might be in your Order model
+            'customer_email' => $checkoutData['customer_email'] ?? null,
+        ];
+    }
+
+    /**
+     * NEW: Simple totals calculation for checkout (without complex promotions)
+     */
+    protected function calculateSimpleOrderTotals($cartItems)
+    {
+        $subtotal = 0;
+
+        foreach ($cartItems as $cartItem) {
+            $subtotal += $cartItem->quantity * $cartItem->unit_price;
+        }
+
+        // Simple shipping calculation (you can enhance this)
+        $shippingAmount = $subtotal >= 5000 ? 0 : 300; // Free shipping over Rs. 5000
+
+        return [
+            'subtotal' => $subtotal,
+            'discount_amount' => 0, // No promotions in simple checkout
+            'shipping_amount' => $shippingAmount,
+            'total_amount' => $subtotal + $shippingAmount,
+        ];
+    }
+
+    /**
+     * NEW: Simple order item creation for checkout
+     */
+    protected function createOrderItemFromCart($order, $cartItem)
+    {
+        $product = $cartItem->product;
+        $variantCombination = $cartItem->variantCombination;
+        
+        // Get cost price using your existing method
+        $costPrice = $this->getAverageCostPrice($product->id, $variantCombination?->id, $cartItem->quantity);
+
+        // Prepare variant details for storage
+        $variantDetails = null;
+        if ($variantCombination) {
+            $variantDetails = json_encode([
+                'size' => $variantCombination->sizeVariant?->variant_value,
+                'color' => $variantCombination->colorVariant?->variant_value,
+                'scent' => $variantCombination->scentVariant?->variant_value,
+                'combination_sku' => $variantCombination->combination_sku,
+            ]);
+        }
+
+        return OrderItem::create([
+            'order_id' => $order->id,
+            'product_id' => $product->id,
+            'variant_combination_id' => $variantCombination?->id,
+            'product_name' => $product->name,
+            'product_sku' => $variantCombination ? $variantCombination->combination_sku : $product->sku,
+            'variant_details' => $variantDetails,
+            'quantity' => $cartItem->quantity,
+            'unit_price' => $cartItem->unit_price,
+            'cost_price' => $costPrice,
+            'discount_amount' => 0, // No item-level discounts in simple checkout
+            'total_price' => $cartItem->quantity * $cartItem->unit_price,
+        ]);
+    }
+
+    /**
+     * NEW: Generate simple order number
+     */
+    public function generateOrderNumber()
+    {
+        return 'CHB-' . date('Ymd') . '-' . str_pad(Order::count() + 1, 4, '0', STR_PAD_LEFT);
+    }
+
+    // KEEP ALL YOUR EXISTING METHODS BELOW (no changes needed)
+
+    /**
+     * Create individual order item with inventory cost tracking (your existing method)
      */
     protected function createOrderItem($order, $cartItem, $discountPerItem = 0)
     {
@@ -134,7 +298,7 @@ class OrderService
     }
 
     /**
-     * Calculate order totals including promotions
+     * Calculate order totals including promotions (your existing method)
      */
     public function calculateOrderTotals($cartItems, $promotionCode = null)
     {
@@ -186,7 +350,7 @@ class OrderService
     }
 
     /**
-     * Reserve stock for all items in the order
+     * Reserve stock for all items in the order (your existing method)
      */
     public function reserveStockForOrder($order)
     {
@@ -202,7 +366,7 @@ class OrderService
     }
 
     /**
-     * Confirm reserved stock (after successful payment)
+     * Confirm reserved stock (after successful payment) (your existing method)
      */
     public function confirmStockForOrder($order)
     {
@@ -218,7 +382,7 @@ class OrderService
     }
 
     /**
-     * Release reserved stock (on order cancellation)
+     * Release reserved stock (on order cancellation) (your existing method)
      */
     public function releaseStockForOrder($order)
     {
@@ -234,7 +398,7 @@ class OrderService
     }
 
     /**
-     * Update order status with proper workflow validation
+     * Update order status with proper workflow validation (your existing method)
      */
     public function updateOrderStatus($order, $newStatus, $comment = null, $adminId = null)
     {
@@ -282,7 +446,7 @@ class OrderService
     }
 
     /**
-     * Get average cost price using FIFO from inventory
+     * Get average cost price using FIFO from inventory (your existing method)
      */
     protected function getAverageCostPrice($productId, $variantCombinationId, $quantity)
     {
@@ -319,7 +483,7 @@ class OrderService
     }
 
     /**
-     * Validate and get promotion details
+     * Validate and get promotion details (your existing method)
      */
     protected function validateAndGetPromotion($promotionCode)
     {
@@ -329,7 +493,7 @@ class OrderService
     }
 
     /**
-     * Record promotion usage
+     * Record promotion usage (your existing method)
      */
     protected function recordPromotionUsage($order, $promotion, $user)
     {
@@ -338,7 +502,7 @@ class OrderService
     }
 
     /**
-     * Get order statistics for dashboard
+     * Get order statistics for dashboard (your existing method)
      */
     public function getOrderStatistics($date = null)
     {
@@ -355,7 +519,7 @@ class OrderService
     }
 
     /**
-     * Get orders with filters for admin panel
+     * Get orders with filters for admin panel (your existing method)
      */
     public function getOrdersWithFilters($filters = [])
     {
@@ -390,7 +554,7 @@ class OrderService
     }
 
     /**
-     * Clear user's cart after successful order
+     * Clear user's cart after successful order (your existing method)
      */
     public function clearUserCart($user)
     {
