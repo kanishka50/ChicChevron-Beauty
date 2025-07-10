@@ -336,45 +336,62 @@
             });
         }
 
+        async function updateWishlistCounter() {
+    try {
+        const response = await fetch('/wishlist/count');
+        const data = await response.json();
+        
+        // Get the wishlist count element by ID
+        const wishlistCount = document.getElementById('wishlist-count');
+        if (wishlistCount) {
+            wishlistCount.textContent = data.count || 0;
+            
+            // Show/hide counter based on count
+            if (data.count > 0) {
+                wishlistCount.style.display = 'flex';
+                wishlistCount.classList.remove('hidden');
+            } else {
+                wishlistCount.style.display = 'none';
+                wishlistCount.classList.add('hidden');
+            }
+        }
+        
+    } catch (error) {
+        console.error('Error updating wishlist counter:', error);
+    }
+}
+
         // Load cart and wishlist counts
         async function updateCartCounter() {
             try {
                 const response = await fetch('/cart/count');
                 const data = await response.json();
                 
-                // Update all cart counters on the page
-                document.querySelectorAll('.cart-counter').forEach(counter => {
-                    counter.textContent = data.count || 0;
+                // Get the cart count element by ID
+                const cartCount = document.getElementById('cart-count');
+                if (cartCount) {
+                    cartCount.textContent = data.count || 0;
                     
-                    // Hide counter if count is 0
+                    // Show/hide counter based on count
                     if (data.count > 0) {
-                        counter.style.display = 'flex';
+                        cartCount.style.display = 'flex';
+                        cartCount.classList.remove('hidden');
                     } else {
-                        counter.style.display = 'none';
+                        cartCount.style.display = 'none';
+                        cartCount.classList.add('hidden');
                     }
+                }
+                
+                // Also update any elements with cart-count class (for compatibility)
+                document.querySelectorAll('.cart-count').forEach(counter => {
+                    counter.textContent = data.count || 0;
+                    counter.style.display = data.count > 0 ? 'flex' : 'none';
                 });
+                
             } catch (error) {
                 console.error('Error updating cart counter:', error);
             }
         }
-
-        async function updateWishlistCounter() {
-    try {
-        const response = await fetch('/wishlist/count');
-        const data = await response.json();
-        
-        document.querySelectorAll('.wishlist-counter').forEach(counter => {
-            counter.textContent = data.count || 0;
-            if (data.count > 0) {
-                counter.classList.remove('hidden');
-            } else {
-                counter.classList.add('hidden');
-            }
-        });
-    } catch (error) {
-        console.error('Error updating wishlist counter:', error);
-    }
-}
 
         // Listen for cart updates from other parts of the application
         window.addEventListener('cart-updated', function() {
@@ -382,8 +399,8 @@
         });
 
         // Initialize counts
-        updateCartCount();
-        updateWishlistCount();
+        updateCartCounter();
+        updateWishlistCounter();
     </script>
 </body>
 </html>

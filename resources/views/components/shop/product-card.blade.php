@@ -9,10 +9,19 @@
         </a>
         
         <!-- Wishlist Button -->
-        <button onclick="addToWishlist({{ $product->id }})" 
-                class="absolute top-2 right-2 p-2 bg-white rounded-full shadow-md hover:bg-pink-50 transition-colors">
-            <svg class="w-4 h-4 text-gray-600 hover:text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.682l-1.318-1.364a4.5 4.5 0 00-6.364 0z"></path>
+        @php
+            $isInWishlist = auth()->check() && auth()->user()->wishlist->contains('product_id', $product->id);
+        @endphp
+
+        <!-- Wishlist Button -->
+        <button onclick="toggleWishlist({{ $product->id }})" 
+                class="absolute top-2 right-2 p-2 bg-white rounded-full shadow-md hover:bg-pink-50 transition-colors"
+                data-product-id="{{ $product->id }}">
+            <svg class="w-4 h-4 {{ $isInWishlist ? 'text-pink-600 fill-current' : 'text-gray-600' }}" 
+                fill="{{ $isInWishlist ? 'currentColor' : 'none' }}" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
             </svg>
         </button>
 
@@ -238,10 +247,14 @@ async function addToCart(productId, variantId = null, quantity = 1) {
     }
 }
 
-// Add to wishlist functionality
-async function addToWishlist(productId) {
+async function toggleWishlist(productId) {
+    const button = event.currentTarget;
+    const svg = button.querySelector('svg');
+    const isInWishlist = svg.classList.contains('text-pink-600');
+    
     try {
-        const response = await fetch('/wishlist/add', {
+        const url = isInWishlist ? '/wishlist/remove' : '/wishlist/add';
+        const response = await fetch(url, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -255,23 +268,31 @@ async function addToWishlist(productId) {
         const data = await response.json();
         
         if (data.success) {
-            // Update wishlist icon
-            const button = event.target.closest('button');
-            const svg = button.querySelector('svg');
-            svg.classList.add('text-pink-600');
+            // Toggle heart appearance
+            if (isInWishlist) {
+                svg.classList.remove('text-pink-600', 'fill-current');
+                svg.classList.add('text-gray-600');
+                svg.setAttribute('fill', 'none');
+            } else {
+                svg.classList.remove('text-gray-600');
+                svg.classList.add('text-pink-600', 'fill-current');
+                svg.setAttribute('fill', 'currentColor');
+            }
             
             // Update wishlist counter
             updateWishlistCounter();
             
             showToast(data.message, 'success');
         } else {
-            showToast(data.message, 'error');
+            showToast(data.message || 'Error updating wishlist', 'error');
         }
     } catch (error) {
-        console.error('Error adding to wishlist:', error);
-        showToast('Error adding to wishlist. Please try again.', 'error');
+        console.error('Error updating wishlist:', error);
+        showToast('Error updating wishlist. Please try again.', 'error');
     }
 }
+
+
 // Quick view functionality
 function quickView(productId) {
     // For now, redirect to product page
@@ -279,8 +300,23 @@ function quickView(productId) {
     window.location.href = `/products/${productId}`;
 }
 
+/
 // Update cart counter in header
 function updateCartCounter(count) {
+    // Update by ID
+    const cartCountById = document.getElementById('cart-count');
+    if (cartCountById) {
+        cartCountById.textContent = count;
+        if (count > 0) {
+            cartCountById.style.display = 'flex';
+            cartCountById.classList.remove('hidden');
+        } else {
+            cartCountById.style.display = 'none';
+            cartCountById.classList.add('hidden');
+        }
+    }
+    
+    // Also update any elements with cart-count class
     const cartCounters = document.querySelectorAll('.cart-count');
     cartCounters.forEach(counter => {
         counter.textContent = count;
