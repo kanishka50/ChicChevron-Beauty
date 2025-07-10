@@ -16,34 +16,45 @@ use Illuminate\Support\Facades\DB;
 class ProductController extends Controller
 {
     /**
-     * Display product catalog with filtering and sorting
-     */
-    public function index(Request $request)
-    {
-        $query = Product::active()
-            ->with(['brand', 'category', 'images', 'inventory', 'reviews', 'colors', 'texture'])
-            ->withAvg('reviews', 'rating')
-            ->withCount('reviews');
+ * Display product catalog with filtering and sorting
+ */
+public function index(Request $request)
+{
+    $query = Product::active()
+        ->with(['brand', 'category', 'images', 'inventory', 'colors', 'texture']);
 
-        // Apply filters
-        $this->applyFilters($query, $request);
+    // Apply filters
+    $this->applyFilters($query, $request);
 
-        // Apply sorting
-        $this->applySorting($query, $request);
+    // Apply sorting
+    $this->applySorting($query, $request);
 
-        // Paginate results
-        $products = $query->paginate(20)->withQueryString();
+    // Paginate results FIRST
+    $products = $query->paginate(20)->withQueryString();
 
-        // Get filter data
-        $filterData = $this->getFilterData($request);
+    // THEN load reviews with proper aggregation
+    $products->getCollection()->load([
+        'reviews' => function($query) {
+            $query->where('is_approved', true);
+        }
+    ]);
 
-        return view('products.index', [
-            'products' => $products,
-            'filters' => $filterData,
-            'currentFilters' => $request->all(),
-            'totalProducts' => $products->total(),
-        ]);
-    }
+    // Calculate averages manually to avoid GROUP BY issues
+    $products->getCollection()->each(function ($product) {
+        $product->reviews_avg_rating = $product->reviews->avg('rating') ?: 0;
+        $product->reviews_count = $product->reviews->count();
+    });
+
+    // Get filter data
+    $filterData = $this->getFilterData($request);
+
+    return view('products.index', [
+        'products' => $products,
+        'filters' => $filterData,
+        'currentFilters' => $request->all(),
+        'totalProducts' => $products->total(),
+    ]);
+}
 
     /**
      * Display individual product details
