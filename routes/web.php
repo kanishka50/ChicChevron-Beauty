@@ -351,3 +351,21 @@ Route::bind('product', function ($value, $route) {
     
     return $product;
 });
+
+
+
+
+// Checkout routes
+Route::middleware(['auth'])->group(function () {
+    Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
+    Route::post('/checkout/process', [CheckoutController::class, 'process'])->name('checkout.process');
+    Route::get('/checkout/payment/{orderNumber}', [CheckoutController::class, 'payment'])->name('checkout.payment');
+    Route::post('/checkout/payment/{orderNumber}', [CheckoutController::class, 'processPayment'])->name('checkout.payment.process');
+    Route::get('/checkout/payment-callback/{orderNumber}', [CheckoutController::class, 'paymentCallback'])->name('checkout.payment.callback');
+    Route::get('/checkout/success/{orderNumber}', [CheckoutController::class, 'success'])->name('checkout.success');
+    Route::get('/checkout/failed/{orderNumber}', [CheckoutController::class, 'failed'])->name('checkout.failed');
+});
+
+// Payment notification routes (no auth required for webhooks)
+// Route::post('/payment/notify/payhere', [PaymentNotificationController::class, 'payhere'])->name('payment.notify.payhere');
+// Route::post('/payment/notify/stripe', [PaymentNotificationController::class, 'stripe'])->name('payment.notify.stripe');

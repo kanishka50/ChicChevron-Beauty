@@ -40,6 +40,7 @@ class LoginRequest extends FormRequest
         }
 
         RateLimiter::clear($this->throttleKey());
+        session()->forget('url.intended');
     }
 
     public function ensureIsNotRateLimited(): void

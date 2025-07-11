@@ -12,6 +12,7 @@ class Order extends Model
     protected $fillable = [
         'order_number',
         'user_id',
+        'customer_email',
         'status',
         'subtotal',
         'discount_amount',
@@ -94,19 +95,23 @@ class Order extends Model
      */
     public static function generateOrderNumber()
     {
-        $prefix = 'ORD';
+        $prefix = 'CHB';
         $date = now()->format('Ymd');
-        $random = strtoupper(substr(uniqid(), -4));
         
-        $orderNumber = "{$prefix}-{$date}-{$random}";
+        // Get the last order of the day
+        $lastOrder = static::whereDate('created_at', today())
+                          ->orderBy('id', 'desc')
+                          ->first();
         
-        // Ensure uniqueness
-        while (self::where('order_number', $orderNumber)->exists()) {
-            $random = strtoupper(substr(uniqid(), -4));
-            $orderNumber = "{$prefix}-{$date}-{$random}";
+        if ($lastOrder) {
+            // Extract the sequence number from the last order
+            $lastSequence = (int) substr($lastOrder->order_number, -4);
+            $sequence = $lastSequence + 1;
+        } else {
+            $sequence = 1;
         }
         
-        return $orderNumber;
+        return sprintf('%s-%s-%04d', $prefix, $date, $sequence);
     }
 
     /**
@@ -138,20 +143,29 @@ class Order extends Model
         return in_array($this->status, ['payment_completed', 'processing']);
     }
 
+
     /**
-     * Get the status badge color.
+     * Check if order can be cancelled
+     */
+    public function canBeCancelled()
+    {
+        return in_array($this->status, ['payment_completed', 'processing']);
+    }
+
+
+    /**
+     * Get status badge color
      */
     public function getStatusColorAttribute()
     {
         return [
-            'payment_completed' => 'blue',
-            'processing' => 'yellow',
-            'shipping' => 'indigo',
-            'completed' => 'green',
-            'cancelled' => 'red',
-        ][$this->status] ?? 'gray';
+            'payment_completed' => 'bg-green-100 text-green-800',
+            'processing' => 'bg-blue-100 text-blue-800',
+            'shipping' => 'bg-yellow-100 text-yellow-800',
+            'completed' => 'bg-gray-100 text-gray-800',
+            'cancelled' => 'bg-red-100 text-red-800',
+        ][$this->status] ?? 'bg-gray-100 text-gray-800';
     }
-
     /**
      * Add a status history entry.
      */
@@ -167,20 +181,27 @@ class Order extends Model
     /**
      * Update order status.
      */
-    public function updateStatus($status, $comment = null, $adminId = null)
+     public function updateStatus($newStatus, $comment = null, $adminId = null)
     {
-        $this->status = $status;
-        
-        if ($status === 'shipping') {
-            $this->shipped_at = now();
-        } elseif ($status === 'completed') {
-            $this->completed_at = now();
-        }
-        
+        $this->status = $newStatus;
         $this->save();
-        $this->addStatusHistory($status, $comment, $adminId);
         
-        return $this;
+        $this->addStatusHistory($newStatus, $comment, $adminId);
+        
+        // Update timestamps based on status
+        if ($newStatus === 'shipping') {
+            $this->update(['shipped_at' => now()]);
+        } elseif ($newStatus === 'completed') {
+            $this->update(['completed_at' => now()]);
+        }
+    }
+
+    /**
+     * Get formatted total
+     */
+    public function getTotalFormattedAttribute()
+    {
+        return 'Rs. ' . number_format($this->total_amount, 2);
     }
 
     /**

@@ -155,36 +155,49 @@ class OrderService
      * NEW: Map checkout form data to your order database structure
      */
     protected function mapCheckoutDataToOrderFormat(array $checkoutData)
-    {
-        return [
-            'order_number' => $checkoutData['order_number'],
-            'user_id' => $checkoutData['user_id'],
-            'status' => $checkoutData['status'],
-            'payment_method' => $checkoutData['payment_method'],
-            'payment_status' => $checkoutData['payment_status'],
-            
-            // Map customer fields to shipping fields (your DB structure)
-            'shipping_name' => $checkoutData['customer_name'],
-            'shipping_phone' => $checkoutData['customer_phone'],
-            'shipping_address_line_1' => $checkoutData['delivery_address'],
-            'shipping_address_line_2' => null, // Not in checkout form
-            'shipping_city' => $checkoutData['delivery_city'],
-            'shipping_district' => $checkoutData['delivery_city'], // Use city as district if no separate field
-            'shipping_postal_code' => $checkoutData['delivery_postal_code'],
-            
-            // Totals
-            'subtotal' => $checkoutData['subtotal'],
-            'discount_amount' => $checkoutData['discount_amount'],
-            'shipping_amount' => $checkoutData['shipping_amount'],
-            'total_amount' => $checkoutData['total_amount'],
-            
-            // Notes
-            'notes' => $checkoutData['notes'] ?? $checkoutData['delivery_notes'] ?? null,
-            
-            // Additional fields that might be in your Order model
-            'customer_email' => $checkoutData['customer_email'] ?? null,
-        ];
+{
+    return [
+        'order_number' => $checkoutData['order_number'],
+        'user_id' => $checkoutData['user_id'],
+        'customer_email' => $checkoutData['customer_email'], // ADDED: Store email for historical record
+        'status' => $checkoutData['status'],
+        'payment_method' => $checkoutData['payment_method'],
+        'payment_status' => $checkoutData['payment_status'],
+        
+        // Map customer fields from checkout form to shipping fields in database
+        'shipping_name' => $checkoutData['customer_name'],
+        'shipping_phone' => $checkoutData['customer_phone'],
+        'shipping_address_line_1' => $checkoutData['delivery_address'],
+        'shipping_address_line_2' => null, // Not collected in checkout form
+        'shipping_city' => $checkoutData['delivery_city'],
+        'shipping_district' => $checkoutData['delivery_city'], // Use city as district since we don't collect district separately
+        'shipping_postal_code' => $checkoutData['delivery_postal_code'],
+        
+        // Totals
+        'subtotal' => $checkoutData['subtotal'],
+        'discount_amount' => $checkoutData['discount_amount'],
+        'shipping_amount' => $checkoutData['shipping_amount'],
+        'total_amount' => $checkoutData['total_amount'],
+        
+        // Notes - combine delivery notes and order notes if both exist
+        'notes' => $this->combineNotes($checkoutData),
+    ];
+}
+
+private function combineNotes(array $checkoutData)
+{
+    $notes = [];
+    
+    if (!empty($checkoutData['delivery_notes'])) {
+        $notes[] = "Delivery Instructions: " . $checkoutData['delivery_notes'];
     }
+    
+    if (!empty($checkoutData['order_notes'])) {
+        $notes[] = "Order Notes: " . $checkoutData['order_notes'];
+    }
+    
+    return !empty($notes) ? implode("\n", $notes) : null;
+}
 
     /**
      * NEW: Simple totals calculation for checkout (without complex promotions)
