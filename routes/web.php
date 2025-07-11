@@ -145,7 +145,7 @@ Route::middleware('auth:web')->group(function () {
         Route::get('/orders/{order}/invoice', [OrderController::class, 'downloadInvoice'])->name('user.orders.invoice');
         Route::post('/orders/{order}/complete', [OrderController::class, 'markComplete'])->name('user.orders.complete');
         Route::post('/orders/{order}/request-cancellation', [OrderController::class, 'requestCancellation'])->name('user.orders.request-cancellation');
-        Route::post('/orders/{order}/reorder', [OrderController::class, 'reorder'])->name('user.orders.reorder');
+        
         
         // Order tracking
         Route::get('/orders/{order}/track', [OrderController::class, 'trackOrder'])->name('user.orders.track');
@@ -339,11 +339,11 @@ Route::bind('product', function ($value, $route) {
 Route::middleware(['auth'])->group(function () {
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
     Route::post('/checkout/process', [CheckoutController::class, 'process'])->name('checkout.process');
-    Route::get('/checkout/payment/{orderNumber}', [CheckoutController::class, 'payment'])->name('checkout.payment');
-    Route::post('/checkout/payment/{orderNumber}', [CheckoutController::class, 'processPayment'])->name('checkout.payment.process');
-    Route::get('/checkout/payment-callback/{orderNumber}', [CheckoutController::class, 'paymentCallback'])->name('checkout.payment.callback');
-    Route::get('/checkout/success/{orderNumber}', [CheckoutController::class, 'success'])->name('checkout.success');
-    Route::get('/checkout/failed/{orderNumber}', [CheckoutController::class, 'failed'])->name('checkout.failed');
+    Route::get('/checkout/payment/{order}', [CheckoutController::class, 'payment'])->name('checkout.payment');
+    Route::post('/checkout/payment/{order}', [CheckoutController::class, 'processPayment'])->name('checkout.payment.process');
+    Route::get('/checkout/payment-callback/{order}', [CheckoutController::class, 'paymentCallback'])->name('checkout.payment.callback');
+    Route::get('/checkout/success/{order}', [CheckoutController::class, 'success'])->name('checkout.success');
+    Route::get('/checkout/failed/{order}', [CheckoutController::class, 'failed'])->name('checkout.failed');
 });
 
 

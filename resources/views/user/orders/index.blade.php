@@ -195,10 +195,6 @@
                                     </a>
                                 @endif
                                 
-                                <button onclick="reorderItems({{ $order->id }})" 
-                                        class="text-indigo-600 hover:text-indigo-800 font-medium text-sm">
-                                    Reorder
-                                </button>
                             </div>
                             
                             <div class="flex space-x-3">

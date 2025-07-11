@@ -141,36 +141,38 @@ class CheckoutController extends Controller
      * Prepare order data from request
      */
     private function prepareOrderData(CheckoutRequest $request)
-    {
-        $cartSummary = $this->cartService->getCartSummary();
+{
+    $cartSummary = $this->cartService->getCartSummary();
 
-        return [
-            'user_id' => Auth::id(),
-            'order_number' => $this->generateOrderNumber(),
-            'status' => $request->payment_method === 'cod' ? 'payment_completed' : 'pending_payment',
-            'payment_method' => $request->payment_method,
-            'payment_status' => $request->payment_method === 'cod' ? 'pending' : 'pending',
-            
-            // Customer Details
-            'customer_name' => $request->customer_name,
-            'customer_email' => $request->customer_email,
-            'customer_phone' => $request->customer_phone,
-            
-            // Delivery Address
-            'delivery_address' => $request->delivery_address,
-            'delivery_city' => $request->delivery_city,
-            'delivery_postal_code' => $request->delivery_postal_code,
-            'delivery_notes' => $request->delivery_notes,
-            
-            // Order Totals
-            'subtotal' => $cartSummary['subtotal'],
-            'discount_amount' => $cartSummary['discount_amount'],
-            'shipping_amount' => $cartSummary['shipping_amount'],
-            'total_amount' => $cartSummary['total'],
-            
-            'notes' => $request->order_notes,
-        ];
-    }
+    return [
+        'user_id' => Auth::id(),
+        'order_number' => $this->generateOrderNumber(),
+        // For COD, order should be "processing" not "payment_completed" since payment hasn't been received
+        'status' => $request->payment_method === 'cod' ? 'processing' : 'pending_payment',
+        'payment_method' => $request->payment_method,
+        // Payment status should remain 'pending' for both COD and online payment initially
+        'payment_status' => 'pending',
+        
+        // Customer Details
+        'customer_name' => $request->customer_name,
+        'customer_email' => $request->customer_email,
+        'customer_phone' => $request->customer_phone,
+        
+        // Delivery Address
+        'delivery_address' => $request->delivery_address,
+        'delivery_city' => $request->delivery_city,
+        'delivery_postal_code' => $request->delivery_postal_code,
+        'delivery_notes' => $request->delivery_notes,
+        
+        // Order Totals
+        'subtotal' => $cartSummary['subtotal'],
+        'discount_amount' => $cartSummary['discount_amount'],
+        'shipping_amount' => $cartSummary['shipping_amount'],
+        'total_amount' => $cartSummary['total'],
+        
+        'notes' => $request->order_notes,
+    ];
+}
 
     /**
      * Generate unique order number
