@@ -98,20 +98,29 @@ class CheckoutController extends Controller
     /**
      * Display payment page for online payments
      */
-    public function payment(Order $order)
-    {
-        // Ensure user can access this order
-        if (Auth::id() !== $order->user_id) {
-            abort(403);
-        }
-
-        // Only allow payment for pending orders
-        if ($order->status !== 'pending_payment') {
-            return redirect()->route('checkout.success', $order);
-        }
-
-        return view('checkout.payment', compact('order'));
+  public function payment(Order $order)
+{
+    // Ensure user can access this order
+    if (Auth::id() !== $order->user_id) {
+        abort(403, 'Unauthorized access to order');
     }
+
+    // Only allow payment for pending orders
+    if ($order->payment_status !== 'pending') {
+        return redirect()->route('checkout.success', $order)
+            ->with('info', 'This order has already been processed.');
+    }
+
+    // For COD orders, no payment needed
+    if ($order->payment_method === 'cod') {
+        return redirect()->route('checkout.success', $order);
+    }
+
+    // Load relationships for display
+    $order->load(['items.product', 'items.variantCombination']);
+
+    return view('checkout.payment', compact('order'));
+}
 
     /**
      * Display order success page

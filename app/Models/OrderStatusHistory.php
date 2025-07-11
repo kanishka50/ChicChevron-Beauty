@@ -6,34 +6,17 @@ use Illuminate\Database\Eloquent\Model;
 
 class OrderStatusHistory extends Model
 {
+    protected $table = 'order_status_history';
+
     protected $fillable = [
         'order_id',
-        'from_status',
-        'to_status',
-        'notes',
+        'status',        // Changed from 'from_status' and 'to_status'
+        'comment',       // Changed from 'notes'
         'changed_by',
     ];
 
-    /**
-     * Get the order.
-     */
-    public function order()
-    {
-        return $this->belongsTo(Order::class);
-    }
-
-    /**
-     * Get the admin who changed the status.
-     */
-    public function changedBy()
-    {
-        return $this->belongsTo(Admin::class, 'changed_by');
-    }
-
-    /**
-     * Get from status label.
-     */
-    public function getFromStatusLabelAttribute()
+    // Update methods accordingly
+    public function getStatusLabelAttribute()
     {
         return [
             'payment_completed' => 'Payment Completed',
@@ -41,20 +24,8 @@ class OrderStatusHistory extends Model
             'shipping' => 'Shipping',
             'completed' => 'Completed',
             'cancelled' => 'Cancelled',
-        ][$this->from_status] ?? $this->from_status;
+        ][$this->status] ?? $this->status;
     }
 
-    /**
-     * Get to status label.
-     */
-    public function getToStatusLabelAttribute()
-    {
-        return [
-            'payment_completed' => 'Payment Completed',
-            'processing' => 'Processing',
-            'shipping' => 'Shipping',
-            'completed' => 'Completed',
-            'cancelled' => 'Cancelled',
-        ][$this->to_status] ?? $this->to_status;
-    }
+    // Remove getFromStatusLabelAttribute and getToStatusLabelAttribute
 }

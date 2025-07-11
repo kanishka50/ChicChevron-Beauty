@@ -15,6 +15,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\PaymentController;
 
 // Public routes (accessible by everyone)
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -256,28 +257,7 @@ Route::get('/track-order/{order}', function (\App\Models\Order $order) {
     return view('orders.track-guest-result', compact('order'));
 })->name('orders.track-guest-result');
 
-// =====================================================
-// WEBHOOK ROUTES (NEW)
-// =====================================================
 
-// PayHere webhook for order status updates
-Route::post('/webhooks/payhere', function (Request $request) {
-    // PayHere webhook handler
-    // This will be implemented when payment system is integrated
-    Log::info('PayHere webhook received', $request->all());
-    
-    // Verify webhook signature
-    // Update order status based on payment status
-    // Send confirmation emails
-    
-    return response('OK', 200);
-})->name('webhooks.payhere');
-
-// Other payment gateway webhooks can be added here
-Route::post('/webhooks/stripe', function (Request $request) {
-    // Stripe webhook handler (if implemented in future)
-    return response('OK', 200);
-})->name('webhooks.stripe');
 
 // =====================================================
 // REDIRECT ROUTES (for backward compatibility)
@@ -366,6 +346,19 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/checkout/failed/{orderNumber}', [CheckoutController::class, 'failed'])->name('checkout.failed');
 });
 
-// Payment notification routes (no auth required for webhooks)
-// Route::post('/payment/notify/payhere', [PaymentNotificationController::class, 'payhere'])->name('payment.notify.payhere');
-// Route::post('/payment/notify/stripe', [PaymentNotificationController::class, 'stripe'])->name('payment.notify.stripe');
+
+
+
+
+// Payment routes
+Route::prefix('checkout/payment')->name('checkout.payment.')->group(function () {
+    Route::get('/{order}/success', [PaymentController::class, 'success'])->name('success');
+    Route::get('/{order}/cancel', [PaymentController::class, 'cancel'])->name('cancel');
+    Route::get('/{order}/status', [PaymentController::class, 'checkStatus'])->name('status');
+});
+
+// Webhook route (no auth required)
+Route::post('/webhooks/payhere', [PaymentController::class, 'webhook'])->name('webhooks.payhere');
+
+
+

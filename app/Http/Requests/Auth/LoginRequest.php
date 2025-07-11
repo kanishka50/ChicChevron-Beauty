@@ -10,6 +10,8 @@ use Illuminate\Validation\ValidationException;
 
 class LoginRequest extends FormRequest
 {
+    protected $guard = null;
+
     public function authorize(): bool
     {
         return true;
@@ -20,7 +22,7 @@ class LoginRequest extends FormRequest
         return [
             'email' => ['required', 'string', 'email'],
             'password' => ['required', 'string'],
-            'remember' => ['nullable', 'boolean'], // Changed from 'boolean' to 'nullable', 'boolean'
+            'remember' => ['nullable', 'boolean'],
         ];
     }
 
@@ -28,19 +30,36 @@ class LoginRequest extends FormRequest
     {
         $this->ensureIsNotRateLimited();
 
-        // Get the remember value - convert "on" to boolean
-        $remember = $this->has('remember') && $this->input('remember') === 'on' ? true : false;
+        $remember = $this->boolean('remember');
+        $credentials = $this->only('email', 'password');
 
-        if (!Auth::attempt($this->only('email', 'password'), $remember)) {
-            RateLimiter::hit($this->throttleKey());
-
-            throw ValidationException::withMessages([
-                'email' => trans('auth.failed'),
-            ]);
+        // First try admin guard
+        if (Auth::guard('admin')->attempt($credentials, $remember)) {
+            $this->guard = 'admin';
+            RateLimiter::clear($this->throttleKey());
+            session()->forget('url.intended');
+            return;
         }
 
-        RateLimiter::clear($this->throttleKey());
-        session()->forget('url.intended');
+        // Then try web guard
+        if (Auth::guard('web')->attempt($credentials, $remember)) {
+            $this->guard = 'web';
+            RateLimiter::clear($this->throttleKey());
+            session()->forget('url.intended');
+            return;
+        }
+
+        // If both failed
+        RateLimiter::hit($this->throttleKey());
+
+        throw ValidationException::withMessages([
+            'email' => trans('auth.failed'),
+        ]);
+    }
+
+    public function getAuthenticatedGuard(): ?string
+    {
+        return $this->guard;
     }
 
     public function ensureIsNotRateLimited(): void

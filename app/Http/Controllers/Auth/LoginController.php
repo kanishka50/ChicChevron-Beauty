@@ -16,30 +16,21 @@ class LoginController extends Controller
 
     public function store(LoginRequest $request)
     {
-        $credentials = $request->validated();
-        $remember = $request->boolean('remember');
+        $request->authenticate();
+        
+        $request->session()->regenerate();
 
-        // First, try to login as admin
-        if (Auth::guard('admin')->attempt($credentials, $remember)) {
-            $request->session()->regenerate();
-            return redirect()->intended(route('admin.dashboard'));
+        // Redirect based on which guard was authenticated
+        if ($request->getAuthenticatedGuard() === 'admin') {
+            return redirect()->route('admin.dashboard');
         }
 
-        // If not admin, try regular user login
-        if (Auth::guard('web')->attempt($credentials, $remember)) {
-            $request->session()->regenerate();
-            return redirect()->intended(route('home'));
-        }
-
-        // If both failed, return error
-        return back()->withErrors([
-            'email' => 'The provided credentials do not match our records.',
-        ])->onlyInput('email');
+        // For regular users
+        return redirect('/');
     }
 
     public function destroy(Request $request)
     {
-        // Check which guard is logged in and logout accordingly
         if (Auth::guard('admin')->check()) {
             Auth::guard('admin')->logout();
         } else {
