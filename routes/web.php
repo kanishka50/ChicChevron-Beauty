@@ -335,21 +335,6 @@ Route::bind('product', function ($value, $route) {
 
 
 
-// Checkout routes
-Route::middleware(['auth'])->group(function () {
-    Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
-    Route::post('/checkout/process', [CheckoutController::class, 'process'])->name('checkout.process');
-    Route::get('/checkout/payment/{order}', [CheckoutController::class, 'payment'])->name('checkout.payment');
-    Route::post('/checkout/payment/{order}', [CheckoutController::class, 'processPayment'])->name('checkout.payment.process');
-    Route::get('/checkout/payment-callback/{order}', [CheckoutController::class, 'paymentCallback'])->name('checkout.payment.callback');
-    Route::get('/checkout/success/{order}', [CheckoutController::class, 'success'])->name('checkout.success');
-    Route::get('/checkout/failed/{order}', [CheckoutController::class, 'failed'])->name('checkout.failed');
-});
-
-
-
-
-
 // Payment routes
 Route::prefix('checkout/payment')->name('checkout.payment.')->group(function () {
     Route::get('/{order}/success', [PaymentController::class, 'success'])->name('success');

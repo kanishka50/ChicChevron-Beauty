@@ -27,12 +27,28 @@
 
 <script>
 // Check payment status every 3 seconds
+// Check payment status every 3 seconds
 setInterval(function() {
-    fetch('{{ route('checkout.payment.status', $order) }}')
+    // Force HTTPS URL
+    const statusUrl = '{{ route('checkout.payment.status', $order) }}'.replace('http://', 'https://');
+    const successUrl = '{{ route('checkout.success', $order) }}'.replace('http://', 'https://');
+    
+    fetch(statusUrl)
         .then(response => response.json())
         .then(data => {
             if (data.is_completed) {
-                window.location.href = '{{ route('checkout.success', $order) }}';
+                window.location.href = successUrl;
+            }
+        })
+        .catch(error => {
+            console.error('Error checking payment status:', error);
+            // Fallback: redirect to success page after multiple failures
+            if (window.paymentCheckAttempts === undefined) {
+                window.paymentCheckAttempts = 0;
+            }
+            window.paymentCheckAttempts++;
+            if (window.paymentCheckAttempts > 5) {
+                window.location.href = successUrl;
             }
         });
 }, 3000);
