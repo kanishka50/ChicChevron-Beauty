@@ -265,142 +265,196 @@
         </footer>
     </div>
 
-    <!-- Scripts -->
-    @stack('scripts')
+<!-- Scripts -->
+@stack('scripts')
 
-    <script>
-        // Mobile menu toggle
-        document.getElementById('mobile-menu-button').addEventListener('click', function() {
-            const mobileMenu = document.getElementById('mobile-menu');
-            mobileMenu.classList.toggle('hidden');
-        });
+<script>
+    // Global flag for checkout
+    window._isCheckoutInProgress = false;
 
-        document.addEventListener('DOMContentLoaded', function() {
-            updateCartCounter();
-        });
+    // Mobile menu toggle
+    document.getElementById('mobile-menu-button').addEventListener('click', function() {
+        const mobileMenu = document.getElementById('mobile-menu');
+        mobileMenu.classList.toggle('hidden');
+    });
 
-        // Update wishlist counter on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            updateWishlistCounter();
-        });
-
-        // Search suggestions
-        const searchInput = document.getElementById('search-input');
-        const suggestionsDiv = document.getElementById('search-suggestions');
-        let searchTimeout;
-
-        if (searchInput) {
-            searchInput.addEventListener('input', function() {
-                clearTimeout(searchTimeout);
-                const query = this.value.trim();
-                
-                if (query.length < 2) {
-                    suggestionsDiv.classList.add('hidden');
-                    return;
-                }
-
-                searchTimeout = setTimeout(() => {
-                    fetch(`{{ route('search.suggestions') }}?q=${encodeURIComponent(query)}`)
-                        .then(response => response.json())
-                        .then(suggestions => {
-                            if (suggestions.length > 0) {
-                                let html = '';
-                                suggestions.forEach(suggestion => {
-                                    html += `
-                                        <a href="${suggestion.url}" class="flex items-center p-3 hover:bg-gray-50 border-b border-gray-100">
-                                            ${suggestion.image ? `<img src="${suggestion.image}" class="w-8 h-8 rounded mr-3" alt="">` : ''}
-                                            <div>
-                                                <div class="font-medium text-gray-900">${suggestion.text}</div>
-                                                ${suggestion.subtitle ? `<div class="text-sm text-gray-500">${suggestion.subtitle}</div>` : ''}
-                                            </div>
-                                        </a>
-                                    `;
-                                });
-                                suggestionsDiv.innerHTML = html;
-                                suggestionsDiv.classList.remove('hidden');
-                            } else {
-                                suggestionsDiv.classList.add('hidden');
-                            }
-                        })
-                        .catch(() => {
-                            suggestionsDiv.classList.add('hidden');
-                        });
-                }, 300);
-            });
-
-            // Hide suggestions when clicking outside
-            document.addEventListener('click', function(e) {
-                if (!searchInput.contains(e.target) && !suggestionsDiv.contains(e.target)) {
-                    suggestionsDiv.classList.add('hidden');
-                }
-            });
+    // Define updateCartCounter function
+    async function updateCartCounter() {
+        // ALWAYS check if we're in checkout process
+        if (window._isCheckoutInProgress || 
+            window.location.pathname.includes('/checkout') || 
+            document.querySelector('#checkout-form')) {
+            console.log('Cart update blocked - checkout in progress');
+            return;
         }
-
-        async function updateWishlistCounter() {
-    try {
-        const response = await fetch('/wishlist/count');
-        const data = await response.json();
         
-        // Get the wishlist count element by ID
-        const wishlistCount = document.getElementById('wishlist-count');
-        if (wishlistCount) {
-            wishlistCount.textContent = data.count || 0;
+        try {
+            const response = await fetch('/cart/count');
+            const data = await response.json();
             
-            // Show/hide counter based on count
-            if (data.count > 0) {
-                wishlistCount.style.display = 'flex';
-                wishlistCount.classList.remove('hidden');
-            } else {
-                wishlistCount.style.display = 'none';
-                wishlistCount.classList.add('hidden');
+            const cartCount = document.getElementById('cart-count');
+            if (cartCount) {
+                cartCount.textContent = data.count || 0;
+                if (data.count > 0) {
+                    cartCount.style.display = 'flex';
+                    cartCount.classList.remove('hidden');
+                } else {
+                    cartCount.style.display = 'none';
+                    cartCount.classList.add('hidden');
+                }
             }
+            
+            document.querySelectorAll('.cart-count').forEach(counter => {
+                counter.textContent = data.count || 0;
+                counter.style.display = data.count > 0 ? 'flex' : 'none';
+            });
+            
+        } catch (error) {
+            console.error('Error updating cart counter:', error);
+        }
+    }
+
+    async function updateWishlistCounter() {
+        // ALWAYS check if we're in checkout process
+        if (window._isCheckoutInProgress || 
+            window.location.pathname.includes('/checkout') || 
+            document.querySelector('#checkout-form')) {
+            console.log('Wishlist update blocked - checkout in progress');
+            return;
         }
         
-    } catch (error) {
-        console.error('Error updating wishlist counter:', error);
-    }
-}
-
-        // Load cart and wishlist counts
-        async function updateCartCounter() {
-            try {
-                const response = await fetch('/cart/count');
-                const data = await response.json();
-                
-                // Get the cart count element by ID
-                const cartCount = document.getElementById('cart-count');
-                if (cartCount) {
-                    cartCount.textContent = data.count || 0;
-                    
-                    // Show/hide counter based on count
-                    if (data.count > 0) {
-                        cartCount.style.display = 'flex';
-                        cartCount.classList.remove('hidden');
-                    } else {
-                        cartCount.style.display = 'none';
-                        cartCount.classList.add('hidden');
-                    }
+        try {
+            const response = await fetch('/wishlist/count');
+            const data = await response.json();
+            
+            const wishlistCount = document.getElementById('wishlist-count');
+            if (wishlistCount) {
+                wishlistCount.textContent = data.count || 0;
+                if (data.count > 0) {
+                    wishlistCount.style.display = 'flex';
+                    wishlistCount.classList.remove('hidden');
+                } else {
+                    wishlistCount.style.display = 'none';
+                    wishlistCount.classList.add('hidden');
                 }
-                
-                // Also update any elements with cart-count class (for compatibility)
-                document.querySelectorAll('.cart-count').forEach(counter => {
-                    counter.textContent = data.count || 0;
-                    counter.style.display = data.count > 0 ? 'flex' : 'none';
-                });
-                
-            } catch (error) {
-                console.error('Error updating cart counter:', error);
             }
+            
+        } catch (error) {
+            console.error('Error updating wishlist counter:', error);
         }
+    }
 
-        // Listen for cart updates from other parts of the application
-        window.addEventListener('cart-updated', function() {
-            updateCartCounter();
+    // Search suggestions
+    const searchInput = document.getElementById('search-input');
+    const suggestionsDiv = document.getElementById('search-suggestions');
+    let searchTimeout;
+
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            const query = this.value.trim();
+            
+            if (query.length < 2) {
+                suggestionsDiv.classList.add('hidden');
+                return;
+            }
+
+            searchTimeout = setTimeout(() => {
+                fetch(`{{ route('search.suggestions') }}?q=${encodeURIComponent(query)}`)
+                    .then(response => response.json())
+                    .then(suggestions => {
+                        if (suggestions.length > 0) {
+                            let html = '';
+                            suggestions.forEach(suggestion => {
+                                html += `
+                                    <a href="${suggestion.url}" class="flex items-center p-3 hover:bg-gray-50 border-b border-gray-100">
+                                        ${suggestion.image ? `<img src="${suggestion.image}" class="w-8 h-8 rounded mr-3" alt="">` : ''}
+                                        <div>
+                                            <div class="font-medium text-gray-900">${suggestion.text}</div>
+                                            ${suggestion.subtitle ? `<div class="text-sm text-gray-500">${suggestion.subtitle}</div>` : ''}
+                                        </div>
+                                    </a>
+                                `;
+                            });
+                            suggestionsDiv.innerHTML = html;
+                            suggestionsDiv.classList.remove('hidden');
+                        } else {
+                            suggestionsDiv.classList.add('hidden');
+                        }
+                    })
+                    .catch(() => {
+                        suggestionsDiv.classList.add('hidden');
+                    });
+            }, 300);
         });
 
-        // Initialize counts
-        updateCartCounter();
-        updateWishlistCounter();
-    </script>
+        document.addEventListener('click', function(e) {
+            if (!searchInput.contains(e.target) && !suggestionsDiv.contains(e.target)) {
+                suggestionsDiv.classList.add('hidden');
+            }
+        });
+    }
+
+    // Listen for cart updates
+    window.addEventListener('cart-updated', function(e) {
+        if (!window._isCheckoutInProgress) {
+            updateCartCounter();
+        }
+    });
+
+    // Listen for wishlist updates  
+    window.addEventListener('wishlist-updated', function(e) {
+        if (!window._isCheckoutInProgress) {
+            updateWishlistCounter();
+        }
+    });
+
+    // Initialize on DOM ready
+    document.addEventListener('DOMContentLoaded', function() {
+        // Only update counters if not on checkout page
+        if (!window.location.pathname.includes('/checkout')) {
+            updateCartCounter();
+            updateWishlistCounter();
+        }
+    });
+
+    // Global toast function
+    window.showToast = function(message, type = 'success') {
+        document.querySelectorAll('.toast-notification').forEach(toast => toast.remove());
+
+        const toast = document.createElement('div');
+        toast.className = `toast-notification fixed bottom-4 right-4 p-4 rounded-lg shadow-lg z-50 transform translate-y-full transition-all duration-300 ${
+            type === 'success' ? 'bg-green-600' : 'bg-red-600'
+        } text-white max-w-sm`;
+        
+        toast.innerHTML = `
+            <div class="flex items-center justify-between">
+                <span>${message}</span>
+                <button onclick="this.parentElement.parentElement.remove()" class="ml-3 text-white hover:text-gray-200">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+        `;
+
+        document.body.appendChild(toast);
+
+        setTimeout(() => {
+            toast.classList.remove('translate-y-full');
+        }, 100);
+
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.classList.add('translate-y-full');
+                setTimeout(() => {
+                    if (toast.parentNode) {
+                        toast.remove();
+                    }
+                }, 300);
+            }
+        }, 5000);
+    };
+</script>
 </body>
 </html>

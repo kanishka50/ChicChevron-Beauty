@@ -347,3 +347,9 @@ Route::post('/webhooks/payhere', [PaymentController::class, 'webhook'])->name('w
 
 
 
+
+
+
+Route::get('/webhooks/payhere/test', function() {
+    return response()->json(['status' => 'Webhook endpoint is accessible']);
+});

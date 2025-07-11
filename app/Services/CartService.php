@@ -99,10 +99,23 @@ class CartService
 
     /**
      * Clear entire cart
+     * @param bool $silent - If true, suppress any events or redirects
      */
-    public function clearCart()
+    public function clearCart($silent = false)
     {
-        return CartItem::where($this->getCartIdentifier())->delete();
+        // Store the silent flag in session temporarily
+        if ($silent) {
+            Session::put('cart_clearing_silent', true);
+        }
+        
+        $result = CartItem::where($this->getCartIdentifier())->delete();
+        
+        // Remove the silent flag after clearing
+        if ($silent) {
+            Session::forget('cart_clearing_silent');
+        }
+        
+        return $result;
     }
 
     /**
@@ -375,7 +388,4 @@ class CartService
 
         return $errors;
     }
-
-
-    
 }

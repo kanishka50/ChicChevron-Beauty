@@ -290,5 +290,102 @@ function fillAddressForm(address) {
     document.getElementById('delivery_city').value = address.city;
     document.getElementById('delivery_postal_code').value = address.postal_code;
 }
+
+
+
+
+document.addEventListener('DOMContentLoaded', function() {
+    const checkoutForm = document.getElementById('checkout-form');
+    
+    if (checkoutForm) {
+        // Override fetch to block counter requests during checkout
+        const originalFetch = window.fetch;
+        let isSubmitting = false;
+        
+        checkoutForm.addEventListener('submit', function(e) {
+            // Don't prevent default - let form submit normally
+            console.log('Checkout form submitting...');
+            
+            // Set flag
+            isSubmitting = true;
+            window._isCheckoutInProgress = true;
+            
+            // Override fetch to block counter requests
+            window.fetch = function(url, options) {
+                if (isSubmitting && (url.includes('/cart/count') || url.includes('/wishlist/count'))) {
+                    console.log('Blocked counter request during checkout:', url);
+                    return Promise.resolve({
+                        json: () => Promise.resolve({ count: 0 }),
+                        ok: true
+                    });
+                }
+                return originalFetch.apply(this, arguments);
+            };
+            
+            // Disable all event listeners temporarily
+            const stopAllEvents = function(e) {
+                if (isSubmitting) {
+                    e.stopImmediatePropagation();
+                    e.preventDefault();
+                }
+            };
+            
+            window.addEventListener('cart-updated', stopAllEvents, true);
+            window.addEventListener('wishlist-updated', stopAllEvents, true);
+            
+            // Show loading state
+            const submitButton = this.querySelector('button[type="submit"]');
+            if (submitButton) {
+                submitButton.disabled = true;
+                submitButton.innerHTML = '<span class="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></span> Processing order...';
+            }
+            
+            // Disable all links and buttons
+            document.querySelectorAll('a, button').forEach(el => {
+                if (!el.closest('#checkout-form')) {
+                    el.style.pointerEvents = 'none';
+                    el.style.opacity = '0.6';
+                }
+            });
+            
+            console.log('All AJAX and events blocked during checkout');
+        });
+    }
+});
+
+// Also override XMLHttpRequest for older code
+(function() {
+    const originalXHR = window.XMLHttpRequest;
+    
+    window.XMLHttpRequest = function() {
+        const xhr = new originalXHR();
+        const originalOpen = xhr.open;
+        
+        xhr.open = function(method, url) {
+            if (window._isCheckoutInProgress && (url.includes('/cart/count') || url.includes('/wishlist/count'))) {
+                console.log('Blocked XHR counter request during checkout:', url);
+                // Return a dummy response
+                this.send = function() {
+                    Object.defineProperty(this, 'responseText', {
+                        get: function() { return '{"count": 0}'; }
+                    });
+                    Object.defineProperty(this, 'readyState', {
+                        get: function() { return 4; }
+                    });
+                    Object.defineProperty(this, 'status', {
+                        get: function() { return 200; }
+                    });
+                    if (this.onreadystatechange) {
+                        this.onreadystatechange();
+                    }
+                };
+                return;
+            }
+            return originalOpen.apply(this, arguments);
+        };
+        
+        return xhr;
+    };
+})();
 </script>
 @endsection

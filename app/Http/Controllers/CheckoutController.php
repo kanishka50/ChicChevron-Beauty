@@ -57,92 +57,99 @@ class CheckoutController extends Controller
     /**
      * Process checkout and create order
      */
-    // public function store(CheckoutRequest $request)
-    // {
-
-        
-    //     DB::beginTransaction();
-        
-    //     try {
-    //         // Validate cart again
-    //         $cartItems = $this->cartService->getCartItems();
-    //         if ($cartItems->isEmpty()) {
-    //             throw new \Exception('Cart is empty');
-    //         }
-
-    //         // Create order
-    //         $orderData = $this->prepareOrderData($request);
-    //         $order = $this->orderService->createOrder($orderData, $cartItems);
-
-    //         // Clear cart after successful order creation
-    //         $this->cartService->clearCart();
-
-    //         DB::commit();
-
-    //         // Redirect based on payment method
-    //         if ($request->payment_method === 'payhere') {
-    //             return redirect()->route('checkout.payment', $order)
-    //                 ->with('success', 'Order created successfully. Please complete payment.');
-    //         } else {
-    //             // Cash on Delivery
-    //             return redirect()->route('checkout.success', $order)
-    //                 ->with('success', 'Order placed successfully! We will contact you for delivery.');
-    //         }
-
-    //     } catch (\Exception $e) {
-    //         DB::rollBack();
-            
-    //         return redirect()->back()
-    //             ->withInput()
-    //             ->with('error', 'Error processing checkout: ' . $e->getMessage());
-    //     }
-    // }
-
     public function store(CheckoutRequest $request)
-{
-    // IMMEDIATE DEBUG
-        Log::info('=== CHECKOUT STORE CALLED ===', [
-        'time' => now(),
-        'method' => request()->method(),
-        'url' => request()->fullUrl(),
-        'route_name' => request()->route()->getName(),
-        'all_headers' => request()->headers->all(),
-        'is_ajax' => request()->ajax(),
-        'user_id' => Auth::id(),
-    ]);
-    
-    // Also log to see if we even get here
-    return response()->json(['debug' => 'Checkout store method reached successfully']);
-    
-    // Comment out everything else temporarily
-}
+    {
+        DB::beginTransaction();
+        
+        try {
+            // Validate cart again
+            $cartItems = $this->cartService->getCartItems();
+            if ($cartItems->isEmpty()) {
+                throw new \Exception('Cart is empty');
+            }
+
+            // Create order
+            $orderData = $this->prepareOrderData($request);
+            $order = $this->orderService->createOrder($orderData, $cartItems);
+
+            // Clear cart after successful order creation (with silent flag to prevent events)
+            $this->cartService->clearCart(true);
+
+            DB::commit();
+
+            // Handle AJAX requests
+            if ($request->ajax() || $request->wantsJson()) {
+                if ($request->payment_method === 'payhere') {
+                    return response()->json([
+                        'success' => true,
+                        'redirect' => route('checkout.payment', $order)
+                    ]);
+                } else {
+                    return response()->json([
+                        'success' => true,
+                        'redirect' => route('checkout.success', $order)
+                    ]);
+                }
+            }
+
+            // Regular form submission
+            if ($request->payment_method === 'payhere') {
+                return redirect()->route('checkout.payment', $order)
+                    ->with('success', 'Order created successfully. Please complete payment.');
+            } else {
+                // Cash on Delivery
+                return redirect()->route('checkout.success', $order)
+                    ->with('success', 'Order placed successfully! We will contact you for delivery.');
+            }
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            Log::error('Checkout error: ' . $e->getMessage(), [
+                'user_id' => Auth::id(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error processing checkout: ' . $e->getMessage()
+                ], 500);
+            }
+            
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Error processing checkout: ' . $e->getMessage());
+        }
+    }
 
     /**
      * Display payment page for online payments
      */
-  public function payment(Order $order)
-{
-    // Ensure user can access this order
-    if (Auth::id() !== $order->user_id) {
-        abort(403, 'Unauthorized access to order');
+    public function payment(Order $order)
+    {
+        // Ensure user can access this order
+        if (Auth::id() !== $order->user_id) {
+            abort(403, 'Unauthorized access to order');
+        }
+
+        // Only allow payment for pending orders
+        if ($order->payment_status !== 'pending') {
+            return redirect()->route('checkout.success', $order)
+                ->with('info', 'This order has already been processed.');
+        }
+
+        // For COD orders, no payment needed
+        if ($order->payment_method === 'cod') {
+            return redirect()->route('checkout.success', $order);
+        }
+
+        // Load relationships for display
+        $order->load(['items.product', 'items.variantCombination']);
+
+        return view('checkout.payment', compact('order'));
     }
-
-    // Only allow payment for pending orders
-    if ($order->payment_status !== 'pending') {
-        return redirect()->route('checkout.success', $order)
-            ->with('info', 'This order has already been processed.');
-    }
-
-    // For COD orders, no payment needed
-    if ($order->payment_method === 'cod') {
-        return redirect()->route('checkout.success', $order);
-    }
-
-    // Load relationships for display
-    $order->load(['items.product', 'items.variantCombination']);
-
-    return view('checkout.payment', compact('order'));
-}
 
     /**
      * Display order success page
@@ -163,44 +170,45 @@ class CheckoutController extends Controller
      * Prepare order data from request
      */
     private function prepareOrderData(CheckoutRequest $request)
-{
-    $cartSummary = $this->cartService->getCartSummary();
+    {
+        $cartSummary = $this->cartService->getCartSummary();
 
-    return [
-        'user_id' => Auth::id(),
-        'order_number' => $this->generateOrderNumber(),
-        // For COD, order should be "processing" not "payment_completed" since payment hasn't been received
-        'status' => $request->payment_method === 'cod' ? 'processing' : 'pending_payment',
-        'payment_method' => $request->payment_method,
-        // Payment status should remain 'pending' for both COD and online payment initially
-        'payment_status' => 'pending',
-        
-        // Customer Details
-        'customer_name' => $request->customer_name,
-        'customer_email' => $request->customer_email,
-        'customer_phone' => $request->customer_phone,
-        
-        // Delivery Address
-        'delivery_address' => $request->delivery_address,
-        'delivery_city' => $request->delivery_city,
-        'delivery_postal_code' => $request->delivery_postal_code,
-        'delivery_notes' => $request->delivery_notes,
-        
-        // Order Totals
-        'subtotal' => $cartSummary['subtotal'],
-        'discount_amount' => $cartSummary['discount_amount'],
-        'shipping_amount' => $cartSummary['shipping_amount'],
-        'total_amount' => $cartSummary['total'],
-        
-        'notes' => $request->order_notes,
-    ];
-}
+        return [
+            'user_id' => Auth::id(),
+            'order_number' => $this->generateOrderNumber(),
+            'status' => $request->payment_method === 'cod' ? 'processing' : 'pending',
+            'payment_method' => $request->payment_method,
+            'payment_status' => 'pending',
+            
+            // Customer information
+            'customer_name' => $request->customer_name,
+            'customer_phone' => $request->customer_phone,
+            'customer_email' => $request->customer_email ?? Auth::user()->email,
+            
+            // Delivery information
+            'delivery_address' => $request->delivery_address,
+            'delivery_city' => $request->delivery_city,
+            'delivery_postal_code' => $request->delivery_postal_code,
+            'delivery_notes' => $request->delivery_notes,
+            'order_notes' => $request->order_notes,
+            
+            // Totals (these will be calculated by OrderService)
+            'subtotal' => $cartSummary['subtotal'],
+            'discount_amount' => $cartSummary['discount_amount'] ?? 0,
+            'shipping_amount' => $cartSummary['shipping_amount'] ?? 0,
+            'total_amount' => $cartSummary['total'],
+        ];
+    }
 
     /**
      * Generate unique order number
      */
     private function generateOrderNumber()
     {
-        return 'CHB-' . date('Ymd') . '-' . str_pad(Order::count() + 1, 4, '0', STR_PAD_LEFT);
+        $prefix = 'ORD';
+        $timestamp = now()->format('ymdHis');
+        $random = mt_rand(100, 999);
+        
+        return $prefix . $timestamp . $random;
     }
 }
