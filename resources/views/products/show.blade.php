@@ -520,7 +520,7 @@
             const scentId = selectedVariants.scent?.id || null;
 
             // Make API call to get variant combination details
-            fetch(`{{ route('products.variant-details', $product) }}?size_id=${sizeId}&color_id=${colorId}&scent_id=${scentId}`)
+            fetch(`/products/{{ $product->id }}/variant-details?size_id=${sizeId}&color_id=${colorId}&scent_id=${scentId}`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
