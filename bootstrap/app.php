@@ -28,14 +28,14 @@ return Application::configure(basePath: dirname(__DIR__))
         
         // Configure where to redirect guests
         $middleware->redirectGuestsTo(fn () => route('login'));
+
+        // CSRF Token Exceptions for webhooks
+        $middleware->validateCsrfTokens(except: [
+            'webhooks/payhere',
+            'webhooks/payhere/*',
+            'webhooks/*'
+        ]);
         
-        // Configure where to redirect authenticated users
-        // $middleware->redirectUsersTo(function () {
-        //     if (auth()->guard('admin')->check()) {
-        //         return '/admin/dashboard'; // Use URL instead of route name
-        //     }
-        //     return '/';
-        // });
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

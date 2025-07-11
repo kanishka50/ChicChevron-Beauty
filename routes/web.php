@@ -21,20 +21,17 @@ use App\Http\Controllers\PaymentController;
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
 // Public shop routes
-
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
 Route::get('/products/{product:slug}', [ProductController::class, 'show'])->name('products.show');
-// Product variant details for AJAX
 Route::get('/products/{product}/variant-details', [ProductController::class, 'getVariantDetails'])->name('products.variant-details');
 
-
-// Search functionality (Replace existing search route)
+// Search functionality
 Route::get('/search', [SearchController::class, 'index'])->name('search');
 Route::get('/search/suggestions', [SearchController::class, 'suggestions'])->name('search.suggestions');
 Route::get('/search/ingredients', [SearchController::class, 'ingredients'])->name('search.ingredients');
 Route::get('/search/trending', [SearchController::class, 'trending'])->name('search.trending');
 
-
+// Categories
 Route::get('/categories', function () {
     $categories = \App\Models\Category::active()
         ->ordered()
@@ -72,9 +69,7 @@ Route::get('/brands/{brand:slug}', function (\App\Models\Brand $brand) {
     return redirect()->route('products.index', ['brands' => [$brand->id]]);
 })->name('brands.show');
 
-
-
-
+// Static pages
 Route::get('/about', function () {
     return view('welcome');
 })->name('about');
@@ -95,29 +90,24 @@ Route::get('/privacy', function () {
     return view('welcome');
 })->name('privacy');
 
-// Guest only routes (only for non-logged-in users)
+// Guest only routes
 Route::middleware('guest')->group(function () {
-    // Registration
     Route::get('register', [RegisterController::class, 'create'])->name('register');
     Route::post('register', [RegisterController::class, 'store']);
     
-    // Login (unified for both users and admins)
     Route::get('login', [LoginController::class, 'create'])->name('login');
     Route::post('login', [LoginController::class, 'store']);
     
-    // Password Reset
     Route::get('forgot-password', [ForgotPasswordController::class, 'create'])->name('password.request');
     Route::post('forgot-password', [ForgotPasswordController::class, 'store'])->name('password.email');
     Route::get('reset-password/{token}', [ResetPasswordController::class, 'create'])->name('password.reset');
     Route::post('reset-password', [ResetPasswordController::class, 'store'])->name('password.update');
 });
 
-// Authenticated routes (for logged-in users only - both regular and admin)
+// Authenticated routes
 Route::middleware('auth:web')->group(function () {
-    // Logout
     Route::post('logout', [LoginController::class, 'destroy'])->name('logout');
     
-    // Email Verification
     Route::get('verify-email', [VerificationController::class, 'show'])->name('verification.notice');
     Route::get('verify-email/{id}/{hash}', [VerificationController::class, 'verify'])
         ->middleware(['signed', 'throttle:6,1'])
@@ -126,81 +116,42 @@ Route::middleware('auth:web')->group(function () {
         ->middleware('throttle:6,1')
         ->name('verification.send');
     
-    
     // Verified user routes
     Route::middleware('verified')->group(function () {
         Route::get('/account', function () {
             return 'My Account';
         })->name('account.index');
         
-        // =====================================================
-        // CUSTOMER ORDER MANAGEMENT ROUTES (NEW)
-        // =====================================================
-        
-        // Customer order history and details
+        // Customer order management
         Route::get('/my-orders', [OrderController::class, 'index'])->name('user.orders.index');
         Route::get('/orders/{order}', [OrderController::class, 'show'])->name('user.orders.show');
-        
-        // Order actions
         Route::get('/orders/{order}/invoice', [OrderController::class, 'downloadInvoice'])->name('user.orders.invoice');
         Route::post('/orders/{order}/complete', [OrderController::class, 'markComplete'])->name('user.orders.complete');
         Route::post('/orders/{order}/request-cancellation', [OrderController::class, 'requestCancellation'])->name('user.orders.request-cancellation');
-        
-        
-        // Order tracking
         Route::get('/orders/{order}/track', [OrderController::class, 'trackOrder'])->name('user.orders.track');
-        
-        // Order statistics for dashboard
         Route::get('/my-order-statistics', [OrderController::class, 'getOrderStatistics'])->name('user.orders.statistics');
         
-        // =====================================================
-        
-        // Legacy order route (keeping for backward compatibility)
-        Route::get('/orders', function () {
-            return redirect()->route('user.orders.index');
-        })->name('orders.index');
-        
+        // Complaints
         Route::get('/complaints/create', function () {
             return 'Create Complaint';
         })->name('complaints.create');
     });
 });
 
-
-
-// =====================================================
-// CART ROUTES
-// =====================================================
+// Cart routes
 Route::prefix('cart')->name('cart.')->group(function () {
-    // Display cart
     Route::get('/', [CartController::class, 'index'])->name('index');
-    
-    // Add to cart (AJAX)
     Route::post('/add', [CartController::class, 'addToCart'])->name('add');
-    
-    // Update cart item quantity (AJAX)
     Route::post('/update-quantity', [CartController::class, 'updateQuantity'])->name('update-quantity');
-    
-    // Remove cart item (AJAX)
     Route::post('/remove', [CartController::class, 'removeItem'])->name('remove');
-    
-    // Clear entire cart (AJAX)
     Route::post('/clear', [CartController::class, 'clearCart'])->name('clear');
-    
-    // Get cart count for header (AJAX)
     Route::get('/count', [CartController::class, 'getCartCount'])->name('count');
-    
-    // Get cart summary for dropdown (AJAX)
     Route::get('/summary', [CartController::class, 'getCartSummary'])->name('summary');
-    
-    // Promotion code handling (AJAX)
     Route::post('/apply-promotion', [CartController::class, 'applyPromotion'])->name('apply-promotion');
     Route::post('/remove-promotion', [CartController::class, 'removePromotion'])->name('remove-promotion');
 });
 
-// =====================================================
-// CHECKOUT ROUTES (NEW)
-// =====================================================
+// Checkout routes
 Route::middleware('auth')->prefix('checkout')->name('checkout.')->group(function () {
     Route::get('/', [CheckoutController::class, 'index'])->name('index');
     Route::post('/', [CheckoutController::class, 'store'])->name('store');
@@ -208,9 +159,22 @@ Route::middleware('auth')->prefix('checkout')->name('checkout.')->group(function
     Route::get('/{order}/success', [CheckoutController::class, 'success'])->name('success');
 });
 
-// =====================================================
-// WISHLIST ROUTES
-// =====================================================
+// Payment routes
+Route::prefix('checkout/payment')->name('checkout.payment.')->group(function () {
+    Route::get('/{order}/success', [PaymentController::class, 'success'])->name('success');
+    Route::get('/{order}/cancel', [PaymentController::class, 'cancel'])->name('cancel');
+    Route::get('/{order}/status', [PaymentController::class, 'checkStatus'])->name('status');
+    Route::post('/{order}/confirm', [PaymentController::class, 'confirmPayment'])->name('confirm')->middleware('auth');
+});
+
+// Webhook routes (no auth required)
+Route::post('/webhooks/payhere', [PaymentController::class, 'webhook'])->name('webhooks.payhere');
+Route::match(['GET', 'POST'], '/webhooks/payhere/debug', [PaymentController::class, 'webhookDebug'])->name('webhooks.payhere.debug');
+Route::get('/webhooks/payhere/test', function() {
+    return response()->json(['status' => 'Webhook endpoint is accessible']);
+});
+
+// Wishlist routes
 Route::middleware('auth')->prefix('wishlist')->name('wishlist.')->group(function () {
     Route::get('/', [App\Http\Controllers\WishlistController::class, 'index'])->name('index');
     Route::post('/add', [App\Http\Controllers\WishlistController::class, 'add'])->name('add');
@@ -220,14 +184,7 @@ Route::middleware('auth')->prefix('wishlist')->name('wishlist.')->group(function
     Route::post('/check', [App\Http\Controllers\WishlistController::class, 'check'])->name('check');
 });
 
-
-
-
-// =====================================================
-// GUEST ORDER TRACKING ROUTES (NEW)
-// =====================================================
-
-// Guest order tracking (for orders placed without account)
+// Guest order tracking
 Route::get('/track-order', function () {
     return view('orders.track-guest');
 })->name('orders.track-guest');
@@ -252,64 +209,59 @@ Route::post('/track-order', function (Request $request) {
 })->name('orders.track-guest.submit');
 
 Route::get('/track-order/{order}', function (\App\Models\Order $order) {
-    // Simple guest tracking page - you can expand this
     $order->load(['items.product', 'statusHistory']);
     return view('orders.track-guest-result', compact('order'));
 })->name('orders.track-guest-result');
 
-
-
-// =====================================================
-// REDIRECT ROUTES (for backward compatibility)
-// =====================================================
-
-// Redirect old order URLs to new structure
+// Redirect routes (for backward compatibility)
 Route::redirect('/my-account/orders', '/my-orders', 301);
 Route::redirect('/account/orders', '/my-orders', 301);
 Route::redirect('/user/orders', '/my-orders', 301);
 
-// =====================================================
-// API ROUTES FOR ORDER MANAGEMENT (OPTIONAL)
-// =====================================================
+// Legacy order route redirect (MOVED TO END to avoid conflicts)
+Route::get('/orders', function () {
+    return redirect()->route('user.orders.index');
+})->name('orders.index');
 
-// API routes for mobile app or AJAX requests
+// API routes
 Route::prefix('api/v1')->group(function () {
-    
-    // Public API endpoints (NO auth required)
     Route::get('/products/{product}/variants', [ProductController::class, 'getVariantDetails'])->name('api.products.variants');
     Route::get('/search/autocomplete', [SearchController::class, 'suggestions'])->name('api.search.autocomplete');
     
-    // Authenticated API endpoints
     Route::middleware(['auth:sanctum'])->group(function () {
-        // Customer API endpoints
         Route::get('/orders', [OrderController::class, 'index'])->name('api.orders.index');
         Route::get('/orders/{order}', [OrderController::class, 'show'])->name('api.orders.show');
         Route::get('/orders/{order}/track', [OrderController::class, 'trackOrder'])->name('api.orders.track');
         Route::post('/orders/{order}/complete', [OrderController::class, 'markComplete'])->name('api.orders.complete');
-        
-        
     });
 });
 
-// =====================================================
-// ROUTE MODEL BINDING CUSTOMIZATION (NEW)
-// =====================================================
+// TEST ROUTE FOR MANUAL ORDER UPDATE (REMOVE IN PRODUCTION)
+Route::get('/test-payment-update/{orderNumber}', function($orderNumber) {
+    $order = \App\Models\Order::where('order_number', $orderNumber)->first();
+    if ($order) {
+        $order->payment_status = 'completed';
+        $order->status = 'payment_completed';
+        $order->payment_reference = 'TEST-' . now()->timestamp;
+        $order->save();
+        
+        return 'Order updated successfully. <a href="' . route('checkout.success', $order) . '">Go to success page</a>';
+    }
+    return 'Order not found';
+})->middleware('auth');
 
-// Custom route model binding for orders to ensure proper authorization
+// Route model binding customizations
 Route::bind('order', function ($value) {
     $order = \App\Models\Order::findOrFail($value);
     
-    // If this is an admin route, no additional checks needed
     if (request()->is('admin/*')) {
         return $order;
     }
     
-    // For user routes, ensure the user owns the order
     if (Auth::check() && Auth::id() === $order->user_id) {
         return $order;
     }
     
-    // For guest tracking, we'll handle authorization in the controller
     if (request()->is('track-order/*')) {
         return $order;
     }
@@ -317,39 +269,14 @@ Route::bind('order', function ($value) {
     abort(403, 'Unauthorized access to this order.');
 });
 
-
-// Enhanced route model binding for products to handle view tracking
 Route::bind('product', function ($value, $route) {
     $product = \App\Models\Product::where('slug', $value)
         ->orWhere('id', $value)
         ->firstOrFail();
     
-    // Only increment views for product show pages, not API calls
     if ($route->getName() === 'products.show') {
         $product->increment('views_count');
     }
     
     return $product;
-});
-
-
-
-
-// Payment routes
-Route::prefix('checkout/payment')->name('checkout.payment.')->group(function () {
-    Route::get('/{order}/success', [PaymentController::class, 'success'])->name('success');
-    Route::get('/{order}/cancel', [PaymentController::class, 'cancel'])->name('cancel');
-    Route::get('/{order}/status', [PaymentController::class, 'checkStatus'])->name('status');
-});
-
-// Webhook route (no auth required)
-Route::post('/webhooks/payhere', [PaymentController::class, 'webhook'])->name('webhooks.payhere');
-
-
-
-
-
-
-Route::get('/webhooks/payhere/test', function() {
-    return response()->json(['status' => 'Webhook endpoint is accessible']);
 });
