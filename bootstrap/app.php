@@ -30,12 +30,12 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->redirectGuestsTo(fn () => route('login'));
         
         // Configure where to redirect authenticated users
-        $middleware->redirectUsersTo(function () {
-            if (auth()->guard('admin')->check()) {
-                return '/admin/dashboard'; // Use URL instead of route name
-            }
-            return '/';
-        });
+        // $middleware->redirectUsersTo(function () {
+        //     if (auth()->guard('admin')->check()) {
+        //         return '/admin/dashboard'; // Use URL instead of route name
+        //     }
+        //     return '/';
+        // });
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

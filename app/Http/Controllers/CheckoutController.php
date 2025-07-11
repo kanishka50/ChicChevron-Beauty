@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Log;
 
 class CheckoutController extends Controller
 {
@@ -56,44 +57,65 @@ class CheckoutController extends Controller
     /**
      * Process checkout and create order
      */
-    public function store(CheckoutRequest $request)
-    {
-        DB::beginTransaction();
+    // public function store(CheckoutRequest $request)
+    // {
+
         
-        try {
-            // Validate cart again
-            $cartItems = $this->cartService->getCartItems();
-            if ($cartItems->isEmpty()) {
-                throw new \Exception('Cart is empty');
-            }
+    //     DB::beginTransaction();
+        
+    //     try {
+    //         // Validate cart again
+    //         $cartItems = $this->cartService->getCartItems();
+    //         if ($cartItems->isEmpty()) {
+    //             throw new \Exception('Cart is empty');
+    //         }
 
-            // Create order
-            $orderData = $this->prepareOrderData($request);
-            $order = $this->orderService->createOrder($orderData, $cartItems);
+    //         // Create order
+    //         $orderData = $this->prepareOrderData($request);
+    //         $order = $this->orderService->createOrder($orderData, $cartItems);
 
-            // Clear cart after successful order creation
-            $this->cartService->clearCart();
+    //         // Clear cart after successful order creation
+    //         $this->cartService->clearCart();
 
-            DB::commit();
+    //         DB::commit();
 
-            // Redirect based on payment method
-            if ($request->payment_method === 'payhere') {
-                return redirect()->route('checkout.payment', $order)
-                    ->with('success', 'Order created successfully. Please complete payment.');
-            } else {
-                // Cash on Delivery
-                return redirect()->route('checkout.success', $order)
-                    ->with('success', 'Order placed successfully! We will contact you for delivery.');
-            }
+    //         // Redirect based on payment method
+    //         if ($request->payment_method === 'payhere') {
+    //             return redirect()->route('checkout.payment', $order)
+    //                 ->with('success', 'Order created successfully. Please complete payment.');
+    //         } else {
+    //             // Cash on Delivery
+    //             return redirect()->route('checkout.success', $order)
+    //                 ->with('success', 'Order placed successfully! We will contact you for delivery.');
+    //         }
 
-        } catch (\Exception $e) {
-            DB::rollBack();
+    //     } catch (\Exception $e) {
+    //         DB::rollBack();
             
-            return redirect()->back()
-                ->withInput()
-                ->with('error', 'Error processing checkout: ' . $e->getMessage());
-        }
-    }
+    //         return redirect()->back()
+    //             ->withInput()
+    //             ->with('error', 'Error processing checkout: ' . $e->getMessage());
+    //     }
+    // }
+
+    public function store(CheckoutRequest $request)
+{
+    // IMMEDIATE DEBUG
+        Log::info('=== CHECKOUT STORE CALLED ===', [
+        'time' => now(),
+        'method' => request()->method(),
+        'url' => request()->fullUrl(),
+        'route_name' => request()->route()->getName(),
+        'all_headers' => request()->headers->all(),
+        'is_ajax' => request()->ajax(),
+        'user_id' => Auth::id(),
+    ]);
+    
+    // Also log to see if we even get here
+    return response()->json(['debug' => 'Checkout store method reached successfully']);
+    
+    // Comment out everything else temporarily
+}
 
     /**
      * Display payment page for online payments
