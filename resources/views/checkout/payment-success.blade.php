@@ -68,7 +68,10 @@ let checkCount = 0;
 const maxChecks = 30;
 
 function checkPaymentStatus() {
-    fetch('{{ route("checkout.payment.status", $order) }}', {
+    // Force HTTPS
+    const statusUrl = '{{ route("checkout.payment.status", $order) }}'.replace('http://', 'https://');
+    
+    fetch(statusUrl, {
         headers: {
             'Accept': 'application/json',
             'X-Requested-With': 'XMLHttpRequest'
@@ -81,11 +84,15 @@ function checkPaymentStatus() {
         if (data.payment_status === 'completed') {
             document.getElementById('processing').classList.add('hidden');
             document.getElementById('success').classList.remove('hidden');
-            document.getElementById('manual-confirm').classList.add('hidden');
+            if (document.getElementById('manual-confirm')) {
+                document.getElementById('manual-confirm').classList.add('hidden');
+            }
         } else if (data.payment_status === 'failed' || data.payment_status === 'cancelled') {
             document.getElementById('processing').classList.add('hidden');
             document.getElementById('failed').classList.remove('hidden');
-            document.getElementById('manual-confirm').classList.add('hidden');
+            if (document.getElementById('manual-confirm')) {
+                document.getElementById('manual-confirm').classList.add('hidden');
+            }
         } else {
             checkCount++;
             if (checkCount < maxChecks) {
@@ -105,7 +112,10 @@ function checkPaymentStatus() {
 // Manual confirmation function
 function manualConfirm() {
     if (confirm('Confirm that payment was successful in PayHere?')) {
-        fetch('{{ route("checkout.payment.confirm", $order) }}', {
+        // Force HTTPS
+        const confirmUrl = '{{ route("checkout.payment.confirm", $order) }}'.replace('http://', 'https://');
+        
+        fetch(confirmUrl, {
             method: 'POST',
             headers: {
                 'Accept': 'application/json',

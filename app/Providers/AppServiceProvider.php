@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use App\Services\CartService;
+use Illuminate\Support\Facades\URL;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -21,6 +22,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        //// Force HTTPS for all URLs when using ngrok
+        if (app()->environment('local') && strpos(config('app.url'), 'ngrok') !== false) {
+            URL::forceScheme('https');
+        }
     }
 }
