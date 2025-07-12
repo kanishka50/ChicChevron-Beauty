@@ -63,14 +63,19 @@ class CheckoutController extends Controller
         
         try {
             // Validate cart again
-            $cartItems = $this->cartService->getCartItems();
-            if ($cartItems->isEmpty()) {
-                throw new \Exception('Cart is empty');
-            }
+        $cartItems = $this->cartService->getCartItems();
+        if ($cartItems->isEmpty()) {
+            throw new \Exception('Cart is empty');
+        }
 
-            // Create order
-            $orderData = $this->prepareOrderData($request);
-            $order = $this->orderService->createOrder($orderData, $cartItems);
+        // Save address if requested and not using saved address
+        if ($request->has('save_address') && $request->save_address && !$request->saved_address_id) {
+            $this->saveUserAddress($request);
+        }
+
+        // Create order
+        $orderData = $this->prepareOrderData($request);
+        $order = $this->orderService->createOrder($orderData, $cartItems);
 
             // Clear cart after successful order creation (with silent flag to prevent events)
             $this->cartService->clearCart(true);
@@ -124,6 +129,27 @@ class CheckoutController extends Controller
         }
     }
 
+
+
+
+    private function saveUserAddress(Request $request)
+{
+    UserAddress::create([
+        'user_id' => Auth::id(),
+        'name' => $request->customer_name,
+        'phone' => $request->customer_phone,
+        'address_line_1' => $request->address_line_1,
+        'address_line_2' => $request->address_line_2,
+        'city' => $request->city,
+        'district' => $request->district,
+        'postal_code' => $request->postal_code,
+        'is_default' => UserAddress::where('user_id', Auth::id())->count() === 0,
+        'is_active' => true,
+    ]);
+}
+
+
+
     /**
      * Display payment page for online payments
      */
@@ -170,36 +196,79 @@ class CheckoutController extends Controller
      * Prepare order data from request
      */
     private function prepareOrderData(CheckoutRequest $request)
-    {
-        $cartSummary = $this->cartService->getCartSummary();
+{
+    $cartSummary = $this->cartService->getCartSummary();
 
-        return [
-            'user_id' => Auth::id(),
-            'order_number' => $this->generateOrderNumber(),
-            'status' => $request->payment_method === 'cod' ? 'processing' : 'pending',
-            'payment_method' => $request->payment_method,
-            'payment_status' => 'pending',
-            
-            // Customer information
-            'customer_name' => $request->customer_name,
-            'customer_phone' => $request->customer_phone,
-            'customer_email' => $request->customer_email ?? Auth::user()->email,
-            
-            // Delivery information
-            'delivery_address' => $request->delivery_address,
-            'delivery_city' => $request->delivery_city,
-            'delivery_postal_code' => $request->delivery_postal_code,
-            'delivery_notes' => $request->delivery_notes,
-            'order_notes' => $request->order_notes,
-            
-            // Totals (these will be calculated by OrderService)
-            'subtotal' => $cartSummary['subtotal'],
-            'discount_amount' => $cartSummary['discount_amount'] ?? 0,
-            'shipping_amount' => $cartSummary['shipping_amount'] ?? 0,
-            'total_amount' => $cartSummary['total'],
-        ];
+    // If using saved address
+    if ($request->saved_address_id) {
+        $address = UserAddress::find($request->saved_address_id);
+        if ($address && $address->user_id == Auth::id()) {
+            return [
+                'user_id' => Auth::id(),
+                'order_number' => $this->generateOrderNumber(),
+                'status' => $request->payment_method === 'cod' ? 'processing' : 'pending',
+                'payment_method' => $request->payment_method,
+                'payment_status' => 'pending',
+                
+                // Use saved address data
+                'customer_name' => $address->name,
+                'customer_phone' => $address->phone,
+                'customer_email' => Auth::user()->email,
+                
+                // Delivery information from saved address
+                'delivery_address' => $address->address_line_1, // For your existing field
+                'address_line_1' => $address->address_line_1,   // New field
+                'address_line_2' => $address->address_line_2,   // New field
+                'delivery_city' => $address->city,
+                'city' => $address->city,                        // New field
+                'district' => $address->district,                // New field
+                'delivery_postal_code' => $address->postal_code,
+                'delivery_notes' => $request->delivery_notes,
+                'order_notes' => $request->order_notes,
+                
+                // Add these for OrderService
+                'saved_address_id' => $request->saved_address_id,
+                
+                // Totals
+                'subtotal' => $cartSummary['subtotal'],
+                'discount_amount' => $cartSummary['discount_amount'] ?? 0,
+                'shipping_amount' => $cartSummary['shipping_amount'] ?? 0,
+                'total_amount' => $cartSummary['total'],
+            ];
+        }
     }
 
+    // Use form data
+    return [
+        'user_id' => Auth::id(),
+        'order_number' => $this->generateOrderNumber(),
+        'status' => $request->payment_method === 'cod' ? 'processing' : 'pending',
+        'payment_method' => $request->payment_method,
+        'payment_status' => 'pending',
+        
+        // Customer information
+        'customer_name' => $request->customer_name,
+        'customer_phone' => $request->customer_phone,
+        'customer_email' => $request->customer_email ?? Auth::user()->email,
+        
+        // Delivery information - include both old and new field names
+        'delivery_address' => $request->address_line_1,  // For backward compatibility
+        'address_line_1' => $request->address_line_1,    // New field
+        'address_line_2' => $request->address_line_2,    // New field
+        'delivery_city' => $request->city,
+        'city' => $request->city,                         // New field
+        'district' => $request->district,                 // New field
+        'delivery_postal_code' => $request->postal_code,
+        'delivery_notes' => $request->delivery_notes,
+        'order_notes' => $request->order_notes,
+        
+        // Totals
+        'subtotal' => $cartSummary['subtotal'],
+        'discount_amount' => $cartSummary['discount_amount'] ?? 0,
+        'shipping_amount' => $cartSummary['shipping_amount'] ?? 0,
+        'total_amount' => $cartSummary['total'],
+    ];
+}
     /**
      * Generate unique order number
      */

@@ -72,76 +72,140 @@
                         
                         @if($userAddresses->isNotEmpty())
                             <!-- Saved Addresses -->
-                            <div class="mb-4">
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Saved Addresses</label>
+                            <div class="mb-6">
+                                <label class="block text-sm font-medium text-gray-700 mb-3">Select Delivery Address</label>
                                 <div class="space-y-2">
+                                    <label class="flex items-start space-x-3 p-3 border border-gray-200 rounded-md hover:bg-gray-50 cursor-pointer">
+                                        <input type="radio" 
+                                               name="address_selection" 
+                                               value="new"
+                                               class="mt-1 text-pink-600 focus:ring-pink-500"
+                                               checked
+                                               onchange="useNewAddress()">
+                                        <div class="flex-1">
+                                            <div class="font-medium">Enter New Address</div>
+                                            <div class="text-sm text-gray-500">Fill in the delivery details below</div>
+                                        </div>
+                                    </label>
+                                    
                                     @foreach($userAddresses as $address)
                                         <label class="flex items-start space-x-3 p-3 border border-gray-200 rounded-md hover:bg-gray-50 cursor-pointer">
                                             <input type="radio" 
-                                                   name="saved_address" 
-                                                   value="{{ $address->id }}"
+                                                   name="address_selection" 
+                                                   value="saved_{{ $address->id }}"
                                                    class="mt-1 text-pink-600 focus:ring-pink-500"
-                                                   onchange="fillAddressForm({{ $address->toJson() }})">
+                                                   onchange="useSavedAddress({{ $address->toJson() }})">
                                             <div class="flex-1">
-                                                <div class="font-medium">{{ $address->address_line_1 }}</div>
+                                                <div class="font-medium">{{ $address->name }}</div>
+                                                <div class="text-sm text-gray-600">{{ $address->phone }}</div>
+                                                <div class="text-sm text-gray-600">{{ $address->address_line_1 }}</div>
+                                                @if($address->address_line_2)
+                                                    <div class="text-sm text-gray-600">{{ $address->address_line_2 }}</div>
+                                                @endif
                                                 <div class="text-sm text-gray-600">
-                                                    {{ $address->city }}, {{ $address->postal_code }}
+                                                    {{ $address->city }}, {{ $address->district }} {{ $address->postal_code }}
                                                 </div>
+                                                @if($address->is_default)
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 mt-1">
+                                                        Default
+                                                    </span>
+                                                @endif
                                             </div>
                                         </label>
                                     @endforeach
                                 </div>
-                                <hr class="my-4">
-                                <label class="flex items-center space-x-2">
-                                    <input type="radio" name="saved_address" value="new" checked class="text-pink-600 focus:ring-pink-500">
-                                    <span class="text-sm font-medium">Use new address</span>
-                                </label>
                             </div>
+                            <hr class="mb-6">
                         @endif
                         
-                        <div class="space-y-4">
+                        <!-- Address Form Fields -->
+                        <div id="address-form" class="space-y-4">
+                            <input type="hidden" name="saved_address_id" id="saved_address_id" value="">
+                            
                             <div>
-                                <label for="delivery_address" class="block text-sm font-medium text-gray-700 mb-2">
-                                    Street Address <span class="text-red-500">*</span>
+                                <label for="address_line_1" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Address Line 1 <span class="text-red-500">*</span>
                                 </label>
-                                <textarea id="delivery_address" 
-                                          name="delivery_address" 
-                                          rows="3"
-                                          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500 @error('delivery_address') border-red-500 @enderror"
-                                          placeholder="Enter your full address"
-                                          required>{{ old('delivery_address') }}</textarea>
-                                @error('delivery_address')
+                                <input type="text" 
+                                       id="address_line_1" 
+                                       name="address_line_1" 
+                                       value="{{ old('address_line_1') }}"
+                                       placeholder="House/Building No, Street Name"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500 @error('address_line_1') border-red-500 @enderror"
+                                       required>
+                                @error('address_line_1')
                                     <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
                                 @enderror
                             </div>
 
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="address_line_2" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Address Line 2 (Optional)
+                                </label>
+                                <input type="text" 
+                                       id="address_line_2" 
+                                       name="address_line_2" 
+                                       value="{{ old('address_line_2') }}"
+                                       placeholder="Apartment, Suite, Unit, etc."
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500 @error('address_line_2') border-red-500 @enderror">
+                                @error('address_line_2')
+                                    <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div>
-                                    <label for="delivery_city" class="block text-sm font-medium text-gray-700 mb-2">
+                                    <label for="city" class="block text-sm font-medium text-gray-700 mb-2">
                                         City <span class="text-red-500">*</span>
                                     </label>
-                                    <input type="text" 
-                                           id="delivery_city" 
-                                           name="delivery_city" 
-                                           value="{{ old('delivery_city') }}"
-                                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500 @error('delivery_city') border-red-500 @enderror"
-                                           required>
-                                    @error('delivery_city')
+                                    <select id="city" 
+                                            name="city" 
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500 @error('city') border-red-500 @enderror"
+                                            required>
+                                        <option value="">Select City</option>
+                                        @foreach(['Colombo', 'Gampaha', 'Kalutara', 'Kandy', 'Matale', 'Nuwara Eliya', 'Galle', 'Matara', 'Hambantota', 'Jaffna', 'Kilinochchi', 'Mannar', 'Mullaitivu', 'Vavuniya', 'Puttalam', 'Kurunegala', 'Anuradhapura', 'Polonnaruwa', 'Badulla', 'Moneragala', 'Ratnapura', 'Kegalle', 'Batticaloa', 'Ampara', 'Trincomalee'] as $city)
+                                            <option value="{{ $city }}" {{ old('city') == $city ? 'selected' : '' }}>
+                                                {{ $city }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('city')
                                         <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
                                     @enderror
                                 </div>
 
                                 <div>
-                                    <label for="delivery_postal_code" class="block text-sm font-medium text-gray-700 mb-2">
+                                    <label for="district" class="block text-sm font-medium text-gray-700 mb-2">
+                                        District <span class="text-red-500">*</span>
+                                    </label>
+                                    <select id="district" 
+                                            name="district" 
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500 @error('district') border-red-500 @enderror"
+                                            required>
+                                        <option value="">Select District</option>
+                                        @foreach(['Colombo', 'Gampaha', 'Kalutara', 'Kandy', 'Matale', 'Nuwara Eliya', 'Galle', 'Matara', 'Hambantota', 'Jaffna', 'Kilinochchi', 'Mannar', 'Mullaitivu', 'Vavuniya', 'Puttalam', 'Kurunegala', 'Anuradhapura', 'Polonnaruwa', 'Badulla', 'Moneragala', 'Ratnapura', 'Kegalle', 'Batticaloa', 'Ampara', 'Trincomalee'] as $district)
+                                            <option value="{{ $district }}" {{ old('district') == $district ? 'selected' : '' }}>
+                                                {{ $district }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('district')
+                                        <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                                    @enderror
+                                </div>
+
+                                <div>
+                                    <label for="postal_code" class="block text-sm font-medium text-gray-700 mb-2">
                                         Postal Code <span class="text-red-500">*</span>
                                     </label>
                                     <input type="text" 
-                                           id="delivery_postal_code" 
-                                           name="delivery_postal_code" 
-                                           value="{{ old('delivery_postal_code') }}"
-                                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500 @error('delivery_postal_code') border-red-500 @enderror"
+                                           id="postal_code" 
+                                           name="postal_code" 
+                                           value="{{ old('postal_code') }}"
+                                           placeholder="00000"
+                                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500 @error('postal_code') border-red-500 @enderror"
                                            required>
-                                    @error('delivery_postal_code')
+                                    @error('postal_code')
                                         <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
                                     @enderror
                                 </div>
@@ -156,6 +220,18 @@
                                           rows="2"
                                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
                                           placeholder="Any special delivery instructions">{{ old('delivery_notes') }}</textarea>
+                            </div>
+
+                            <!-- Save Address Option -->
+                            <div class="mt-4">
+                                <label class="flex items-center space-x-2">
+                                    <input type="checkbox" 
+                                           name="save_address" 
+                                           value="1"
+                                           class="rounded border-gray-300 text-pink-600 focus:ring-pink-500"
+                                           {{ old('save_address') ? 'checked' : '' }}>
+                                    <span class="text-sm text-gray-700">Save this address for future orders</span>
+                                </label>
                             </div>
                         </div>
                     </div>
@@ -285,14 +361,105 @@
 </div>
 
 <script>
-function fillAddressForm(address) {
-    document.getElementById('delivery_address').value = address.address_line_1;
-    document.getElementById('delivery_city').value = address.city;
-    document.getElementById('delivery_postal_code').value = address.postal_code;
+function useSavedAddress(address) {
+    // Set saved address ID
+    document.getElementById('saved_address_id').value = address.id;
+    
+    // Fill customer info
+    document.getElementById('customer_name').value = address.name;
+    document.getElementById('customer_phone').value = address.phone;
+    
+    // Fill address fields
+    document.getElementById('address_line_1').value = address.address_line_1;
+    document.getElementById('address_line_2').value = address.address_line_2 || '';
+    document.getElementById('city').value = address.city;
+    document.getElementById('district').value = address.district;
+    document.getElementById('postal_code').value = address.postal_code;
+    
+    // Disable save address checkbox when using saved address
+    const saveCheckbox = document.querySelector('input[name="save_address"]');
+    if (saveCheckbox) {
+        saveCheckbox.checked = false;
+        saveCheckbox.disabled = true;
+    }
+    
+    // Make form fields readonly
+    const fields = ['customer_name', 'customer_phone', 'address_line_1', 'address_line_2', 'city', 'district', 'postal_code'];
+    fields.forEach(field => {
+        const element = document.getElementById(field);
+        if (element) {
+            element.readOnly = true;
+            element.classList.add('bg-gray-100');
+        }
+    });
 }
 
+function useNewAddress() {
+    // Clear saved address ID
+    document.getElementById('saved_address_id').value = '';
+    
+    // Clear form fields
+    const fields = ['address_line_1', 'address_line_2', 'city', 'district', 'postal_code'];
+    fields.forEach(field => {
+        const element = document.getElementById(field);
+        if (element) {
+            element.value = '';
+            element.readOnly = false;
+            element.classList.remove('bg-gray-100');
+        }
+    });
+    
+    // Enable customer fields
+    ['customer_name', 'customer_phone'].forEach(field => {
+        const element = document.getElementById(field);
+        if (element) {
+            element.readOnly = false;
+            element.classList.remove('bg-gray-100');
+        }
+    });
+    
+    // Enable save address checkbox
+    const saveCheckbox = document.querySelector('input[name="save_address"]');
+    if (saveCheckbox) {
+        saveCheckbox.disabled = false;
+    }
+}
 
-
+// Auto-select district based on city (common mapping for Sri Lanka)
+document.getElementById('city')?.addEventListener('change', function() {
+    const cityDistrictMap = {
+        'Colombo': 'Colombo',
+        'Gampaha': 'Gampaha',
+        'Kalutara': 'Kalutara',
+        'Kandy': 'Kandy',
+        'Matale': 'Matale',
+        'Nuwara Eliya': 'Nuwara Eliya',
+        'Galle': 'Galle',
+        'Matara': 'Matara',
+        'Hambantota': 'Hambantota',
+        'Jaffna': 'Jaffna',
+        'Kilinochchi': 'Kilinochchi',
+        'Mannar': 'Mannar',
+        'Mullaitivu': 'Mullaitivu',
+        'Vavuniya': 'Vavuniya',
+        'Puttalam': 'Puttalam',
+        'Kurunegala': 'Kurunegala',
+        'Anuradhapura': 'Anuradhapura',
+        'Polonnaruwa': 'Polonnaruwa',
+        'Badulla': 'Badulla',
+        'Moneragala': 'Moneragala',
+        'Ratnapura': 'Ratnapura',
+        'Kegalle': 'Kegalle',
+        'Batticaloa': 'Batticaloa',
+        'Ampara': 'Ampara',
+        'Trincomalee': 'Trincomalee'
+    };
+    
+    const district = cityDistrictMap[this.value];
+    if (district) {
+        document.getElementById('district').value = district;
+    }
+});
 
 document.addEventListener('DOMContentLoaded', function() {
     const checkoutForm = document.getElementById('checkout-form');

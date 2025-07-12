@@ -156,22 +156,23 @@ class OrderService
      */
     protected function mapCheckoutDataToOrderFormat(array $checkoutData)
 {
+    // Simply map the address fields directly - no splitting needed
     return [
         'order_number' => $checkoutData['order_number'],
         'user_id' => $checkoutData['user_id'],
-        'customer_email' => $checkoutData['customer_email'], // ADDED: Store email for historical record
+        'customer_email' => $checkoutData['customer_email'],
         'status' => $checkoutData['status'],
         'payment_method' => $checkoutData['payment_method'],
         'payment_status' => $checkoutData['payment_status'],
         
-        // Map customer fields from checkout form to shipping fields in database
+        // Map to shipping fields in database
         'shipping_name' => $checkoutData['customer_name'],
         'shipping_phone' => $checkoutData['customer_phone'],
-        'shipping_address_line_1' => $checkoutData['delivery_address'],
-        'shipping_address_line_2' => null, // Not collected in checkout form
-        'shipping_city' => $checkoutData['delivery_city'],
-        'shipping_district' => $checkoutData['delivery_city'], // Use city as district since we don't collect district separately
-        'shipping_postal_code' => $checkoutData['delivery_postal_code'],
+        'shipping_address_line_1' => $checkoutData['address_line_1'] ?? $checkoutData['delivery_address'], // Use new field or fall back to old
+        'shipping_address_line_2' => $checkoutData['address_line_2'] ?? null,
+        'shipping_city' => $checkoutData['city'] ?? $checkoutData['delivery_city'],
+        'shipping_district' => $checkoutData['district'] ?? $checkoutData['delivery_city'], // Use district or fall back to city
+        'shipping_postal_code' => $checkoutData['postal_code'] ?? $checkoutData['delivery_postal_code'],
         
         // Totals
         'subtotal' => $checkoutData['subtotal'],
@@ -179,7 +180,7 @@ class OrderService
         'shipping_amount' => $checkoutData['shipping_amount'],
         'total_amount' => $checkoutData['total_amount'],
         
-        // Notes - combine delivery notes and order notes if both exist
+        // Notes - combine if both exist
         'notes' => $this->combineNotes($checkoutData),
     ];
 }
