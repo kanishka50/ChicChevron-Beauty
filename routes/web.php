@@ -17,6 +17,8 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\UserAccountController;
+use App\Http\Controllers\ComplaintController;
+use App\Http\Controllers\ReviewController;
 
 // Public routes (accessible by everyone)
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -318,21 +320,36 @@ Route::middleware(['auth', 'verified'])->prefix('account')->name('user.account.'
 });
 
 
-// Reviews (placeholder - implement ReviewController later)
-    Route::prefix('reviews')->name('user.reviews.')->group(function () {
-        Route::get('/', function() {
-            $reviews = \App\Models\Review::where('user_id', Auth::id())
-                ->with('product')
-                ->orderBy('created_at', 'desc')
-                ->paginate(10);
-            return view('user.reviews.index', compact('reviews'));
-        })->name('index');
-        
-        Route::get('/create/{order}', function($orderId) {
-            $order = \App\Models\Order::where('user_id', Auth::id())
-                ->where('id', $orderId)
-                ->firstOrFail();
-            return view('user.reviews.create', compact('order'));
-        })->name('create');
-    });
+// Reviews routes
+// Route::get('/reviews', [ReviewController::class, 'index'])->name('user.reviews.index');
+// Route::get('/reviews/create/{order}', [ReviewController::class, 'create'])->name('user.reviews.create');
+// Route::post('/reviews', [ReviewController::class, 'store'])->name('user.reviews.store');
 
+// Complaints routes
+// Route::resource('complaints', ComplaintController::class)->names('user.complaints');
+// Route::post('/complaints/{complaint}/respond', [ComplaintController::class, 'respond'])->name('user.complaints.respond');
+// Route::patch('/complaints/{complaint}/close', [ComplaintController::class, 'close'])->name('user.complaints.close');
+// Route::patch('/complaints/{complaint}/reopen', [ComplaintController::class, 'reopen'])->name('user.complaints.reopen');
+// Route::post('/complaints/{complaint}/mark-responses-read', [ComplaintController::class, 'markResponsesRead'])->name('user.complaints.mark-responses-read');
+
+// Reviews routes
+Route::middleware(['auth', 'verified'])->prefix('reviews')->name('user.reviews.')->group(function () {
+    Route::get('/', [ReviewController::class, 'index'])->name('index');
+    Route::get('/create/{order}', [ReviewController::class, 'create'])->name('create');
+    Route::post('/', [ReviewController::class, 'store'])->name('store');
+    Route::put('/{review}', [ReviewController::class, 'update'])->name('update');
+    Route::delete('/{review}', [ReviewController::class, 'destroy'])->name('destroy');
+    Route::post('/{review}/helpful', [ReviewController::class, 'markHelpful'])->name('helpful');
+});
+
+// Complaints routes
+Route::middleware(['auth', 'verified'])->prefix('complaints')->name('user.complaints.')->group(function () {
+    Route::get('/', [ComplaintController::class, 'index'])->name('index');
+    Route::get('/create', [ComplaintController::class, 'create'])->name('create');
+    Route::post('/', [ComplaintController::class, 'store'])->name('store');
+    Route::get('/{complaint}', [ComplaintController::class, 'show'])->name('show');
+    Route::post('/{complaint}/respond', [ComplaintController::class, 'respond'])->name('respond');
+    Route::patch('/{complaint}/close', [ComplaintController::class, 'close'])->name('close');
+    Route::patch('/{complaint}/reopen', [ComplaintController::class, 'reopen'])->name('reopen');
+    Route::post('/{complaint}/mark-responses-read', [ComplaintController::class, 'markResponsesRead'])->name('mark-responses-read');
+});

@@ -71,42 +71,38 @@ class UserAccountController extends Controller
     }
 
     /**
-     * Update user profile
-     */
-    public function updateProfile(Request $request)
-    {
-        $user = Auth::user();
-        
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', 'unique:users,email,' . $user->id],
-            'phone' => ['required', 'string', 'max:20', 'regex:/^[0-9+\-\s]+$/'],
-            'date_of_birth' => ['nullable', 'date', 'before:today', 'after:1900-01-01'],
-            'current_password' => ['nullable', 'required_with:new_password', 'current_password'],
-            'new_password' => ['nullable', 'confirmed', Password::min(8)->letters()->mixedCase()->numbers()],
-        ]);
-        
-        // Update using Eloquent update method
-        $userData = [
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'phone' => $validated['phone'],
-        ];
-        
-        if (isset($validated['date_of_birth'])) {
-            $userData['date_of_birth'] = $validated['date_of_birth'];
-        }
-        
-        // Update password if provided
-        if (!empty($validated['new_password'])) {
-            $userData['password'] = Hash::make($validated['new_password']);
-        }
-        
-        User::where('id', $user->id)->update($userData);
-        
-        return redirect()->route('user.account.profile')
-            ->with('success', 'Profile updated successfully!');
+ * Update user profile
+ */
+public function updateProfile(Request $request)
+{
+    $user = Auth::user();
+    
+    $validated = $request->validate([
+        'name' => ['required', 'string', 'max:255'],
+        'email' => ['required', 'email', 'max:255', 'unique:users,email,' . $user->id],
+        'phone' => ['nullable', 'string', 'max:20'],
+        'current_password' => ['nullable', 'required_with:password', 'current_password'],
+        'password' => ['nullable', 'confirmed', 'min:8'],
+    ]);
+    
+    // Update using the User model directly
+    $updateData = [
+        'name' => $validated['name'],
+        'email' => $validated['email'],
+        'phone' => $validated['phone'] ?? null,
+    ];
+    
+    // Add password to update data if provided
+    if (!empty($validated['password'])) {
+        $updateData['password'] = Hash::make($validated['password']);
     }
+    
+    // Update using the User model
+    User::where('id', $user->id)->update($updateData);
+    
+    return redirect()->route('user.account.profile')
+                    ->with('success', 'Profile updated successfully!');
+}
 
     /**
      * Show user addresses
@@ -131,37 +127,34 @@ class UserAccountController extends Controller
     }
 
     /**
-     * Store new address
-     */
-    public function storeAddress(Request $request)
-    {
-        $validated = $request->validate([
-            'type' => ['required', 'in:home,office,other'],
-            'recipient_name' => ['required', 'string', 'max:255'],
-            'recipient_phone' => ['required', 'string', 'max:20', 'regex:/^[0-9+\-\s]+$/'],
-            'address_line_1' => ['required', 'string', 'max:255'],
-            'address_line_2' => ['nullable', 'string', 'max:255'],
-            'city' => ['required', 'string', 'max:100'],
-            'district' => ['required', 'string', 'max:100'],
-            'postal_code' => ['required', 'string', 'max:10', 'regex:/^[0-9]+$/'],
-            'is_default' => ['boolean'],
-        ]);
-        
-        $validated['user_id'] = Auth::id();
-        
-        // If setting as default, unset other defaults
-        if ($request->boolean('is_default')) {
-            UserAddress::where('user_id', Auth::id())->update(['is_default' => false]);
-        } else if (UserAddress::where('user_id', Auth::id())->count() === 0) {
-            // If this is the first address, make it default
-            $validated['is_default'] = true;
-        }
-        
-        UserAddress::create($validated);
-        
-        return redirect()->route('user.account.addresses')
-            ->with('success', 'Address added successfully!');
+ * Store new address
+ */
+public function storeAddress(Request $request)
+{
+    $validated = $request->validate([
+        'address_line_1' => ['required', 'string', 'max:255'],
+        'address_line_2' => ['nullable', 'string', 'max:255'],
+        'city' => ['required', 'string', 'max:100'],
+        'district' => ['required', 'string', 'max:100'],
+        'postal_code' => ['required', 'string', 'max:10', 'regex:/^[0-9]+$/'],
+        'is_default' => ['boolean'],
+    ]);
+    
+    $validated['user_id'] = Auth::id();
+    
+    // If setting as default, unset other defaults
+    if ($request->boolean('is_default')) {
+        UserAddress::where('user_id', Auth::id())->update(['is_default' => false]);
+    } else if (UserAddress::where('user_id', Auth::id())->count() === 0) {
+        // If this is the first address, make it default
+        $validated['is_default'] = true;
     }
+    
+    UserAddress::create($validated);
+    
+    return redirect()->route('user.account.addresses')
+        ->with('success', 'Address added successfully!');
+}
 
     /**
      * Edit address
@@ -180,36 +173,33 @@ class UserAccountController extends Controller
      * Update address
      */
     public function updateAddress(Request $request, UserAddress $address)
-    {
-        // Ensure address belongs to user
-        if ($address->user_id !== Auth::id()) {
-            abort(403);
-        }
-        
-        $validated = $request->validate([
-            'type' => ['required', 'in:home,office,other'],
-            'recipient_name' => ['required', 'string', 'max:255'],
-            'recipient_phone' => ['required', 'string', 'max:20', 'regex:/^[0-9+\-\s]+$/'],
-            'address_line_1' => ['required', 'string', 'max:255'],
-            'address_line_2' => ['nullable', 'string', 'max:255'],
-            'city' => ['required', 'string', 'max:100'],
-            'district' => ['required', 'string', 'max:100'],
-            'postal_code' => ['required', 'string', 'max:10', 'regex:/^[0-9]+$/'],
-            'is_default' => ['boolean'],
-        ]);
-        
-        // If setting as default, unset other defaults
-        if ($request->boolean('is_default') && !$address->is_default) {
-            UserAddress::where('user_id', Auth::id())
-                ->where('id', '!=', $address->id)
-                ->update(['is_default' => false]);
-        }
-        
-        $address->update($validated);
-        
-        return redirect()->route('user.account.addresses')
-            ->with('success', 'Address updated successfully!');
+{
+    // Ensure address belongs to user
+    if ($address->user_id !== Auth::id()) {
+        abort(403);
     }
+    
+    $validated = $request->validate([
+        'address_line_1' => ['required', 'string', 'max:255'],
+        'address_line_2' => ['nullable', 'string', 'max:255'],
+        'city' => ['required', 'string', 'max:100'],
+        'district' => ['required', 'string', 'max:100'],
+        'postal_code' => ['required', 'string', 'max:10', 'regex:/^[0-9]+$/'],
+        'is_default' => ['boolean'],
+    ]);
+    
+    // If setting as default, unset other defaults
+    if ($request->boolean('is_default') && !$address->is_default) {
+        UserAddress::where('user_id', Auth::id())
+            ->where('id', '!=', $address->id)
+            ->update(['is_default' => false]);
+    }
+    
+    $address->update($validated);
+    
+    return redirect()->route('user.account.addresses')
+        ->with('success', 'Address updated successfully!');
+}
 
     /**
      * Delete address
