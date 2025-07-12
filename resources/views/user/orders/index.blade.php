@@ -13,7 +13,7 @@
                     <p class="mt-2 text-gray-600">Track and manage your ChicChevron Beauty orders</p>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <a href="{{ route('shop.index') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium">
+                    <a href="{{ route('products.index') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium">
                         Continue Shopping
                     </a>
                 </div>
@@ -102,29 +102,7 @@
                                         Placed on {{ $order->created_at->format('F d, Y \a\t g:i A') }}
                                     </p>
                                 </div>
-                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium 
-                                    @switch($order->status)
-                                        @case('payment_completed')
-                                            bg-blue-100 text-blue-800
-                                            @break
-                                        @case('processing')
-                                            bg-yellow-100 text-yellow-800
-                                            @break
-                                        @case('shipping')
-                                            bg-indigo-100 text-indigo-800
-                                            @break
-                                        @case('completed')
-                                            bg-green-100 text-green-800
-                                            @break
-                                        @case('cancelled')
-                                            bg-red-100 text-red-800
-                                            @break
-                                        @default
-                                            bg-gray-100 text-gray-800
-                                    @endswitch
-                                ">
-                                    {{ ucfirst(str_replace('_', ' ', $order->status)) }}
-                                </span>
+                                <x-order-status-badge :status="$order->status" />
                             </div>
                             <div class="text-right">
                                 <div class="text-lg font-bold text-gray-900">
@@ -234,7 +212,7 @@
                             You haven't placed any orders yet. Start shopping to see your orders here!
                         @endif
                     </p>
-                    <a href="{{ route('shop.index') }}" 
+                    <a href="{{ route('products.index') }}" 
                        class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
                         <i class="fas fa-shopping-cart mr-2"></i>
                         Start Shopping
@@ -326,7 +304,7 @@ function trackOrder(orderId) {
         .then(data => {
             hideLoading();
             if (data.success) {
-                showTrackingModal(data);
+                showTrackingModal(data, orderId);
             } else {
                 alert('Error loading tracking information');
             }
@@ -337,7 +315,7 @@ function trackOrder(orderId) {
         });
 }
 
-function showTrackingModal(trackingData) {
+function showTrackingModal(trackingData, orderId) {
     const content = `
         <div class="mb-6">
             <div class="bg-blue-50 p-4 rounded-lg mb-4">
@@ -362,12 +340,12 @@ function showTrackingModal(trackingData) {
         </div>
         
         <div class="mt-6 flex justify-center space-x-3">
-            ${trackingData.can_complete ? `
-                <button onclick="markAsCompleted(${orderId})" 
-                        class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md">
-                    Mark as Received
-                </button>
-            ` : ''}
+                    ${trackingData.can_complete ? `
+                    <button onclick="markAsCompleted(${trackingData.order_id || orderId})" 
+                            class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md">
+                        Mark as Received
+                    </button>
+                ` : ''}
             ${trackingData.can_cancel ? `
                 <button onclick="requestCancellation(${orderId})" 
                         class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md">
