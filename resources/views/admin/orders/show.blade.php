@@ -479,28 +479,16 @@ function submitStatusUpdate(event) {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'Accept': 'application/json' 
         },
         body: JSON.stringify({
             status: status,
-            comment: comment
+            comment: comment,
+            notify_customer: true
         })
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert('Order status updated successfully!');
-            location.reload();
-        } else {
-            alert('Error: ' + data.message);
-        }
-    })
-    .catch(error => {
-        alert('Error updating order status: ' + error.message);
-    });
     
-    hideStatusModal();
-}
 
 function submitNote(event) {
     event.preventDefault();

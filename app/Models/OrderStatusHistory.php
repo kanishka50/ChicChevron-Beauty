@@ -27,5 +27,18 @@ class OrderStatusHistory extends Model
         ][$this->status] ?? $this->status;
     }
 
+     public function changedBy()
+    {
+        return $this->belongsTo(Admin::class, 'changed_by');
+    }
+
+    /**
+     * Get the order that owns the status history.
+     */
+    public function order()
+    {
+        return $this->belongsTo(Order::class);
+    }
+
     // Remove getFromStatusLabelAttribute and getToStatusLabelAttribute
 }
