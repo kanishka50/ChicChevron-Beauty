@@ -184,6 +184,12 @@ class Order extends Model
      public function updateStatus($newStatus, $comment = null, $adminId = null)
     {
         $this->status = $newStatus;
+
+        // Update payment status for COD orders when marked as completed
+    // if ($newStatus === 'completed' && $this->payment_method === 'cod') {
+    //     $this->payment_status = 'completed';
+    // }
+
         $this->save();
         
         $this->addStatusHistory($newStatus, $comment, $adminId);

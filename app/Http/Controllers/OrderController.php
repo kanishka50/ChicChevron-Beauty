@@ -139,7 +139,19 @@ class OrderController extends BaseController
         }
 
         try {
-            $order->updateStatus('completed', 'Order marked as completed by customer');
+            
+
+            // For COD orders, mark payment as completed when order is received
+        if ($order->payment_method === 'cod' && $order->payment_status === 'pending') {
+            $order->payment_status = 'completed';
+            $order->payment_reference = 'COD-' . now()->timestamp;
+            $order->save();
+            
+            // Add payment status history
+            $order->addStatusHistory('payment_completed', 'Payment received via Cash on Delivery');
+        }
+
+        $order->updateStatus('completed', 'Order marked as completed by customer');
 
             // Send completion notification email (optional)
             // Mail::to($order->user)->send(new OrderStatusUpdate($order, 'completed', 'Thank you for confirming delivery!'));

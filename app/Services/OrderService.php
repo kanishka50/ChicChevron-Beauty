@@ -420,6 +420,17 @@ class OrderService
         DB::beginTransaction();
         
         try {
+
+            // Handle COD payment completion
+        if ($newStatus === 'completed' && $order->payment_method === 'cod' && $order->payment_status === 'pending') {
+            $order->payment_status = 'completed';
+            $order->payment_reference = 'COD-' . now()->timestamp;
+            $order->save();
+            
+            // Add payment status history
+            $order->addStatusHistory('payment_completed', 'Payment received via Cash on Delivery', $adminId);
+        }
+        
             // Handle inventory changes based on status
             if ($newStatus === 'cancelled') {
                 // Release reserved stock
