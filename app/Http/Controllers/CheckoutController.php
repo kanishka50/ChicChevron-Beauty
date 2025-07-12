@@ -30,29 +30,36 @@ class CheckoutController extends Controller
      * Display checkout page
      */
     public function index()
-    {
-        // Validate cart before checkout
-        $cartItems = $this->cartService->getCartItems();
-        
-        if ($cartItems->isEmpty()) {
-            return redirect()->route('cart.index')
-                ->with('error', 'Your cart is empty. Add some items before checkout.');
-        }
-
-        // Validate cart items for checkout
-        $validationErrors = $this->cartService->validateCartForCheckout();
-        if (!empty($validationErrors)) {
-            return redirect()->route('cart.index')
-                ->with('error', 'Cart validation failed: ' . implode(' ', $validationErrors));
-        }
-
-        $cartSummary = $this->cartService->getCartSummary();
-        
-        // Get user addresses if logged in
-        $userAddresses = collect();
-
-        return view('checkout.index', compact('cartItems', 'cartSummary', 'userAddresses'));
+{
+    // Validate cart before checkout
+    $cartItems = $this->cartService->getCartItems();
+    
+    if ($cartItems->isEmpty()) {
+        return redirect()->route('cart.index')
+            ->with('error', 'Your cart is empty. Add some items before checkout.');
     }
+
+    // Validate cart items for checkout
+    $validationErrors = $this->cartService->validateCartForCheckout();
+    if (!empty($validationErrors)) {
+        return redirect()->route('cart.index')
+            ->with('error', 'Cart validation failed: ' . implode(' ', $validationErrors));
+    }
+
+    $cartSummary = $this->cartService->getCartSummary();
+    
+    // Get user addresses if logged in - THIS IS THE FIX
+    $userAddresses = collect();
+    if (Auth::check()) {
+        $userAddresses = UserAddress::where('user_id', Auth::id())
+            ->where('is_active', true)
+            ->orderBy('is_default', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->get();
+    }
+
+    return view('checkout.index', compact('cartItems', 'cartSummary', 'userAddresses'));
+}
 
     /**
      * Process checkout and create order
@@ -224,7 +231,6 @@ class CheckoutController extends Controller
                 'district' => $address->district,                // New field
                 'delivery_postal_code' => $address->postal_code,
                 'delivery_notes' => $request->delivery_notes,
-                'order_notes' => $request->order_notes,
                 
                 // Add these for OrderService
                 'saved_address_id' => $request->saved_address_id,
@@ -260,7 +266,6 @@ class CheckoutController extends Controller
         'district' => $request->district,                 // New field
         'delivery_postal_code' => $request->postal_code,
         'delivery_notes' => $request->delivery_notes,
-        'order_notes' => $request->order_notes,
         
         // Totals
         'subtotal' => $cartSummary['subtotal'],

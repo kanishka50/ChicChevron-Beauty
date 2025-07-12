@@ -136,7 +136,7 @@ public function storeAddress(Request $request)
         'address_line_2' => ['nullable', 'string', 'max:255'],
         'city' => ['required', 'string', 'max:100'],
         'district' => ['required', 'string', 'max:100'],
-        'postal_code' => ['required', 'string', 'max:10', 'regex:/^[0-9]+$/'],
+        'postal_code' => ['nullable', 'string', 'max:10', 'regex:/^[0-9]+$/'],
         'is_default' => ['boolean'],
     ]);
     
@@ -184,7 +184,7 @@ public function storeAddress(Request $request)
         'address_line_2' => ['nullable', 'string', 'max:255'],
         'city' => ['required', 'string', 'max:100'],
         'district' => ['required', 'string', 'max:100'],
-        'postal_code' => ['required', 'string', 'max:10', 'regex:/^[0-9]+$/'],
+        'postal_code' => ['nullable', 'string', 'max:10', 'regex:/^[0-9]+$/'],
         'is_default' => ['boolean'],
     ]);
     

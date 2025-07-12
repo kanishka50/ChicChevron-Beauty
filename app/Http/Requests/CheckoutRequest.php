@@ -24,13 +24,6 @@ class CheckoutRequest extends FormRequest
                 'in:cod,payhere'
             ],
             
-            // Order Notes
-            'order_notes' => [
-                'nullable',
-                'string',
-                'max:1000'
-            ],
-            
             // Terms Acceptance
             'terms_accepted' => [
                 'required',
@@ -103,10 +96,9 @@ class CheckoutRequest extends FormRequest
                 ],
                 
                 'city' => [
-                    'required',
-                    'string',
-                    'max:100',
-                    'in:Colombo,Gampaha,Kalutara,Kandy,Matale,Nuwara Eliya,Galle,Matara,Hambantota,Jaffna,Kilinochchi,Mannar,Mullaitivu,Vavuniya,Puttalam,Kurunegala,Anuradhapura,Polonnaruwa,Badulla,Moneragala,Ratnapura,Kegalle,Batticaloa,Ampara,Trincomalee'
+                'required',
+                'string',
+                'max:100'
                 ],
                 
                 'district' => [
@@ -117,7 +109,7 @@ class CheckoutRequest extends FormRequest
                 ],
                 
                 'postal_code' => [
-                    'required',
+                    'nullable',
                     'string',
                     'regex:/^[0-9]{5}$/'
                 ],
@@ -147,6 +139,47 @@ class CheckoutRequest extends FormRequest
     }
 
     // ... keep your existing validateCODOrder and validateCartContents methods ...
+
+    // ... keep your existing validateCODOrder and validateCartContents methods ...
+
+    /**
+     * Validate COD order constraints
+     */
+    protected function validateCODOrder($validator)
+    {
+        $cartService = app(\App\Services\CartService::class);
+        $cartSummary = $cartService->getCartSummary();
+        
+        // Check COD maximum limit (Rs. 10,000)
+        if ($cartSummary['total'] > 10000) {
+            $validator->errors()->add('payment_method', 
+                'Cash on Delivery is only available for orders up to Rs. 10,000. Your order total is Rs. ' . 
+                number_format($cartSummary['total'], 2) . '. Please choose online payment.'
+            );
+        }
+    }
+
+    /**
+     * Validate cart contents are valid for checkout
+     */
+    protected function validateCartContents($validator)
+    {
+        $cartService = app(\App\Services\CartService::class);
+        
+        // Check if cart is empty
+        $cartItems = $cartService->getCartItems();
+        if ($cartItems->isEmpty()) {
+            $validator->errors()->add('cart', 'Your cart is empty. Please add items before checkout.');
+        }
+        
+        // Validate cart items for checkout
+        $validationErrors = $cartService->validateCartForCheckout();
+        if (!empty($validationErrors)) {
+            foreach ($validationErrors as $error) {
+                $validator->errors()->add('cart', $error);
+            }
+        }
+    }
 
     public function messages(): array
     {
@@ -192,7 +225,7 @@ class CheckoutRequest extends FormRequest
         // Trim all string inputs
         $fieldsToTrim = [
             'customer_name', 'customer_email', 'address_line_1', 'address_line_2',
-            'city', 'district', 'postal_code', 'delivery_notes', 'order_notes'
+            'city', 'district', 'postal_code', 'delivery_notes', 
         ];
         
         foreach ($fieldsToTrim as $field) {

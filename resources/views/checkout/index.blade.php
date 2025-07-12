@@ -158,17 +158,13 @@
                                     <label for="city" class="block text-sm font-medium text-gray-700 mb-2">
                                         City <span class="text-red-500">*</span>
                                     </label>
-                                    <select id="city" 
-                                            name="city" 
-                                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500 @error('city') border-red-500 @enderror"
-                                            required>
-                                        <option value="">Select City</option>
-                                        @foreach(['Colombo', 'Gampaha', 'Kalutara', 'Kandy', 'Matale', 'Nuwara Eliya', 'Galle', 'Matara', 'Hambantota', 'Jaffna', 'Kilinochchi', 'Mannar', 'Mullaitivu', 'Vavuniya', 'Puttalam', 'Kurunegala', 'Anuradhapura', 'Polonnaruwa', 'Badulla', 'Moneragala', 'Ratnapura', 'Kegalle', 'Batticaloa', 'Ampara', 'Trincomalee'] as $city)
-                                            <option value="{{ $city }}" {{ old('city') == $city ? 'selected' : '' }}>
-                                                {{ $city }}
-                                            </option>
-                                        @endforeach
-                                    </select>
+                                    <input type="text" 
+                                        id="city" 
+                                        name="city" 
+                                        value="{{ old('city') }}"
+                                        placeholder="Enter your city"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500 @error('city') border-red-500 @enderror"
+                                        required>
                                     @error('city')
                                         <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
                                     @enderror
@@ -196,7 +192,7 @@
 
                                 <div>
                                     <label for="postal_code" class="block text-sm font-medium text-gray-700 mb-2">
-                                        Postal Code <span class="text-red-500">*</span>
+                                        Postal Code (Optional) 
                                     </label>
                                     <input type="text" 
                                            id="postal_code" 
@@ -204,7 +200,7 @@
                                            value="{{ old('postal_code') }}"
                                            placeholder="00000"
                                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500 @error('postal_code') border-red-500 @enderror"
-                                           required>
+                                           >
                                     @error('postal_code')
                                         <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
                                     @enderror
@@ -266,15 +262,6 @@
                                 </div>
                             </label>
                         </div>
-                    </div>
-
-                    <!-- Order Notes -->
-                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                        <h2 class="text-xl font-semibold text-gray-900 mb-4">Order Notes (Optional)</h2>
-                        <textarea name="order_notes" 
-                                  rows="3"
-                                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
-                                  placeholder="Any special requests or notes for your order">{{ old('order_notes') }}</textarea>
                     </div>
                 </div>
 
@@ -365,11 +352,8 @@ function useSavedAddress(address) {
     // Set saved address ID
     document.getElementById('saved_address_id').value = address.id;
     
-    // Fill customer info
-    document.getElementById('customer_name').value = address.name;
-    document.getElementById('customer_phone').value = address.phone;
-    
-    // Fill address fields
+    // DON'T change customer info - keep the logged-in user's details
+    // Only fill address fields
     document.getElementById('address_line_1').value = address.address_line_1;
     document.getElementById('address_line_2').value = address.address_line_2 || '';
     document.getElementById('city').value = address.city;
@@ -383,8 +367,8 @@ function useSavedAddress(address) {
         saveCheckbox.disabled = true;
     }
     
-    // Make form fields readonly
-    const fields = ['customer_name', 'customer_phone', 'address_line_1', 'address_line_2', 'city', 'district', 'postal_code'];
+    // Make ONLY address fields readonly (not customer fields)
+    const fields = ['address_line_1', 'address_line_2', 'city', 'district', 'postal_code'];
     fields.forEach(field => {
         const element = document.getElementById(field);
         if (element) {
@@ -398,21 +382,12 @@ function useNewAddress() {
     // Clear saved address ID
     document.getElementById('saved_address_id').value = '';
     
-    // Clear form fields
+    // Clear ONLY address fields (not customer fields)
     const fields = ['address_line_1', 'address_line_2', 'city', 'district', 'postal_code'];
     fields.forEach(field => {
         const element = document.getElementById(field);
         if (element) {
             element.value = '';
-            element.readOnly = false;
-            element.classList.remove('bg-gray-100');
-        }
-    });
-    
-    // Enable customer fields
-    ['customer_name', 'customer_phone'].forEach(field => {
-        const element = document.getElementById(field);
-        if (element) {
             element.readOnly = false;
             element.classList.remove('bg-gray-100');
         }

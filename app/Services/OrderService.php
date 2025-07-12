@@ -180,25 +180,11 @@ class OrderService
         'shipping_amount' => $checkoutData['shipping_amount'],
         'total_amount' => $checkoutData['total_amount'],
         
-        // Notes - combine if both exist
-        'notes' => $this->combineNotes($checkoutData),
+        // Notes for delivery
+        'notes' => $checkoutData['delivery_notes'] ?? null,
     ];
 }
 
-private function combineNotes(array $checkoutData)
-{
-    $notes = [];
-    
-    if (!empty($checkoutData['delivery_notes'])) {
-        $notes[] = "Delivery Instructions: " . $checkoutData['delivery_notes'];
-    }
-    
-    if (!empty($checkoutData['order_notes'])) {
-        $notes[] = "Order Notes: " . $checkoutData['order_notes'];
-    }
-    
-    return !empty($notes) ? implode("\n", $notes) : null;
-}
 
     /**
      * NEW: Simple totals calculation for checkout (without complex promotions)
