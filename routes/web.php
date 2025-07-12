@@ -16,6 +16,7 @@ use App\Http\Controllers\SearchController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\UserAccountController;
 
 // Public routes (accessible by everyone)
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -118,9 +119,7 @@ Route::middleware('auth:web')->group(function () {
     
     // Verified user routes
     Route::middleware('verified')->group(function () {
-        Route::get('/account', function () {
-            return 'My Account';
-        })->name('account.index');
+        
         
         // Customer order management
         Route::get('/my-orders', [OrderController::class, 'index'])->name('user.orders.index');
@@ -214,9 +213,9 @@ Route::get('/track-order/{order}', function (\App\Models\Order $order) {
 })->name('orders.track-guest-result');
 
 // Redirect routes (for backward compatibility)
-Route::redirect('/my-account/orders', '/my-orders', 301);
-Route::redirect('/account/orders', '/my-orders', 301);
-Route::redirect('/user/orders', '/my-orders', 301);
+// Route::redirect('/my-account/orders', '/my-orders', 301);
+// Route::redirect('/account/orders', '/my-orders', 301);
+// Route::redirect('/user/orders', '/my-orders', 301);
 
 // Legacy order route redirect (MOVED TO END to avoid conflicts)
 Route::get('/orders', function () {
@@ -280,3 +279,41 @@ Route::bind('product', function ($value, $route) {
     
     return $product;
 });
+
+
+
+
+
+
+
+
+
+
+
+// User Account Management Routes
+// User Account Management Routes
+Route::middleware(['auth', 'verified'])->prefix('account')->name('user.account.')->group(function () {
+    // Dashboard
+    Route::get('/', [UserAccountController::class, 'index'])->name('index');
+    
+    // Profile
+    Route::get('/profile', [UserAccountController::class, 'editProfile'])->name('profile');
+    Route::put('/profile', [UserAccountController::class, 'updateProfile'])->name('profile.update');
+    
+    // Addresses
+    Route::get('/addresses', [UserAccountController::class, 'addresses'])->name('addresses');
+    Route::get('/addresses/create', [UserAccountController::class, 'createAddress'])->name('addresses.create');
+    Route::post('/addresses', [UserAccountController::class, 'storeAddress'])->name('addresses.store');
+    Route::get('/addresses/{address}/edit', [UserAccountController::class, 'editAddress'])->name('addresses.edit');
+    Route::put('/addresses/{address}', [UserAccountController::class, 'updateAddress'])->name('addresses.update');
+    Route::delete('/addresses/{address}', [UserAccountController::class, 'deleteAddress'])->name('addresses.delete');
+    Route::post('/addresses/{address}/default', [UserAccountController::class, 'makeDefaultAddress'])->name('addresses.default'); // ADD THIS
+    
+    // Security
+    Route::get('/security', [UserAccountController::class, 'security'])->name('security');
+    Route::put('/security/password', [UserAccountController::class, 'updatePassword'])->name('security.password'); // ADD THIS
+    Route::post('/security/two-factor', [UserAccountController::class, 'enableTwoFactor'])->name('security.two-factor'); // ADD THIS
+    Route::post('/logout-other-sessions', [UserAccountController::class, 'logoutOtherSessions'])->name('logout-other-sessions');
+    Route::delete('/delete-account', [UserAccountController::class, 'deleteAccount'])->name('delete'); // ADD THIS
+});
+
