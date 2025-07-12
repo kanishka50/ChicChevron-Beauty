@@ -444,6 +444,8 @@
 
 @endsection
 
+// Replace the entire scripts section in your show.blade.php with this:
+
 @push('scripts')
 <script>
 function showStatusModal() {
@@ -475,21 +477,134 @@ function submitStatusUpdate(event) {
         return;
     }
     
+    // Show loading state
+    const submitButton = event.target.querySelector('button[type="submit"]');
+    const originalText = submitButton.innerHTML;
+    submitButton.disabled = true;
+    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Updating...';
+    
+    // First, let's change the route from PUT to POST
     fetch(`{{ route('admin.orders.update-status', $order) }}`, {
-        method: 'PUT',
+        method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-            'Accept': 'application/json' 
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
         },
         body: JSON.stringify({
+            _method: 'PUT', // Method spoofing for Laravel
             status: status,
             comment: comment,
             notify_customer: true
         })
     })
-    
+    .then(response => {
+        // Log the response for debugging
+        console.log('Response status:', response.status);
+        console.log('Response headers:', response.headers);
+        
+        if (!response.ok) {
+            return response.text().then(text => {
+                console.error('Error response:', text);
+                throw new Error(`HTTP error! status: ${response.status}`);
+            });
+        }
+        
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.indexOf("application/json") !== -1) {
+            return response.json();
+        } else {
+            return response.text().then(text => {
+                console.error('Non-JSON response:', text);
+                throw new Error('Server returned non-JSON response');
+            });
+        }
+    })
+    .then(data => {
+        console.log('Success data:', data);
+        
+        if (data.success) {
+            hideStatusModal();
+            showSuccessNotification('Order status updated successfully! Refreshing...');
+            
+            // Force reload the page
+            setTimeout(() => {
+                window.location.reload(true);
+            }, 1000);
+        } else {
+            // Re-enable button on error
+            submitButton.disabled = false;
+            submitButton.innerHTML = originalText;
+            showErrorNotification(data.message || 'Failed to update order status');
+        }
+    })
+    .catch(error => {
+        console.error('Fetch error:', error);
+        
+        // Re-enable button on error
+        submitButton.disabled = false;
+        submitButton.innerHTML = originalText;
+        
+        showErrorNotification('Error updating order status. Please check the console.');
+    });
+}
 
+// Notification functions
+function showSuccessNotification(message) {
+    removeExistingNotifications();
+    
+    const notification = document.createElement('div');
+    notification.className = 'notification-toast fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-[9999]';
+    notification.innerHTML = `
+        <div class="flex items-center">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            <span>${message}</span>
+        </div>
+    `;
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.remove();
+    }, 3000);
+}
+
+function showErrorNotification(message) {
+    removeExistingNotifications();
+    
+    const notification = document.createElement('div');
+    notification.className = 'notification-toast fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-[9999]';
+    notification.innerHTML = `
+        <div class="flex items-center">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+            <span>${message}</span>
+        </div>
+    `;
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.remove();
+    }, 5000);
+}
+
+function removeExistingNotifications() {
+    const existingNotifications = document.querySelectorAll('.notification-toast');
+    existingNotifications.forEach(n => n.remove());
+}
+
+// Quick status update
+function updateStatus(status) {
+    if (confirm(`Are you sure you want to change the order status to ${status}?`)) {
+        document.getElementById('newStatus').value = status;
+        showStatusModal();
+    }
+}
+
+// Other functions remain the same
 function submitNote(event) {
     event.preventDefault();
     
@@ -499,7 +614,9 @@ function submitNote(event) {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
         },
         body: JSON.stringify({
             note: note
@@ -508,32 +625,27 @@ function submitNote(event) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            alert('Note added successfully!');
-            location.reload();
+            showSuccessNotification('Note added successfully!');
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
         } else {
-            alert('Error: ' + data.message);
+            showErrorNotification(data.message || 'Error adding note');
         }
     })
     .catch(error => {
-        alert('Error adding note: ' + error.message);
+        console.error('Error:', error);
+        showErrorNotification('Error adding note');
     });
     
     hideNoteModal();
 }
 
-function updateStatus(status) {
-    if (confirm(`Are you sure you want to change the order status to ${status}?`)) {
-        document.getElementById('newStatus').value = status;
-        showStatusModal();
-    }
-}
-
 function sendNotification() {
-    // Future implementation for sending custom notifications
     alert('Notification feature will be implemented in the next phase.');
 }
 
-// Close modals when clicking outside
+// Modal event listeners
 document.getElementById('statusModal').addEventListener('click', function(e) {
     if (e.target === this) {
         hideStatusModal();

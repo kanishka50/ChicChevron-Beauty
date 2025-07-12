@@ -8,6 +8,7 @@ use App\Services\OrderService;
 use App\Services\InvoiceService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class OrderController extends Controller
 {
@@ -84,45 +85,56 @@ class OrderController extends Controller
      * Update order status
      */
     public function updateStatus(Request $request, Order $order)
-    {
-        $request->validate([
-            'status' => 'required|in:processing,shipping,completed,cancelled',
-            'comment' => 'nullable|string|max:500'
-        ]);
+{
+    $request->validate([
+        'status' => 'required|in:processing,shipping,completed,cancelled',
+        'comment' => 'nullable|string|max:500',
+        'notify_customer' => 'sometimes|boolean'
+    ]);
 
-        try {
-            $result = $this->orderService->updateOrderStatus(
-                $order,
-                $request->status,
-                $request->comment,
-                Auth::guard('admin')->id()
-            );
+    try {
+        // Use the OrderService to update status
+        $result = $this->orderService->updateOrderStatus(
+            $order,
+            $request->status,
+            $request->comment,
+            Auth::guard('admin')->id()
+        );
 
-            if ($request->ajax()) {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Order status updated successfully!',
-                    'new_status' => $result['order']->status,
-                    'status_color' => $result['order']->status_color
-                ]);
-            }
-
-            return redirect()->route('admin.orders.show', $order)
-                           ->with('success', 'Order status updated successfully!');
-
-        } catch (\Exception $e) {
-            if ($request->ajax()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Error updating order status: ' . $e->getMessage()
-                ], 500);
-            }
-
-            return redirect()->back()
-                           ->with('error', 'Error updating order status: ' . $e->getMessage());
+        // Check if request wants JSON (from Accept header or ajax request)
+        if ($request->wantsJson() || $request->ajax() || $request->acceptsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Order status updated successfully!',
+                'new_status' => $order->fresh()->status,
+                'status_label' => ucfirst(str_replace('_', ' ', $order->fresh()->status))
+            ]);
         }
-    }
 
+        // For non-AJAX requests
+        return redirect()->route('admin.orders.show', $order)
+                       ->with('success', 'Order status updated successfully!');
+
+    } catch (\Exception $e) {
+             Log::error('Order status update failed', [
+            'order_id' => $order->id,
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+        
+        // Return JSON error for AJAX requests
+        if ($request->wantsJson() || $request->ajax() || $request->acceptsJson()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error updating order status: ' . $e->getMessage()
+            ], 500);
+        }
+
+        // For non-AJAX requests
+        return redirect()->back()
+                       ->with('error', 'Error updating order status: ' . $e->getMessage());
+    }
+}
     /**
      * Generate and download invoice
      */
