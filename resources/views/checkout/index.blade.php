@@ -1,264 +1,391 @@
 @extends('layouts.app')
 
-@section('title', 'My Account - ChicChevron Beauty')
+@section('title', 'Checkout - ChicChevron Beauty')
 
 @section('content')
 <div class="min-h-screen bg-gray-50 py-8">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <!-- Page Header -->
-        <div class="mb-8">
-            <h1 class="text-3xl font-bold text-gray-900">My Account</h1>
-            <p class="mt-2 text-gray-600">Welcome back, {{ $user->name }}!</p>
-        </div>
+        <h1 class="text-3xl font-bold text-gray-900 mb-8">Checkout</h1>
 
-        <!-- Account Stats -->
-        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-8">
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-                <div class="text-center">
-                    <p class="text-2xl font-bold text-blue-600">{{ $stats['total_orders'] }}</p>
-                    <p class="text-sm text-gray-600 mt-1">Total Orders</p>
-                </div>
-            </div>
+        <form action="{{ route('checkout.store') }}" method="POST" id="checkout-form">
+            @csrf
             
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-                <div class="text-center">
-                    <p class="text-2xl font-bold text-yellow-600">{{ $stats['pending_orders'] }}</p>
-                    <p class="text-sm text-gray-600 mt-1">Active Orders</p>
-                </div>
-            </div>
-            
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-                <div class="text-center">
-                    <p class="text-2xl font-bold text-green-600">{{ $stats['completed_orders'] }}</p>
-                    <p class="text-sm text-gray-600 mt-1">Completed</p>
-                </div>
-            </div>
-            
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-                <div class="text-center">
-                    <p class="text-2xl font-bold text-purple-600">LKR {{ number_format($stats['total_spent'], 0) }}</p>
-                    <p class="text-sm text-gray-600 mt-1">Total Spent</p>
-                </div>
-            </div>
-            
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-                <div class="text-center">
-                    <p class="text-2xl font-bold text-pink-600">{{ $stats['wishlist_count'] }}</p>
-                    <p class="text-sm text-gray-600 mt-1">Wishlist</p>
-                </div>
-            </div>
-            
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-                <div class="text-center">
-                    <p class="text-2xl font-bold text-indigo-600">{{ $stats['addresses_count'] }}</p>
-                    <p class="text-sm text-gray-600 mt-1">Addresses</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Quick Links Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            <!-- Orders -->
-            <a href="{{ route('user.orders.index') }}" class="group">
-                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
-                    <div class="flex items-center">
-                        <div class="bg-blue-100 rounded-full p-3 group-hover:bg-blue-200 transition-colors">
-                            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
-                            </svg>
-                        </div>
-                        <div class="ml-4">
-                            <h3 class="text-lg font-semibold text-gray-900">My Orders</h3>
-                            <p class="text-sm text-gray-600">Track & manage your orders</p>
-                        </div>
-                        <svg class="w-5 h-5 text-gray-400 ml-auto group-hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                        </svg>
-                    </div>
-                </div>
-            </a>
-
-            <!-- Profile -->
-            <a href="{{ route('user.account.profile') }}" class="group">
-                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
-                    <div class="flex items-center">
-                        <div class="bg-green-100 rounded-full p-3 group-hover:bg-green-200 transition-colors">
-                            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                            </svg>
-                        </div>
-                        <div class="ml-4">
-                            <h3 class="text-lg font-semibold text-gray-900">Profile</h3>
-                            <p class="text-sm text-gray-600">Update personal information</p>
-                        </div>
-                        <svg class="w-5 h-5 text-gray-400 ml-auto group-hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                        </svg>
-                    </div>
-                </div>
-            </a>
-
-            <!-- Addresses -->
-            <a href="{{ route('user.account.addresses') }}" class="group">
-                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
-                    <div class="flex items-center">
-                        <div class="bg-purple-100 rounded-full p-3 group-hover:bg-purple-200 transition-colors">
-                            <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                            </svg>
-                        </div>
-                        <div class="ml-4">
-                            <h3 class="text-lg font-semibold text-gray-900">Addresses</h3>
-                            <p class="text-sm text-gray-600">Manage delivery locations</p>
-                        </div>
-                        <svg class="w-5 h-5 text-gray-400 ml-auto group-hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                        </svg>
-                    </div>
-                </div>
-            </a>
-
-            <!-- Wishlist -->
-            <a href="{{ route('wishlist.index') }}" class="group">
-                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
-                    <div class="flex items-center">
-                        <div class="bg-pink-100 rounded-full p-3 group-hover:bg-pink-200 transition-colors">
-                            <svg class="w-6 h-6 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
-                            </svg>
-                        </div>
-                        <div class="ml-4">
-                            <h3 class="text-lg font-semibold text-gray-900">Wishlist</h3>
-                            <p class="text-sm text-gray-600">Your saved items</p>
-                        </div>
-                        <svg class="w-5 h-5 text-gray-400 ml-auto group-hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                        </svg>
-                    </div>
-                </div>
-            </a>
-
-            <!-- Reviews -->
-            <a href="{{ route('user.reviews.index') }}" class="group">
-                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
-                    <div class="flex items-center">
-                        <div class="bg-yellow-100 rounded-full p-3 group-hover:bg-yellow-200 transition-colors">
-                            <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path>
-                            </svg>
-                        </div>
-                        <div class="ml-4">
-                            <h3 class="text-lg font-semibold text-gray-900">Reviews</h3>
-                            <p class="text-sm text-gray-600">{{ $stats['reviews_count'] }} product reviews</p>
-                        </div>
-                        <svg class="w-5 h-5 text-gray-400 ml-auto group-hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                        </svg>
-                    </div>
-                </div>
-            </a>
-
-            <!-- Security -->
-            <a href="{{ route('user.account.security') }}" class="group">
-                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
-                    <div class="flex items-center">
-                        <div class="bg-gray-100 rounded-full p-3 group-hover:bg-gray-200 transition-colors">
-                            <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
-                            </svg>
-                        </div>
-                        <div class="ml-4">
-                            <h3 class="text-lg font-semibold text-gray-900">Security</h3>
-                            <p class="text-sm text-gray-600">Password & login settings</p>
-                        </div>
-                        <svg class="w-5 h-5 text-gray-400 ml-auto group-hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                        </svg>
-                    </div>
-                </div>
-            </a>
-        </div>
-
-        <!-- Recent Orders -->
-        @if($recentOrders->count() > 0)
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-            <div class="px-6 py-4 border-b border-gray-200">
-                <div class="flex justify-between items-center">
-                    <h2 class="text-lg font-semibold text-gray-900">Recent Orders</h2>
-                    <a href="{{ route('user.orders.index') }}" class="text-sm text-blue-600 hover:text-blue-800">View All</a>
-                </div>
-            </div>
-            <div class="divide-y divide-gray-200">
-                @foreach($recentOrders as $order)
-                <div class="p-6">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <div class="flex items-center space-x-4">
-                                <h3 class="text-sm font-medium text-gray-900">
-                                    Order #{{ $order->order_number }}
-                                </h3>
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                    @if($order->status === 'completed') bg-green-100 text-green-800
-                                    @elseif($order->status === 'shipping') bg-indigo-100 text-indigo-800
-                                    @elseif($order->status === 'processing') bg-yellow-100 text-yellow-800
-                                    @elseif($order->status === 'cancelled') bg-red-100 text-red-800
-                                    @else bg-blue-100 text-blue-800
-                                    @endif">
-                                    {{ ucfirst(str_replace('_', ' ', $order->status)) }}
-                                </span>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Left Column - Checkout Forms -->
+                <div class="lg:col-span-2 space-y-6">
+                    
+                    <!-- Customer Information -->
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                        <h2 class="text-xl font-semibold text-gray-900 mb-4">Customer Information</h2>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="customer_name" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Full Name <span class="text-red-500">*</span>
+                                </label>
+                                <input type="text" 
+                                       id="customer_name" 
+                                       name="customer_name" 
+                                       value="{{ old('customer_name', Auth::user()->name ?? '') }}"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500 @error('customer_name') border-red-500 @enderror"
+                                       required>
+                                @error('customer_name')
+                                    <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                                @enderror
                             </div>
-                            <p class="text-sm text-gray-600 mt-1">
-                                Placed on {{ $order->created_at->format('M d, Y') }}
-                            </p>
-                            <p class="text-sm text-gray-900 font-medium mt-1">
-                                Total: LKR {{ number_format($order->total_amount, 2) }}
-                            </p>
+
+                            <div>
+                                <label for="customer_phone" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Phone Number <span class="text-red-500">*</span>
+                                </label>
+                                <input type="tel" 
+                                       id="customer_phone" 
+                                       name="customer_phone" 
+                                       value="{{ old('customer_phone', Auth::user()->phone ?? '') }}"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500 @error('customer_phone') border-red-500 @enderror"
+                                       required>
+                                @error('customer_phone')
+                                    <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <div class="md:col-span-2">
+                                <label for="customer_email" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Email Address <span class="text-red-500">*</span>
+                                </label>
+                                <input type="email" 
+                                       id="customer_email" 
+                                       name="customer_email" 
+                                       value="{{ old('customer_email', Auth::user()->email ?? '') }}"
+                                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500 @error('customer_email') border-red-500 @enderror"
+                                       required>
+                                @error('customer_email')
+                                    <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                                @enderror
+                            </div>
                         </div>
-                        <div class="flex items-center space-x-3">
-                            <!-- Order Items Preview -->
-                            <div class="flex -space-x-2">
-                                @foreach($order->items->take(3) as $item)
-                                    @if($item->product && $item->product->main_image)
-                                    <img src="{{ Storage::url($item->product->main_image) }}" 
-                                         alt="{{ $item->product_name }}"
-                                         class="w-10 h-10 rounded-full border-2 border-white object-cover">
-                                    @else
-                                    <div class="w-10 h-10 rounded-full border-2 border-white bg-gray-200 flex items-center justify-center">
-                                        <i class="fas fa-image text-gray-400 text-xs"></i>
-                                    </div>
-                                    @endif
-                                @endforeach
-                                @if($order->items->count() > 3)
-                                <div class="w-10 h-10 rounded-full border-2 border-white bg-gray-200 flex items-center justify-center">
-                                    <span class="text-xs text-gray-600">+{{ $order->items->count() - 3 }}</span>
+                    </div>
+
+                    <!-- Delivery Address -->
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                        <h2 class="text-xl font-semibold text-gray-900 mb-4">Delivery Address</h2>
+                        
+                        @if($userAddresses->isNotEmpty())
+                            <!-- Saved Addresses -->
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Saved Addresses</label>
+                                <div class="space-y-2">
+                                    @foreach($userAddresses as $address)
+                                        <label class="flex items-start space-x-3 p-3 border border-gray-200 rounded-md hover:bg-gray-50 cursor-pointer">
+                                            <input type="radio" 
+                                                   name="saved_address" 
+                                                   value="{{ $address->id }}"
+                                                   class="mt-1 text-pink-600 focus:ring-pink-500"
+                                                   onchange="fillAddressForm({{ $address->toJson() }})">
+                                            <div class="flex-1">
+                                                <div class="font-medium">{{ $address->address_line_1 }}</div>
+                                                <div class="text-sm text-gray-600">
+                                                    {{ $address->city }}, {{ $address->postal_code }}
+                                                </div>
+                                            </div>
+                                        </label>
+                                    @endforeach
                                 </div>
-                                @endif
+                                <hr class="my-4">
+                                <label class="flex items-center space-x-2">
+                                    <input type="radio" name="saved_address" value="new" checked class="text-pink-600 focus:ring-pink-500">
+                                    <span class="text-sm font-medium">Use new address</span>
+                                </label>
                             </div>
-                            <a href="{{ route('user.orders.show', $order) }}" 
-                               class="text-sm text-blue-600 hover:text-blue-800 font-medium">
-                                View Details
-                            </a>
+                        @endif
+                        
+                        <div class="space-y-4">
+                            <div>
+                                <label for="delivery_address" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Street Address <span class="text-red-500">*</span>
+                                </label>
+                                <textarea id="delivery_address" 
+                                          name="delivery_address" 
+                                          rows="3"
+                                          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500 @error('delivery_address') border-red-500 @enderror"
+                                          placeholder="Enter your full address"
+                                          required>{{ old('delivery_address') }}</textarea>
+                                @error('delivery_address')
+                                    <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label for="delivery_city" class="block text-sm font-medium text-gray-700 mb-2">
+                                        City <span class="text-red-500">*</span>
+                                    </label>
+                                    <input type="text" 
+                                           id="delivery_city" 
+                                           name="delivery_city" 
+                                           value="{{ old('delivery_city') }}"
+                                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500 @error('delivery_city') border-red-500 @enderror"
+                                           required>
+                                    @error('delivery_city')
+                                        <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                                    @enderror
+                                </div>
+
+                                <div>
+                                    <label for="delivery_postal_code" class="block text-sm font-medium text-gray-700 mb-2">
+                                        Postal Code <span class="text-red-500">*</span>
+                                    </label>
+                                    <input type="text" 
+                                           id="delivery_postal_code" 
+                                           name="delivery_postal_code" 
+                                           value="{{ old('delivery_postal_code') }}"
+                                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500 @error('delivery_postal_code') border-red-500 @enderror"
+                                           required>
+                                    @error('delivery_postal_code')
+                                        <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            <div>
+                                <label for="delivery_notes" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Delivery Notes (Optional)
+                                </label>
+                                <textarea id="delivery_notes" 
+                                          name="delivery_notes" 
+                                          rows="2"
+                                          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
+                                          placeholder="Any special delivery instructions">{{ old('delivery_notes') }}</textarea>
+                            </div>
                         </div>
                     </div>
+
+                    <!-- Payment Method -->
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                        <h2 class="text-xl font-semibold text-gray-900 mb-4">Payment Method</h2>
+                        
+                        <div class="space-y-3">
+                            <!-- Cash on Delivery -->
+                            <label class="flex items-start space-x-3 p-4 border border-gray-200 rounded-md hover:bg-gray-50 cursor-pointer">
+                                <input type="radio" 
+                                       name="payment_method" 
+                                       value="cod" 
+                                       class="mt-1 text-pink-600 focus:ring-pink-500"
+                                       checked>
+                                <div class="flex-1">
+                                    <div class="font-medium">Cash on Delivery</div>
+                                    <div class="text-sm text-gray-600">Pay when you receive your order (Max: Rs. 10,000)</div>
+                                </div>
+                            </label>
+
+                            <!-- PayHere -->
+                            <label class="flex items-start space-x-3 p-4 border border-gray-200 rounded-md hover:bg-gray-50 cursor-pointer">
+                                <input type="radio" 
+                                       name="payment_method" 
+                                       value="payhere" 
+                                       class="mt-1 text-pink-600 focus:ring-pink-500">
+                                <div class="flex-1">
+                                    <div class="font-medium">Online Payment (PayHere)</div>
+                                    <div class="text-sm text-gray-600">Pay securely with credit/debit cards</div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Order Notes -->
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                        <h2 class="text-xl font-semibold text-gray-900 mb-4">Order Notes (Optional)</h2>
+                        <textarea name="order_notes" 
+                                  rows="3"
+                                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
+                                  placeholder="Any special requests or notes for your order">{{ old('order_notes') }}</textarea>
+                    </div>
                 </div>
-                @endforeach
+
+                <!-- Right Column - Order Summary -->
+                <div class="lg:col-span-1">
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 sticky top-8">
+                        <h2 class="text-xl font-semibold text-gray-900 mb-4">Order Summary</h2>
+                        
+                        <!-- Order Items -->
+                        <div class="space-y-3 mb-4">
+                            @foreach($cartItems as $item)
+                                <div class="flex items-center space-x-3">
+                                    <img src="{{ $item->product_image }}" 
+                                         alt="{{ $item->product->name }}" 
+                                         class="w-12 h-12 object-cover rounded">
+                                    <div class="flex-1 min-w-0">
+                                        <h3 class="text-sm font-medium text-gray-900 truncate">{{ $item->product->name }}</h3>
+                                        @if($item->variant_details_formatted)
+                                            <p class="text-xs text-gray-500">{{ $item->variant_details_formatted }}</p>
+                                        @endif
+                                        <p class="text-xs text-gray-500">Qty: {{ $item->quantity }}</p>
+                                    </div>
+                                    <div class="text-sm font-medium text-gray-900">
+                                        {{ $item->total_price_formatted }}
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+
+                        <!-- Order Totals -->
+                        <div class="border-t border-gray-200 pt-4 space-y-2">
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-600">Subtotal</span>
+                                <span>{{ $cartSummary['subtotal_formatted'] }}</span>
+                            </div>
+                            
+                            @if($cartSummary['discount_amount'] > 0)
+                                <div class="flex justify-between text-sm text-green-600">
+                                    <span>Discount</span>
+                                    <span>-{{ $cartSummary['discount_formatted'] }}</span>
+                                </div>
+                            @endif
+                            
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-600">Shipping</span>
+                                <span>{{ $cartSummary['shipping_formatted'] }}</span>
+                            </div>
+                            
+                            <div class="border-t border-gray-200 pt-2">
+                                <div class="flex justify-between text-lg font-medium">
+                                    <span>Total</span>
+                                    <span>{{ $cartSummary['total_formatted'] }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Terms and Conditions -->
+                        <div class="mt-6">
+                            <label class="flex items-start space-x-2">
+                                <input type="checkbox" 
+                                       name="terms_accepted" 
+                                       value="1"
+                                       class="mt-1 text-pink-600 focus:ring-pink-500 @error('terms_accepted') border-red-500 @enderror"
+                                       required>
+                                <span class="text-sm text-gray-600">
+                                    I agree to the <a href="#" class="text-pink-600 hover:text-pink-700">Terms and Conditions</a> and <a href="#" class="text-pink-600 hover:text-pink-700">Privacy Policy</a>
+                                </span>
+                            </label>
+                            @error('terms_accepted')
+                                <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <!-- Place Order Button -->
+                        <button type="submit" 
+                                class="w-full mt-6 bg-pink-600 text-white py-3 px-4 rounded-lg hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-pink-500 font-medium">
+                            Place Order
+                        </button>
+                    </div>
+                </div>
             </div>
-        </div>
-        @else
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
-            <div class="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                <i class="fas fa-shopping-bag text-gray-400 text-3xl"></i>
-            </div>
-            <h3 class="text-lg font-medium text-gray-900 mb-2">No orders yet</h3>
-            <p class="text-gray-600 mb-6">Start shopping to see your orders here!</p>
-            <a href="{{ route('shop.index') }}" 
-               class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
-                <i class="fas fa-shopping-cart mr-2"></i>
-                Start Shopping
-            </a>
-        </div>
-        @endif
+        </form>
     </div>
 </div>
+
+<script>
+function fillAddressForm(address) {
+    document.getElementById('delivery_address').value = address.address_line_1;
+    document.getElementById('delivery_city').value = address.city;
+    document.getElementById('delivery_postal_code').value = address.postal_code;
+}
+
+
+
+
+document.addEventListener('DOMContentLoaded', function() {
+    const checkoutForm = document.getElementById('checkout-form');
+    
+    if (checkoutForm) {
+        // Override fetch to block counter requests during checkout
+        const originalFetch = window.fetch;
+        let isSubmitting = false;
+        
+        checkoutForm.addEventListener('submit', function(e) {
+            // Don't prevent default - let form submit normally
+            console.log('Checkout form submitting...');
+            
+            // Set flag
+            isSubmitting = true;
+            window._isCheckoutInProgress = true;
+            
+            // Override fetch to block counter requests
+            window.fetch = function(url, options) {
+                if (isSubmitting && (url.includes('/cart/count') || url.includes('/wishlist/count'))) {
+                    console.log('Blocked counter request during checkout:', url);
+                    return Promise.resolve({
+                        json: () => Promise.resolve({ count: 0 }),
+                        ok: true
+                    });
+                }
+                return originalFetch.apply(this, arguments);
+            };
+            
+            // Disable all event listeners temporarily
+            const stopAllEvents = function(e) {
+                if (isSubmitting) {
+                    e.stopImmediatePropagation();
+                    e.preventDefault();
+                }
+            };
+            
+            window.addEventListener('cart-updated', stopAllEvents, true);
+            window.addEventListener('wishlist-updated', stopAllEvents, true);
+            
+            // Show loading state
+            const submitButton = this.querySelector('button[type="submit"]');
+            if (submitButton) {
+                submitButton.disabled = true;
+                submitButton.innerHTML = '<span class="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></span> Processing order...';
+            }
+            
+            // Disable all links and buttons
+            document.querySelectorAll('a, button').forEach(el => {
+                if (!el.closest('#checkout-form')) {
+                    el.style.pointerEvents = 'none';
+                    el.style.opacity = '0.6';
+                }
+            });
+            
+            console.log('All AJAX and events blocked during checkout');
+        });
+    }
+});
+
+// Also override XMLHttpRequest for older code
+(function() {
+    const originalXHR = window.XMLHttpRequest;
+    
+    window.XMLHttpRequest = function() {
+        const xhr = new originalXHR();
+        const originalOpen = xhr.open;
+        
+        xhr.open = function(method, url) {
+            if (window._isCheckoutInProgress && (url.includes('/cart/count') || url.includes('/wishlist/count'))) {
+                console.log('Blocked XHR counter request during checkout:', url);
+                // Return a dummy response
+                this.send = function() {
+                    Object.defineProperty(this, 'responseText', {
+                        get: function() { return '{"count": 0}'; }
+                    });
+                    Object.defineProperty(this, 'readyState', {
+                        get: function() { return 4; }
+                    });
+                    Object.defineProperty(this, 'status', {
+                        get: function() { return 200; }
+                    });
+                    if (this.onreadystatechange) {
+                        this.onreadystatechange();
+                    }
+                };
+                return;
+            }
+            return originalOpen.apply(this, arguments);
+        };
+        
+        return xhr;
+    };
+})();
+</script>
 @endsection
