@@ -317,3 +317,22 @@ Route::middleware(['auth', 'verified'])->prefix('account')->name('user.account.'
     Route::delete('/delete-account', [UserAccountController::class, 'deleteAccount'])->name('delete'); // ADD THIS
 });
 
+
+// Reviews (placeholder - implement ReviewController later)
+    Route::prefix('reviews')->name('user.reviews.')->group(function () {
+        Route::get('/', function() {
+            $reviews = \App\Models\Review::where('user_id', Auth::id())
+                ->with('product')
+                ->orderBy('created_at', 'desc')
+                ->paginate(10);
+            return view('user.reviews.index', compact('reviews'));
+        })->name('index');
+        
+        Route::get('/create/{order}', function($orderId) {
+            $order = \App\Models\Order::where('user_id', Auth::id())
+                ->where('id', $orderId)
+                ->firstOrFail();
+            return view('user.reviews.create', compact('order'));
+        })->name('create');
+    });
+

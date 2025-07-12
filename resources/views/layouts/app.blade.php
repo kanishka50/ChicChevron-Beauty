@@ -47,7 +47,7 @@
                                 <a href="{{ route('login') }}" class="hover:text-pink-200">Login</a>
                                 <a href="{{ route('register') }}" class="hover:text-pink-200">Register</a>
                             @else
-                                <a href="{{ route('account.index') }}" class="hover:text-pink-200">My Account</a>
+                                <a href="{{ route('user.account.index') }}" class="hover:text-pink-200">My Account</a>
                                 <form method="POST" action="{{ route('logout') }}" class="inline">
                                     @csrf
                                     <button type="submit" class="hover:text-pink-200">Logout</button>
@@ -170,7 +170,7 @@
                             <a href="{{ route('login') }}" class="block py-2 text-gray-700 hover:text-pink-600">Login</a>
                             <a href="{{ route('register') }}" class="block py-2 text-gray-700 hover:text-pink-600">Register</a>
                         @else
-                            <a href="{{ route('account.index') }}" class="block py-2 text-gray-700 hover:text-pink-600">My Account</a>
+                            <a href="{{ route('user.account.index') }}" class="block py-2 text-gray-700 hover:text-pink-600">My Account</a>
                             <a href="{{ route('user.orders.index') }}" class="block py-2 text-gray-700 hover:text-pink-600">My Orders</a>
                         @endguest
                     </div>
