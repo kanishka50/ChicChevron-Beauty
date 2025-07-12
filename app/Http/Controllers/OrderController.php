@@ -141,14 +141,17 @@ class OrderController extends BaseController
         try {
             
 
-            // For COD orders, mark payment as completed when order is received
+         // For COD orders, mark payment as completed FIRST
         if ($order->payment_method === 'cod' && $order->payment_status === 'pending') {
+            // Use a timestamp 1 second before current time
+            $paymentTimestamp = now()->subSecond();
+            
             $order->payment_status = 'completed';
             $order->payment_reference = 'COD-' . now()->timestamp;
             $order->save();
             
-            // Add payment status history
-            $order->addStatusHistory('payment_completed', 'Payment received via Cash on Delivery');
+            // Add payment status history with earlier timestamp
+            $order->addStatusHistory('payment_completed', 'Payment received via Cash on Delivery', null, $paymentTimestamp);
         }
 
         $order->updateStatus('completed', 'Order marked as completed by customer');

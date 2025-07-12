@@ -169,14 +169,18 @@ class Order extends Model
     /**
      * Add a status history entry.
      */
-    public function addStatusHistory($status, $comment = null, $adminId = null)
-    {
-        return $this->statusHistory()->create([
-            'status' => $status,
-            'comment' => $comment,
-            'changed_by' => $adminId,
-        ]);
-    }
+    /**
+ * Add a status history entry.
+ */
+public function addStatusHistory($status, $comment = null, $adminId = null, $timestamp = null)
+{
+    return $this->statusHistory()->create([
+        'status' => $status,
+        'comment' => $comment,
+        'changed_by' => $adminId,
+        'created_at' => $timestamp ?: now()
+    ]);
+}
 
     /**
      * Update order status.

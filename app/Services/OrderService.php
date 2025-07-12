@@ -421,16 +421,19 @@ class OrderService
         
         try {
 
-            // Handle COD payment completion
+            // Handle COD payment completion BEFORE updating order status
         if ($newStatus === 'completed' && $order->payment_method === 'cod' && $order->payment_status === 'pending') {
+            // Use a timestamp 1 second before current time
+            $paymentTimestamp = now()->subSecond();
+            
             $order->payment_status = 'completed';
             $order->payment_reference = 'COD-' . now()->timestamp;
             $order->save();
             
-            // Add payment status history
-            $order->addStatusHistory('payment_completed', 'Payment received via Cash on Delivery', $adminId);
+            // Add payment status history with earlier timestamp
+            $order->addStatusHistory('payment_completed', 'Payment received via Cash on Delivery', $adminId, $paymentTimestamp);
         }
-        
+
             // Handle inventory changes based on status
             if ($newStatus === 'cancelled') {
                 // Release reserved stock

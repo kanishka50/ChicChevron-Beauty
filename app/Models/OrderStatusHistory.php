@@ -13,6 +13,7 @@ class OrderStatusHistory extends Model
         'status',        // Changed from 'from_status' and 'to_status'
         'comment',       // Changed from 'notes'
         'changed_by',
+        'created_at',
     ];
 
     // Update methods accordingly
