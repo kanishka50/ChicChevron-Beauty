@@ -218,8 +218,8 @@ class CheckoutController extends Controller
                 'payment_status' => 'pending',
                 
                 // Use saved address data
-                'customer_name' => $address->name,
-                'customer_phone' => $address->phone,
+                'customer_name' => Auth::user()->name, 
+                'customer_phone' => Auth::user()->phone,
                 'customer_email' => Auth::user()->email,
                 
                 // Delivery information from saved address
