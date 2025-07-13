@@ -8,6 +8,8 @@ use App\Services\OrderService;  // Add this import
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;  // Add this import
+use Illuminate\Support\Facades\Mail;
+use App\Mail\OrderStatusUpdate;
 
 class PaymentController extends Controller
 {
@@ -161,6 +163,25 @@ public function confirmPayment(Request $request, Order $order)
             $order->id
         );
     }
+
+    // SEND PAYMENT COMPLETION EMAIL
+        if ($order->user && $order->user->email) {
+            try {
+                Mail::to($order->user->email)
+                    ->send(new OrderStatusUpdate($order, 'payment_completed', 'Payment confirmed successfully'));
+                
+                Log::info('Payment completion email sent', [
+                    'order_id' => $order->id,
+                    'order_number' => $order->order_number,
+                    'email' => $order->user->email
+                ]);
+            } catch (\Exception $emailException) {
+                Log::error('Failed to send payment completion email', [
+                    'order_id' => $order->id,
+                    'error' => $emailException->getMessage()
+                ]);
+            }
+        }
     
     Log::info('Payment manually confirmed', [
         'order_id' => $order->id,
