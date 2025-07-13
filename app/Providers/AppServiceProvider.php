@@ -26,5 +26,6 @@ class AppServiceProvider extends ServiceProvider
         if (app()->environment('local') && strpos(config('app.url'), 'ngrok') !== false) {
             URL::forceScheme('https');
         }
+        
     }
 }

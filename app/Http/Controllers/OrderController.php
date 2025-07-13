@@ -9,18 +9,23 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Routing\Controller as BaseController;
+use App\Services\OrderService;
+use App\Mail\OrderStatusUpdate;
+use Illuminate\Support\Facades\Mail;
 
 class OrderController extends BaseController
 {
     use AuthorizesRequests;
     
     protected $invoiceService;
+    protected $orderService;
 
-    public function __construct(InvoiceService $invoiceService)
-    {
-        $this->middleware('auth');
-        $this->invoiceService = $invoiceService;
-    }
+    public function __construct(InvoiceService $invoiceService, OrderService $orderService)
+{
+    $this->middleware('auth');
+    $this->invoiceService = $invoiceService;
+    $this->orderService = $orderService;
+}
 
     /**
      * Display customer's order history
@@ -154,7 +159,12 @@ class OrderController extends BaseController
             $order->addStatusHistory('payment_completed', 'Payment received via Cash on Delivery', null, $paymentTimestamp);
         }
 
-        $order->updateStatus('completed', 'Order marked as completed by customer');
+        $this->orderService->updateOrderStatus(
+            $order,
+            'completed',
+            'Order marked as completed by customer. Thank you for confirming delivery!',
+            null // No admin ID since this is customer action
+        );
 
             // Send completion notification email (optional)
             // Mail::to($order->user)->send(new OrderStatusUpdate($order, 'completed', 'Thank you for confirming delivery!'));
