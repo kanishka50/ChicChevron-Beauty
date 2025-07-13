@@ -28,11 +28,6 @@
             font-size: 28px;
             font-weight: 300;
         }
-        .header .order-number {
-            font-size: 18px;
-            margin-top: 10px;
-            opacity: 0.9;
-        }
         .content {
             padding: 30px;
         }
@@ -54,26 +49,11 @@
             color: #111827;
             margin-bottom: 10px;
         }
-        .status-message {
-            font-size: 18px;
-            color: #6b7280;
-            margin-bottom: 15px;
-        }
-        .status-description {
-            font-size: 16px;
-            color: #374151;
-            line-height: 1.5;
-        }
         .order-info {
             background-color: #f9fafb;
             padding: 20px;
             border-radius: 8px;
             margin-bottom: 30px;
-        }
-        .order-info h3 {
-            margin: 0 0 15px 0;
-            color: #374151;
-            font-size: 18px;
         }
         .order-details {
             display: grid;
@@ -83,7 +63,6 @@
         .order-detail {
             display: flex;
             justify-content: space-between;
-            align-items: center;
             padding: 8px 0;
         }
         .order-detail .label {
@@ -94,127 +73,15 @@
             color: #111827;
             font-weight: 600;
         }
-        .next-steps {
-            margin-bottom: 30px;
-        }
-        .next-steps h3 {
-            color: #374151;
-            font-size: 20px;
-            margin-bottom: 15px;
-        }
-        .steps-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-        .steps-list li {
-            background-color: #f0fdf4;
-            padding: 12px 16px;
-            margin-bottom: 8px;
-            border-radius: 8px;
-            border-left: 3px solid #10b981;
-            color: #374151;
-        }
-        .steps-list li:before {
-            content: "✓";
-            color: #10b981;
-            font-weight: bold;
-            margin-right: 10px;
-        }
-        .comment-section {
-            background-color: #fefce8;
-            padding: 20px;
-            border-radius: 8px;
-            border-left: 4px solid #eab308;
-            margin-bottom: 30px;
-        }
-        .comment-section h4 {
-            margin: 0 0 10px 0;
-            color: #92400e;
-            font-size: 16px;
-        }
-        .comment-section p {
-            margin: 0;
-            color: #78716c;
-            font-style: italic;
-        }
-        .cta-section {
-            text-align: center;
-            margin: 30px 0;
-        }
-        .cta-button {
+        .button {
             display: inline-block;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 12px 30px;
+            background-color: #667eea;
             color: white;
             text-decoration: none;
-            padding: 15px 30px;
-            border-radius: 8px;
+            border-radius: 6px;
             font-weight: 600;
-            margin: 10px;
-        }
-        .cta-button.secondary {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-        }
-        .timeline {
-            margin: 30px 0;
-        }
-        .timeline h3 {
-            color: #374151;
-            font-size: 20px;
-            margin-bottom: 20px;
-        }
-        .timeline-item {
-            display: flex;
-            align-items: center;
-            margin-bottom: 15px;
-            padding: 10px 0;
-        }
-        .timeline-icon {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-right: 15px;
-            font-size: 14px;
-            color: white;
-        }
-        .timeline-icon.completed {
-            background-color: #10b981;
-        }
-        .timeline-icon.current {
-            background-color: {{ $statusInfo['color'] }};
-        }
-        .timeline-icon.pending {
-            background-color: #d1d5db;
-        }
-        .timeline-text {
-            flex: 1;
-            color: #374151;
-        }
-        .timeline-text.current {
-            font-weight: 600;
-            color: #111827;
-        }
-        .contact-info {
-            background-color: #f3f4f6;
-            padding: 25px;
-            border-radius: 8px;
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        .contact-info h4 {
-            margin: 0 0 15px 0;
-            color: #374151;
-        }
-        .contact-info p {
-            margin: 5px 0;
-            color: #6b7280;
-        }
-        .contact-info a {
-            color: #667eea;
-            text-decoration: none;
+            margin: 10px 5px;
         }
         .footer {
             background-color: #f9fafb;
@@ -222,25 +89,9 @@
             text-align: center;
             border-top: 1px solid #e5e7eb;
         }
-        .footer p {
-            margin: 5px 0;
-            color: #6b7280;
-            font-size: 14px;
-        }
-        .footer .company-name {
-            font-weight: 600;
-            color: #374151;
-        }
         @media (max-width: 600px) {
             .order-details {
                 grid-template-columns: 1fr;
-            }
-            .content {
-                padding: 20px;
-            }
-            .cta-button {
-                display: block;
-                margin: 10px 0;
             }
         }
     </style>
@@ -250,7 +101,6 @@
         <!-- Header -->
         <div class="header">
             <h1>🌸 ChicChevron Beauty</h1>
-            <div class="order-number">Order Update</div>
         </div>
 
         <!-- Content -->
@@ -292,104 +142,49 @@
 
             <!-- Comment Section (if comment exists) -->
             @if($comment)
-                <div class="comment-section">
-                    <h4>💬 Additional Information</h4>
-                    <p>"{{ $comment }}"</p>
+                <div style="background-color: #fefce8; padding: 20px; border-radius: 8px; border-left: 4px solid #eab308; margin-bottom: 30px;">
+                    <h4 style="margin: 0 0 10px 0; color: #92400e;">💬 Additional Information</h4>
+                    <p style="margin: 0; color: #78716c; font-style: italic;">"{{ $comment }}"</p>
                     @if($adminName)
                         <p style="font-size: 12px; margin-top: 10px;">- {{ $adminName }}</p>
                     @endif
                 </div>
             @endif
 
-            <!-- Order Timeline -->
-            <div class="timeline">
-                <h3>📋 Order Progress</h3>
-                
-                <div class="timeline-item">
-                    <div class="timeline-icon completed">✓</div>
-                    <div class="timeline-text">Order Confirmed & Payment Processed</div>
-                </div>
-                
-                <div class="timeline-item">
-                    <div class="timeline-icon {{ in_array($newStatus, ['processing', 'shipping', 'completed']) ? 'completed' : ($newStatus === 'processing' ? 'current' : 'pending') }}">
-                        {{ in_array($newStatus, ['processing', 'shipping', 'completed']) ? '✓' : '2' }}
-                    </div>
-                    <div class="timeline-text {{ $newStatus === 'processing' ? 'current' : '' }}">Order Processing</div>
-                </div>
-                
-                <div class="timeline-item">
-                    <div class="timeline-icon {{ in_array($newStatus, ['shipping', 'completed']) ? 'completed' : ($newStatus === 'shipping' ? 'current' : 'pending') }}">
-                        {{ in_array($newStatus, ['shipping', 'completed']) ? '✓' : '3' }}
-                    </div>
-                    <div class="timeline-text {{ $newStatus === 'shipping' ? 'current' : '' }}">Order Shipped</div>
-                </div>
-                
-                <div class="timeline-item">
-                    <div class="timeline-icon {{ $newStatus === 'completed' ? 'completed current' : 'pending' }}">
-                        {{ $newStatus === 'completed' ? '✓' : '4' }}
-                    </div>
-                    <div class="timeline-text {{ $newStatus === 'completed' ? 'current' : '' }}">Order Delivered</div>
-                </div>
-            </div>
-
             <!-- Next Steps -->
-            <div class="next-steps">
-                <h3>🎯 What's Next?</h3>
-                <ul class="steps-list">
+            <div style="margin-bottom: 30px;">
+                <h3>What's Next?</h3>
+                <ul style="list-style: none; padding: 0;">
                     @foreach($nextSteps as $step)
-                        <li>{{ $step }}</li>
+                        <li style="background-color: #f0fdf4; padding: 12px 16px; margin-bottom: 8px; border-radius: 8px; border-left: 3px solid #10b981;">
+                            ✓ {{ $step }}
+                        </li>
                     @endforeach
                 </ul>
             </div>
 
             <!-- CTA Buttons -->
-            <div class="cta-section">
-                <a href="{{ $tracking['order_url'] }}" class="cta-button">
-                    View Order Details
-                </a>
-                
-                @if($newStatus === 'completed')
-                    <a href="{{ route('user.reviews.create', $order) }}" class="cta-button secondary">
-                        Leave a Review
-                    </a>
-                @endif
-            </div>
-
-            <!-- Contact Info -->
-            <div class="contact-info">
-                <h4>📞 Need Help?</h4>
-                <p>Our customer support team is here to help you!</p>
-                <p>
-                    📧 Email: <a href="mailto:{{ $tracking['support_email'] }}">{{ $tracking['support_email'] }}</a>
-                </p>
-                <p>
-                    📞 Phone: {{ $tracking['support_phone'] }}
-                </p>
-                <p style="font-size: 12px; margin-top: 15px; color: #9ca3af;">
-                    Support Hours: Monday - Friday, 9:00 AM - 6:00 PM (Sri Lanka Time)
-                </p>
-            </div>
-
-            <!-- Thank You Message -->
             <div style="text-align: center; margin: 30px 0;">
-                <p style="font-size: 18px; color: #374151;">
-                    Thank you for choosing ChicChevron Beauty! 💖
-                </p>
+                <a href="{{ $tracking['order_url'] }}" class="button">View Order Details</a>
+            </div>
+
+            <!-- Support Info -->
+            <div style="text-align: center; margin-top: 30px;">
+                <p style="color: #6b7280;">Need help? Contact us:</p>
                 <p style="color: #6b7280;">
-                    We appreciate your business and hope you love your products.
+                    📧 {{ $tracking['support_email'] }}<br>
+                    📞 {{ $tracking['support_phone'] }}
                 </p>
             </div>
         </div>
 
         <!-- Footer -->
         <div class="footer">
-            <p class="company-name">ChicChevron Beauty</p>
-            <p>Your trusted partner for premium beauty products</p>
-            <p>Ratnapura, Sabaragamuwa Province, Sri Lanka</p>
-            
-            <p style="margin-top: 20px; font-size: 12px;">
-                This email was sent to {{ $customer['email'] }}. 
-                <br>© {{ date('Y') }} ChicChevron Beauty. All rights reserved.
+            <p style="margin: 5px 0; color: #6b7280; font-size: 14px;">
+                Thank you for choosing ChicChevron Beauty!
+            </p>
+            <p style="margin: 5px 0; color: #6b7280; font-size: 12px;">
+                © {{ date('Y') }} ChicChevron Beauty. All rights reserved.
             </p>
         </div>
     </div>

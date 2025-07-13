@@ -89,10 +89,12 @@ class OrderController extends Controller
     $request->validate([
         'status' => 'required|in:processing,shipping,completed,cancelled',
         'comment' => 'nullable|string|max:500',
-        'notify_customer' => 'sometimes|boolean'
+        'notify_customer' => 'sometimes|boolean',
+        
     ]);
 
     try {
+
         // Use the OrderService to update status
         $result = $this->orderService->updateOrderStatus(
             $order,
@@ -107,13 +109,20 @@ class OrderController extends Controller
                 'success' => true,
                 'message' => 'Order status updated successfully!',
                 'new_status' => $order->fresh()->status,
-                'status_label' => ucfirst(str_replace('_', ' ', $order->fresh()->status))
+                'status_label' => ucfirst(str_replace('_', ' ', $order->fresh()->status)),
+                'order' => [
+                        'status' => $order->fresh()->status,
+                        'status_label' => ucfirst(str_replace('_', ' ', $order->fresh()->status)),
+                        'status_color' => $this->getStatusColor($order->fresh()->status),
+                        'can_be_cancelled' => in_array($order->fresh()->status, ['payment_completed', 'processing']),
+                        'can_be_completed' => $order->fresh()->status === 'shipping'
+                    ]
             ]);
         }
 
         // For non-AJAX requests
         return redirect()->route('admin.orders.show', $order)
-                       ->with('success', 'Order status updated successfully!');
+                       ->with('success', 'Order status updated successfully! Customer has been notified.');
 
     } catch (\Exception $e) {
              Log::error('Order status update failed', [
@@ -135,6 +144,24 @@ class OrderController extends Controller
                        ->with('error', 'Error updating order status: ' . $e->getMessage());
     }
 }
+
+
+
+/**
+ * Helper method to get status color
+ */
+  private function getStatusColor($status)
+    {
+        $colors = [
+            'payment_completed' => 'bg-blue-100 text-blue-800',
+            'processing' => 'bg-yellow-100 text-yellow-800',
+            'shipping' => 'bg-purple-100 text-purple-800',
+            'completed' => 'bg-green-100 text-green-800',
+            'cancelled' => 'bg-red-100 text-red-800',
+        ];
+
+        return $colors[$status] ?? 'bg-gray-100 text-gray-800';
+    }
     /**
      * Generate and download invoice
      */

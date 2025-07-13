@@ -28,204 +28,78 @@
             font-size: 28px;
             font-weight: 300;
         }
-        .header .order-number {
-            font-size: 18px;
-            margin-top: 10px;
-            opacity: 0.9;
-        }
         .content {
             padding: 30px;
         }
         .success-message {
-            background-color: #d1fae5;
-            color: #047857;
-            padding: 20px;
-            border-radius: 8px;
-            text-align: center;
-            margin-bottom: 30px;
+            background-color: #f0fdf4;
             border-left: 4px solid #10b981;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 8px;
         }
-        .success-message .icon {
+        .success-icon {
             font-size: 48px;
+            text-align: center;
             margin-bottom: 10px;
         }
-        .section {
-            margin-bottom: 30px;
-        }
-        .section-title {
-            font-size: 20px;
-            font-weight: 600;
-            color: #374151;
-            margin-bottom: 15px;
-            border-bottom: 2px solid #e5e7eb;
-            padding-bottom: 8px;
-        }
-        .order-item {
-            display: flex;
-            align-items: center;
-            padding: 15px 0;
-            border-bottom: 1px solid #f3f4f6;
-        }
-        .order-item:last-child {
-            border-bottom: none;
-        }
-        .item-image {
-            width: 60px;
-            height: 60px;
-            border-radius: 8px;
-            margin-right: 15px;
-            object-fit: cover;
-        }
-        .item-details {
-            flex: 1;
-        }
-        .item-name {
-            font-weight: 600;
-            color: #111827;
-            margin-bottom: 5px;
-        }
-        .item-variants {
-            font-size: 14px;
-            color: #6b7280;
-            margin-bottom: 5px;
-        }
-        .item-brand {
-            font-size: 12px;
-            color: #9ca3af;
-        }
-        .item-price {
-            text-align: right;
-            font-weight: 600;
-            color: #111827;
-        }
-        .item-quantity {
-            font-size: 14px;
-            color: #6b7280;
-        }
-        .variant-badge {
-            display: inline-block;
-            background-color: #e0e7ff;
-            color: #3730a3;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 12px;
-            margin-right: 5px;
-        }
-        .totals-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-        .totals-table td {
-            padding: 8px 0;
-            border-bottom: 1px solid #f3f4f6;
-        }
-        .totals-table .label {
-            color: #6b7280;
-            width: 70%;
-        }
-        .totals-table .amount {
-            text-align: right;
-            font-weight: 600;
-            color: #111827;
-        }
-        .totals-table .total-row {
-            border-top: 2px solid #e5e7eb;
-            font-size: 18px;
-            font-weight: bold;
-        }
-        .totals-table .total-row td {
-            padding-top: 15px;
-            border-bottom: none;
-        }
-        .info-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-top: 20px;
-        }
-        .info-card {
+        .order-info {
             background-color: #f9fafb;
             padding: 20px;
             border-radius: 8px;
+            margin-bottom: 30px;
         }
-        .info-card h4 {
-            margin: 0 0 10px 0;
-            color: #374151;
-            font-size: 16px;
+        .order-items {
+            margin: 20px 0;
         }
-        .info-card p {
-            margin: 5px 0;
+        .item {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .item:last-child {
+            border-bottom: none;
+        }
+        .item-details h4 {
+            margin: 0 0 5px 0;
+            color: #111827;
+        }
+        .item-details p {
+            margin: 0;
             color: #6b7280;
             font-size: 14px;
         }
-        .payment-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
+        .totals {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #e5e7eb;
+        }
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+        }
+        .total-row.final {
             font-weight: 600;
-            text-transform: uppercase;
+            font-size: 18px;
+            color: #111827;
         }
-        .payment-completed {
-            background-color: #d1fae5;
-            color: #047857;
-        }
-        .payment-pending {
-            background-color: #fef3c7;
-            color: #92400e;
-        }
-        .cta-button {
+        .button {
             display: inline-block;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 12px 30px;
+            background-color: #667eea;
             color: white;
             text-decoration: none;
-            padding: 15px 30px;
-            border-radius: 8px;
+            border-radius: 6px;
             font-weight: 600;
-            text-align: center;
-            margin: 20px auto;
-            display: block;
-            width: fit-content;
+            margin: 10px 5px;
         }
         .footer {
             background-color: #f9fafb;
             padding: 30px;
             text-align: center;
             border-top: 1px solid #e5e7eb;
-        }
-        .footer p {
-            margin: 5px 0;
-            color: #6b7280;
-            font-size: 14px;
-        }
-        .footer .company-name {
-            font-weight: 600;
-            color: #374151;
-        }
-        .social-links {
-            margin-top: 20px;
-        }
-        .social-links a {
-            margin: 0 10px;
-            color: #6b7280;
-            text-decoration: none;
-        }
-        @media (max-width: 600px) {
-            .info-grid {
-                grid-template-columns: 1fr;
-            }
-            .content {
-                padding: 20px;
-            }
-            .order-item {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-            .item-price {
-                text-align: left;
-                margin-top: 10px;
-            }
         }
     </style>
 </head>
@@ -234,161 +108,137 @@
         <!-- Header -->
         <div class="header">
             <h1>🌸 ChicChevron Beauty</h1>
-            <div class="order-number">Order Confirmation</div>
+            <p style="margin-top: 10px; opacity: 0.9;">Thank you for your order!</p>
         </div>
 
         <!-- Content -->
         <div class="content">
             <!-- Success Message -->
             <div class="success-message">
-                <div class="icon">✅</div>
-                <h2 style="margin: 0;">Thank You for Your Order!</h2>
-                <p style="margin: 10px 0 0 0;">Order {{ $order->order_number }} has been confirmed</p>
+                <div class="success-icon">✅</div>
+                <h2 style="text-align: center; margin: 0 0 10px 0; color: #059669;">Order Confirmed!</h2>
+                <p style="text-align: center; margin: 0; color: #047857;">
+                    Your order has been successfully placed and is being processed.
+                </p>
             </div>
 
             <!-- Greeting -->
             <p>Hi {{ $customer['name'] }},</p>
-            <p>Thank you for shopping with ChicChevron Beauty! We're excited to prepare your beautiful selection of products. Your order has been confirmed and will be processed shortly.</p>
+            <p>Thank you for shopping with ChicChevron Beauty! We're excited to prepare your order.</p>
+
+            <!-- Order Information -->
+            <div class="order-info">
+                <h3 style="margin-top: 0;">📦 Order Details</h3>
+                <p><strong>Order Number:</strong> {{ $order->order_number }}</p>
+                <p><strong>Order Date:</strong> {{ $order->created_at->format('F j, Y \a\t g:i A') }}</p>
+                <p><strong>Payment Method:</strong> {{ $payment['method'] }}</p>
+                @if($payment['method'] === 'COD')
+                    <p style="color: #dc2626;"><strong>Payment Due:</strong> LKR {{ number_format($order->total_amount, 2) }} (on delivery)</p>
+                @else
+                    <p><strong>Payment Status:</strong> {{ $payment['status'] }}</p>
+                @endif
+            </div>
 
             <!-- Order Items -->
-            <div class="section">
-                <h3 class="section-title">Order Items ({{ $items->count() }})</h3>
+            <div class="order-items">
+                <h3>Items Ordered</h3>
                 @foreach($items as $item)
-                    <div class="order-item">
-                        <img src="{{ asset('storage/' . $item->product->main_image) }}" 
-                             alt="{{ $item->product_name }}" 
-                             class="item-image">
+                    <div class="item">
                         <div class="item-details">
-                            <div class="item-name">{{ $item->product_name }}</div>
-                            @if($item->variantCombination)
-                                @php $variantDetails = json_decode($item->variant_details, true); @endphp
-                                <div class="item-variants">
-                                    @if(!empty($variantDetails['size']))
-                                        <span class="variant-badge">{{ $variantDetails['size'] }}</span>
-                                    @endif
-                                    @if(!empty($variantDetails['color']))
-                                        <span class="variant-badge">{{ $variantDetails['color'] }}</span>
-                                    @endif
-                                    @if(!empty($variantDetails['scent']))
-                                        <span class="variant-badge">{{ $variantDetails['scent'] }}</span>
-                                    @endif
-                                </div>
+                            <h4>{{ $item->product_name }}</h4>
+                            @if($item->variant_details)
+                                @php $variants = json_decode($item->variant_details, true); @endphp
+                                <p>
+                                    @if(isset($variants['size'])) Size: {{ $variants['size'] }} @endif
+                                    @if(isset($variants['color'])) | Color: {{ $variants['color'] }} @endif
+                                    @if(isset($variants['scent'])) | Scent: {{ $variants['scent'] }} @endif
+                                </p>
                             @endif
-                            <div class="item-brand">{{ $item->product->brand->name ?? 'ChicChevron Beauty' }}</div>
+                            <p>Qty: {{ $item->quantity }} × LKR {{ number_format($item->unit_price, 2) }}</p>
                         </div>
                         <div class="item-price">
-                            <div>LKR {{ number_format($item->unit_price, 2) }}</div>
-                            <div class="item-quantity">Qty: {{ $item->quantity }}</div>
-                            @if($item->discount_amount > 0)
-                                <div style="color: #10b981; font-size: 12px;">
-                                    -LKR {{ number_format($item->discount_amount, 2) }}
-                                </div>
-                            @endif
-                            <div style="font-weight: bold; margin-top: 5px;">
-                                LKR {{ number_format($item->total_price, 2) }}
-                            </div>
+                            <strong>LKR {{ number_format($item->total_price, 2) }}</strong>
                         </div>
                     </div>
                 @endforeach
-            </div>
 
-            <!-- Order Totals -->
-            <div class="section">
-                <h3 class="section-title">Order Summary</h3>
-                <table class="totals-table">
-                    <tr>
-                        <td class="label">Subtotal:</td>
-                        <td class="amount">LKR {{ number_format($order->subtotal, 2) }}</td>
-                    </tr>
+                <!-- Order Totals -->
+                <div class="totals">
+                    <div class="total-row">
+                        <span>Subtotal:</span>
+                        <span>LKR {{ number_format($order->subtotal, 2) }}</span>
+                    </div>
                     @if($order->discount_amount > 0)
-                        <tr>
-                            <td class="label">Discount:</td>
-                            <td class="amount" style="color: #10b981;">-LKR {{ number_format($order->discount_amount, 2) }}</td>
-                        </tr>
+                        <div class="total-row">
+                            <span>Discount:</span>
+                            <span>- LKR {{ number_format($order->discount_amount, 2) }}</span>
+                        </div>
                     @endif
                     @if($order->shipping_amount > 0)
-                        <tr>
-                            <td class="label">Shipping:</td>
-                            <td class="amount">LKR {{ number_format($order->shipping_amount, 2) }}</td>
-                        </tr>
-                    @else
-                        <tr>
-                            <td class="label">Shipping:</td>
-                            <td class="amount" style="color: #10b981;">FREE</td>
-                        </tr>
+                        <div class="total-row">
+                            <span>Shipping:</span>
+                            <span>LKR {{ number_format($order->shipping_amount, 2) }}</span>
+                        </div>
                     @endif
-                    <tr class="total-row">
-                        <td class="label">Total:</td>
-                        <td class="amount">LKR {{ number_format($order->total_amount, 2) }}</td>
-                    </tr>
-                </table>
-            </div>
-
-            <!-- Customer & Payment Info -->
-            <div class="info-grid">
-                <div class="info-card">
-                    <h4>🚚 Shipping Address</h4>
-                    <p><strong>{{ $customer['name'] }}</strong></p>
-                    <p>{{ $customer['phone'] }}</p>
-                    <p>{{ $customer['address'] }}</p>
-                </div>
-                <div class="info-card">
-                    <h4>💳 Payment Information</h4>
-                    <p><strong>Method:</strong> {{ $payment['method'] }}</p>
-                    <p><strong>Status:</strong> 
-                        <span class="payment-badge {{ $payment['status'] === 'Completed' ? 'payment-completed' : 'payment-pending' }}">
-                            {{ $payment['status'] }}
-                        </span>
-                    </p>
-                    @if($payment['reference'])
-                        <p><strong>Reference:</strong> {{ $payment['reference'] }}</p>
-                    @endif
+                    <div class="total-row final">
+                        <span>Total Amount:</span>
+                        <span>LKR {{ number_format($order->total_amount, 2) }}</span>
+                    </div>
                 </div>
             </div>
 
-            <!-- Next Steps -->
-            <div class="section">
-                <h3 class="section-title">What Happens Next?</h3>
-                <ul style="color: #6b7280; padding-left: 20px;">
-                    <li style="margin-bottom: 8px;">📦 We'll start processing your order within 24 hours</li>
-                    <li style="margin-bottom: 8px;">🚚 You'll receive a shipping notification with tracking details</li>
-                    <li style="margin-bottom: 8px;">📱 Track your order anytime in your account</li>
-                    <li style="margin-bottom: 8px;">📞 Contact us if you have any questions</li>
+            <!-- Delivery Information -->
+            <div class="order-info">
+                <h3>🚚 Delivery Information</h3>
+                <p><strong>Name:</strong> {{ $order->shipping_name }}</p>
+                <p><strong>Phone:</strong> {{ $order->shipping_phone }}</p>
+                <p><strong>Address:</strong><br>
+                    {{ $order->shipping_address_line_1 }}<br>
+                    @if($order->shipping_address_line_2)
+                        {{ $order->shipping_address_line_2 }}<br>
+                    @endif
+                    {{ $order->shipping_city }}, {{ $order->shipping_district }}<br>
+                    @if($order->shipping_postal_code)
+                        Postal Code: {{ $order->shipping_postal_code }}
+                    @endif
+                </p>
+                @if($order->notes)
+                    <p><strong>Delivery Notes:</strong> {{ $order->notes }}</p>
+                @endif
+            </div>
+
+            <!-- What's Next -->
+            <div style="margin: 30px 0;">
+                <h3>What happens next?</h3>
+                <ul style="list-style: none; padding: 0;">
+                    <li style="padding: 8px 0;">✓ We'll process your order within 1-2 business days</li>
+                    <li style="padding: 8px 0;">✓ You'll receive an email when your order ships</li>
+                    <li style="padding: 8px 0;">✓ Estimated delivery: 3-5 business days</li>
                 </ul>
             </div>
 
-            <!-- CTA Button -->
-            <a href="{{ $tracking['order_url'] }}" class="cta-button">
-                Track Your Order
-            </a>
+            <!-- CTA Buttons -->
+            <div style="text-align: center; margin: 30px 0;">
+                <a href="{{ $tracking['order_url'] }}" class="button">View Order Status</a>
+            </div>
 
-            <!-- Contact Info -->
-            <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; text-align: center;">
-                <h4 style="margin: 0 0 10px 0; color: #374151;">Need Help?</h4>
-                <p style="margin: 5px 0; color: #6b7280;">
-                    📧 Email: <a href="mailto:{{ $tracking['support_email'] }}" style="color: #667eea;">{{ $tracking['support_email'] }}</a>
-                </p>
-                <p style="margin: 5px 0; color: #6b7280;">
-                    📞 Phone: {{ $tracking['support_phone'] }}
+            <!-- Support Info -->
+            <div style="text-align: center; margin-top: 30px;">
+                <p style="color: #6b7280;">Questions about your order?</p>
+                <p style="color: #6b7280;">
+                    📧 {{ $tracking['support_email'] }}<br>
+                    📞 {{ $tracking['support_phone'] }}
                 </p>
             </div>
         </div>
 
         <!-- Footer -->
         <div class="footer">
-            <p class="company-name">ChicChevron Beauty</p>
-            <p>Your trusted partner for premium beauty products</p>
-            <p>Ratnapura, Sabaragamuwa Province, Sri Lanka</p>
-            
-            <div class="social-links">
-                <a href="#" style="text-decoration: none;">📘 Facebook</a>
-                <a href="#" style="text-decoration: none;">📷 Instagram</a>
-                <a href="#" style="text-decoration: none;">🐦 Twitter</a>
-            </div>
-            
-            <p style="margin-top: 20px; font-size: 12px;">
-                This email was sent to {{ $customer['email'] }}. 
-                <br>© {{ date('Y') }} ChicChevron Beauty. All rights reserved.
+            <p style="margin: 5px 0; color: #6b7280; font-size: 14px;">
+                Thank you for choosing ChicChevron Beauty!
+            </p>
+            <p style="margin: 5px 0; color: #6b7280; font-size: 12px;">
+                © {{ date('Y') }} ChicChevron Beauty. All rights reserved.
             </p>
         </div>
     </div>

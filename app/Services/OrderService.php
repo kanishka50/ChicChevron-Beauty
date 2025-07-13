@@ -10,6 +10,8 @@ use App\Models\VariantCombination;
 use App\Services\InventoryService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Mail\OrderStatusUpdate;
+use Illuminate\Support\Facades\Mail;
 
 class OrderService
 {
@@ -445,6 +447,48 @@ class OrderService
 
             // Update order status
             $order->updateStatus($newStatus, $comment, $adminId);
+
+            // SEND EMAIL NOTIFICATION - NEW CODE
+        if ($order->user && $order->user->email) {
+            try {
+                // Get admin name if available
+                $adminName = null;
+                if ($adminId) {
+                    $admin = \App\Models\Admin::find($adminId);
+                    $adminName = $admin ? $admin->name : 'Support Team';
+                }
+
+                // Send the email
+                Mail::to($order->user->email)
+                    ->send(new OrderStatusUpdate($order, $newStatus, $comment, $adminName));
+                
+                Log::info('Order status email sent successfully', [
+                    'order_id' => $order->id,
+                    'order_number' => $order->order_number,
+                    'status' => $newStatus,
+                    'email' => $order->user->email
+                ]);
+            } catch (\Exception $emailException) {
+                // Log email error but don't fail the whole transaction
+                Log::error('Failed to send order status email', [
+                    'order_id' => $order->id,
+                    'order_number' => $order->order_number,
+                    'error' => $emailException->getMessage()
+                ]);
+                
+                // Add a note about email failure to order history
+                $order->addStatusHistory(
+                    $newStatus,
+                    'Note: Email notification failed to send. Error: ' . $emailException->getMessage(),
+                    $adminId
+                );
+            }
+        } else {
+            Log::warning('No email sent - user email not available', [
+                'order_id' => $order->id,
+                'order_number' => $order->order_number
+            ]);
+        }
 
             DB::commit();
 

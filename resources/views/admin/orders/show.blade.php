@@ -398,6 +398,13 @@
                               placeholder="Add a note about this status change..."
                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
                 </div>
+
+                <div class="mb-6">
+                    <label class="flex items-center">
+                        <input type="checkbox" name="notify_customer" value="1" checked class="mr-2 rounded" id="notifyCustomer">
+                        <span class="text-sm text-green-600">Send email notification to customer</span>
+                    </label>
+                </div>
                 
                 <div class="flex justify-center space-x-3">
                     <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md">
@@ -485,7 +492,7 @@ function submitStatusUpdate(event) {
     
     // First, let's change the route from PUT to POST
     fetch(`{{ route('admin.orders.update-status', $order) }}`, {
-        method: 'POST',
+        method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
@@ -493,7 +500,7 @@ function submitStatusUpdate(event) {
             'X-Requested-With': 'XMLHttpRequest'
         },
         body: JSON.stringify({
-            _method: 'PUT', // Method spoofing for Laravel
+            // _method: 'PUT', // Method spoofing for Laravel
             status: status,
             comment: comment,
             notify_customer: true

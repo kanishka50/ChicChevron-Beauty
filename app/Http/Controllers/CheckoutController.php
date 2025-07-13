@@ -14,6 +14,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Log;
+use App\Mail\OrderConfirmation;
+use Illuminate\Support\Facades\Mail;
 
 class CheckoutController extends Controller
 {
@@ -64,13 +66,17 @@ class CheckoutController extends Controller
     /**
      * Process checkout and create order
      */
-    public function store(CheckoutRequest $request)
-    {
-        DB::beginTransaction();
-        
-        try {
-            // Validate cart again
+    /**
+ * Process checkout and create order
+ */
+public function store(CheckoutRequest $request)
+{
+    DB::beginTransaction();
+    
+    try {
+        // Validate cart again
         $cartItems = $this->cartService->getCartItems();
+        
         if ($cartItems->isEmpty()) {
             throw new \Exception('Cart is empty');
         }
@@ -84,57 +90,88 @@ class CheckoutController extends Controller
         $orderData = $this->prepareOrderData($request);
         $order = $this->orderService->createOrder($orderData, $cartItems);
 
-            // Clear cart after successful order creation (with silent flag to prevent events)
-            $this->cartService->clearCart(true);
-
-            DB::commit();
-
-            // Handle AJAX requests
-            if ($request->ajax() || $request->wantsJson()) {
-                if ($request->payment_method === 'payhere') {
-                    return response()->json([
-                        'success' => true,
-                        'redirect' => route('checkout.payment', $order)
-                    ]);
-                } else {
-                    return response()->json([
-                        'success' => true,
-                        'redirect' => route('checkout.success', $order)
-                    ]);
+        // SEND ORDER CONFIRMATION EMAIL
+        if ($order->user && $order->user->email) {
+            try {
+                // Load relationships needed for email
+                $order->load(['items.product', 'items.variantCombination']);
+                
+                Mail::to($order->user->email)
+                    ->send(new OrderConfirmation($order));
+                
+                Log::info('Order confirmation email sent', [
+                    'order_id' => $order->id,
+                    'order_number' => $order->order_number,
+                    'email' => $order->user->email
+                ]);
+            } catch (\Exception $emailException) {
+                // Log email error but don't fail the order
+                Log::error('Failed to send order confirmation email', [
+                    'order_id' => $order->id,
+                    'error' => $emailException->getMessage()
+                ]);
+                
+                // Optionally, add a note to the order about email failure
+                if (method_exists($order, 'addStatusHistory')) {
+                    $order->addStatusHistory(
+                        $order->status,
+                        'Note: Order confirmation email failed to send. Error: ' . $emailException->getMessage()
+                    );
                 }
             }
-
-            // Regular form submission
-            if ($request->payment_method === 'payhere') {
-                return redirect()->route('checkout.payment', $order)
-                    ->with('success', 'Order created successfully. Please complete payment.');
-            } else {
-                // Cash on Delivery
-                return redirect()->route('checkout.success', $order)
-                    ->with('success', 'Order placed successfully! We will contact you for delivery.');
-            }
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            
-            Log::error('Checkout error: ' . $e->getMessage(), [
-                'user_id' => Auth::id(),
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            
-            if ($request->ajax() || $request->wantsJson()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Error processing checkout: ' . $e->getMessage()
-                ], 500);
-            }
-            
-            return redirect()->back()
-                ->withInput()
-                ->with('error', 'Error processing checkout: ' . $e->getMessage());
         }
+
+        // Clear cart after successful order creation (with silent flag to prevent events)
+        $this->cartService->clearCart(true);
+
+        DB::commit();
+
+        // Handle AJAX requests
+        if ($request->ajax() || $request->wantsJson()) {
+            if ($request->payment_method === 'payhere') {
+                return response()->json([
+                    'success' => true,
+                    'redirect' => route('checkout.payment', $order)
+                ]);
+            } else {
+                return response()->json([
+                    'success' => true,
+                    'redirect' => route('checkout.success', $order)
+                ]);
+            }
+        }
+
+        // Regular form submission
+        if ($request->payment_method === 'payhere') {
+            return redirect()->route('checkout.payment', $order)
+                ->with('success', 'Order created successfully. Please complete payment.');
+        } else {
+            // Cash on Delivery
+            return redirect()->route('checkout.success', $order)
+                ->with('success', 'Order placed successfully! We will contact you for delivery.');
+        }
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+        
+        Log::error('Checkout error: ' . $e->getMessage(), [
+            'user_id' => Auth::id(),
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+        
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error processing checkout: ' . $e->getMessage()
+            ], 500);
+        }
+        
+        return redirect()->back()
+            ->withInput()
+            ->with('error', 'Error processing checkout: ' . $e->getMessage());
     }
+}
 
 
 
