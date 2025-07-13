@@ -10,18 +10,13 @@ class Complaint extends Model
     use HasFactory;
 
     protected $fillable = [
-        'ticket_number',
+        'complaint_number',
         'user_id',
         'order_id',
         'complaint_type',
         'subject',
         'description',
         'status',
-        'priority',
-    ];
-
-    protected $casts = [
-        'priority' => 'integer',
     ];
 
     /**
@@ -45,27 +40,7 @@ class Complaint extends Model
      */
     public function responses()
     {
-        return $this->hasMany(ComplaintResponse::class)->orderBy('created_at', 'desc');
-    }
-
-    /**
-     * Generate a unique ticket number.
-     */
-    public static function generateTicketNumber()
-    {
-        $prefix = 'TKT';
-        $date = now()->format('Ymd');
-        $random = rand(1000, 9999);
-        
-        $ticketNumber = "{$prefix}-{$date}-{$random}";
-        
-        // Ensure uniqueness
-        while (self::where('ticket_number', $ticketNumber)->exists()) {
-            $random = rand(1000, 9999);
-            $ticketNumber = "{$prefix}-{$date}-{$random}";
-        }
-        
-        return $ticketNumber;
+        return $this->hasMany(ComplaintResponse::class)->orderBy('created_at', 'asc');
     }
 
     /**
@@ -82,87 +57,23 @@ class Complaint extends Model
     }
 
     /**
-     * Get the status color.
+     * Get the status color class.
      */
     public function getStatusColorAttribute()
     {
         return [
-            'open' => 'red',
-            'in_progress' => 'yellow',
-            'resolved' => 'green',
-            'closed' => 'gray',
-        ][$this->status] ?? 'gray';
+            'open' => 'bg-red-100 text-red-800',
+            'in_progress' => 'bg-yellow-100 text-yellow-800',
+            'resolved' => 'bg-green-100 text-green-800',
+            'closed' => 'bg-gray-100 text-gray-800',
+        ][$this->status] ?? 'bg-gray-100 text-gray-800';
     }
 
     /**
-     * Get the priority label.
+     * Get the status label.
      */
-    public function getPriorityLabelAttribute()
+    public function getStatusLabelAttribute()
     {
-        return $this->priority === 1 ? 'High' : 'Normal';
-    }
-
-    /**
-     * Get the priority color.
-     */
-    public function getPriorityColorAttribute()
-    {
-        return $this->priority === 1 ? 'red' : 'gray';
-    }
-
-    /**
-     * Check if complaint can be responded to.
-     */
-    public function getCanRespondAttribute()
-    {
-        return !in_array($this->status, ['closed']);
-    }
-
-    /**
-     * Add a response to the complaint.
-     */
-    public function addResponse($message, $isAdminResponse = false, $adminId = null, $userId = null)
-    {
-        return $this->responses()->create([
-            'message' => $message,
-            'is_admin_response' => $isAdminResponse,
-            'admin_id' => $adminId,
-            'user_id' => $userId,
-        ]);
-    }
-
-    /**
-     * Update complaint status.
-     */
-    public function updateStatus($status)
-    {
-        $this->status = $status;
-        $this->save();
-        
-        return $this;
-    }
-
-    /**
-     * Scope for complaints by status.
-     */
-    public function scopeByStatus($query, $status)
-    {
-        return $query->where('status', $status);
-    }
-
-    /**
-     * Scope for open complaints.
-     */
-    public function scopeOpen($query)
-    {
-        return $query->whereIn('status', ['open', 'in_progress']);
-    }
-
-    /**
-     * Scope for high priority complaints.
-     */
-    public function scopeHighPriority($query)
-    {
-        return $query->where('priority', 1);
+        return ucwords(str_replace('_', ' ', $this->status));
     }
 }

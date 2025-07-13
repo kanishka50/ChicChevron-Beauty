@@ -131,11 +131,7 @@ Route::middleware('auth:web')->group(function () {
         Route::post('/orders/{order}/request-cancellation', [OrderController::class, 'requestCancellation'])->name('user.orders.request-cancellation');
         Route::get('/orders/{order}/track', [OrderController::class, 'trackOrder'])->name('user.orders.track');
         Route::get('/my-order-statistics', [OrderController::class, 'getOrderStatistics'])->name('user.orders.statistics');
-        
-        // Complaints
-        Route::get('/complaints/create', function () {
-            return 'Create Complaint';
-        })->name('complaints.create');
+
     });
 });
 
@@ -316,17 +312,6 @@ Route::middleware(['auth', 'verified'])->prefix('account')->name('user.account.'
 });
 
 
-// Reviews routes
-// Route::get('/reviews', [ReviewController::class, 'index'])->name('user.reviews.index');
-// Route::get('/reviews/create/{order}', [ReviewController::class, 'create'])->name('user.reviews.create');
-// Route::post('/reviews', [ReviewController::class, 'store'])->name('user.reviews.store');
-
-// Complaints routes
-// Route::resource('complaints', ComplaintController::class)->names('user.complaints');
-// Route::post('/complaints/{complaint}/respond', [ComplaintController::class, 'respond'])->name('user.complaints.respond');
-// Route::patch('/complaints/{complaint}/close', [ComplaintController::class, 'close'])->name('user.complaints.close');
-// Route::patch('/complaints/{complaint}/reopen', [ComplaintController::class, 'reopen'])->name('user.complaints.reopen');
-// Route::post('/complaints/{complaint}/mark-responses-read', [ComplaintController::class, 'markResponsesRead'])->name('user.complaints.mark-responses-read');
 
 // Reviews routes
 Route::middleware(['auth', 'verified'])->prefix('reviews')->name('user.reviews.')->group(function () {
@@ -338,16 +323,14 @@ Route::middleware(['auth', 'verified'])->prefix('reviews')->name('user.reviews.'
 });
 
 
-// Complaints routes
+// Simplified Complaints routes 
 Route::middleware(['auth', 'verified'])->prefix('complaints')->name('user.complaints.')->group(function () {
     Route::get('/', [ComplaintController::class, 'index'])->name('index');
     Route::get('/create', [ComplaintController::class, 'create'])->name('create');
     Route::post('/', [ComplaintController::class, 'store'])->name('store');
     Route::get('/{complaint}', [ComplaintController::class, 'show'])->name('show');
     Route::post('/{complaint}/respond', [ComplaintController::class, 'respond'])->name('respond');
-    Route::patch('/{complaint}/close', [ComplaintController::class, 'close'])->name('close');
-    Route::patch('/{complaint}/reopen', [ComplaintController::class, 'reopen'])->name('reopen');
-    Route::post('/{complaint}/mark-responses-read', [ComplaintController::class, 'markResponsesRead'])->name('mark-responses-read');
+    
 });
 
 

@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\ColorController;
 use App\Http\Controllers\Admin\InventoryController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\Admin\ComplaintController;
 
 // All routes in this file are prefixed with 'admin' and use 'admin.' name prefix
 // Only admin users can access these routes
@@ -184,18 +185,13 @@ Route::middleware('admin')->group(function () {
         })->name('destroy');
     });
     
-    // Complaints
-    Route::prefix('complaints')->name('complaints.')->group(function () {
-        Route::get('/', function () { 
-            return 'Complaints Management'; 
-        })->name('index');
-        Route::get('/{complaint}', function ($complaint) { 
-            return 'View Complaint'; 
-        })->name('show');
-        Route::post('/{complaint}/respond', function ($complaint) { 
-            return 'Respond to Complaint'; 
-        })->name('respond');
-    });
+    // Complaints management
+Route::prefix('complaints')->name('complaints.')->group(function () {
+    Route::get('/', [ComplaintController::class, 'index'])->name('index');
+    Route::get('/{complaint}', [ComplaintController::class, 'show'])->name('show');
+    Route::post('/{complaint}/respond', [ComplaintController::class, 'respond'])->name('respond');
+    Route::patch('/{complaint}/status', [ComplaintController::class, 'updateStatus'])->name('update-status');
+});
     
     // Content management
     Route::prefix('content')->name('content.')->group(function () {
