@@ -184,11 +184,11 @@ class OrderStatusUpdate extends Mailable
      * Build the message (Laravel 9 compatibility)
      */
     public function build()
-    {
-        $content = $this->content();
-        
-        return $this->subject($this->envelope()->subject)
-                    ->from($this->envelope()->from[0]->address ?? config('mail.from.address'))
-                    ->view($content->view, $content->with);
-    }
+{
+    $content = $this->content();
+    
+    return $this->subject($this->envelope()->subject)
+                ->from(config('mail.from.address'))
+                ->view($content->view, $content->with);
+}
 }
