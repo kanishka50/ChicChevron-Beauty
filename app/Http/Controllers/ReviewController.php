@@ -128,8 +128,6 @@ class ReviewController extends BaseController
                     'comment' => $reviewData['comment'],
                     'is_verified_purchase' => true,
                     'is_approved' => true, // Auto-approve verified purchases
-                    'helpful_count' => 0,
-                    'not_helpful_count' => 0,
                 ]);
 
                 $reviewsCreated++;
@@ -203,83 +201,24 @@ class ReviewController extends BaseController
     }
 
     /**
-     * Mark a review as helpful or not helpful
-     */
-    public function markHelpful(Request $request, Review $review)
-    {
-        $validated = $request->validate([
-            'helpful' => 'required|boolean',
-        ]);
-
-        // Check if user has already voted on this review
-        $existingVote = DB::table('review_votes')
-            ->where('user_id', Auth::id())
-            ->where('review_id', $review->id)
+ * Update product's average rating
+ */
+private function updateProductRating($productId)
+{
+    $product = Product::find($productId);
+    
+    if ($product) {
+        $stats = Review::where('product_id', $productId)
+            ->where('is_approved', true)
+            ->selectRaw('COUNT(*) as total_reviews, AVG(rating) as average_rating')
             ->first();
 
-        if ($existingVote) {
-            return response()->json([
-                'success' => false,
-                'message' => 'You have already voted on this review.',
-            ], 400);
-        }
-
-        // Record the vote
-        DB::table('review_votes')->insert([
-            'user_id' => Auth::id(),
-            'review_id' => $review->id,
-            'is_helpful' => $validated['helpful'],
-            'created_at' => now(),
-        ]);
-
-        // Update review counts
-        if ($validated['helpful']) {
-            $review->increment('helpful_count');
-        } else {
-            $review->increment('not_helpful_count');
-        }
-
-        return response()->json([
-            'success' => true,
-            'helpful_count' => $review->helpful_count,
-            'not_helpful_count' => $review->not_helpful_count,
+        $product->update([
+            'average_rating' => round($stats->average_rating ?? 0, 1),
+            'reviews_count' => $stats->total_reviews ?? 0,
         ]);
     }
-
-    /**
-     * Update product's average rating
-     */
-    private function updateProductRating($productId)
-    {
-        $product = Product::find($productId);
-        
-        if ($product) {
-            $stats = Review::where('product_id', $productId)
-                ->where('is_approved', true)
-                ->selectRaw('
-                    COUNT(*) as total_reviews,
-                    AVG(rating) as average_rating,
-                    SUM(CASE WHEN rating = 5 THEN 1 ELSE 0 END) as five_star,
-                    SUM(CASE WHEN rating = 4 THEN 1 ELSE 0 END) as four_star,
-                    SUM(CASE WHEN rating = 3 THEN 1 ELSE 0 END) as three_star,
-                    SUM(CASE WHEN rating = 2 THEN 1 ELSE 0 END) as two_star,
-                    SUM(CASE WHEN rating = 1 THEN 1 ELSE 0 END) as one_star
-                ')
-                ->first();
-
-            $product->update([
-                'average_rating' => round($stats->average_rating, 1),
-                'reviews_count' => $stats->total_reviews,
-                'rating_breakdown' => [
-                    5 => $stats->five_star,
-                    4 => $stats->four_star,
-                    3 => $stats->three_star,
-                    2 => $stats->two_star,
-                    1 => $stats->one_star,
-                ],
-            ]);
-        }
-    }
+}
 
     /**
      * Helper function to pluralize

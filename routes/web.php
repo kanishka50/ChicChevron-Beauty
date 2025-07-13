@@ -339,7 +339,6 @@ Route::middleware(['auth', 'verified'])->prefix('reviews')->name('user.reviews.'
     Route::post('/', [ReviewController::class, 'store'])->name('store');
     Route::put('/{review}', [ReviewController::class, 'update'])->name('update');
     Route::delete('/{review}', [ReviewController::class, 'destroy'])->name('destroy');
-    Route::post('/{review}/helpful', [ReviewController::class, 'markHelpful'])->name('helpful');
 });
 
 // Complaints routes

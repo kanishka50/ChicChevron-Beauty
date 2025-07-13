@@ -30,6 +30,8 @@ class Product extends Model
         'has_variants',
         'is_active',
         'views_count',
+        'average_rating',
+        'reviews_count',
     ];
 
     protected $casts = [
