@@ -321,10 +321,12 @@
                             <div class="flex items-center justify-between">
                                 <h3 class="text-lg font-medium text-gray-900">Customer Reviews</h3>
                                 @auth
-                                    <a href="{{ route('reviews.create', $product) }}" class="text-pink-600 hover:text-pink-700 font-medium">
-                                        Write a Review
-                                    </a>
-                                @endauth
+                                @if($product->canBeReviewedBy(auth()->user()))
+                                    <span class="text-sm text-gray-600">
+                                        You can review this product from your order history
+                                    </span>
+                                @endif
+                            @endauth
                             </div>
 
                             <!-- Review Summary -->

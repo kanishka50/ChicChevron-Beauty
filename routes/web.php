@@ -214,10 +214,6 @@ Route::get('/track-order/{order}', function (\App\Models\Order $order) {
     return view('orders.track-guest-result', compact('order'));
 })->name('orders.track-guest-result');
 
-// Redirect routes (for backward compatibility)
-// Route::redirect('/my-account/orders', '/my-orders', 301);
-// Route::redirect('/account/orders', '/my-orders', 301);
-// Route::redirect('/user/orders', '/my-orders', 301);
 
 // Legacy order route redirect (MOVED TO END to avoid conflicts)
 Route::get('/orders', function () {
@@ -335,10 +331,11 @@ Route::middleware(['auth', 'verified'])->prefix('account')->name('user.account.'
 // Reviews routes
 Route::middleware(['auth', 'verified'])->prefix('reviews')->name('user.reviews.')->group(function () {
     Route::get('/', [ReviewController::class, 'index'])->name('index');
-    Route::get('/create/{order}', [ReviewController::class, 'create'])->name('create');
+    // Route::get('/create/{order}', [ReviewController::class, 'create'])->name('create');
     Route::post('/', [ReviewController::class, 'store'])->name('store');
     Route::put('/{review}', [ReviewController::class, 'update'])->name('update');
     Route::delete('/{review}', [ReviewController::class, 'destroy'])->name('destroy');
+    Route::get('/create/{order}/{product}', [ReviewController::class, 'createSingle'])->name('create.single');
 });
 
 // Complaints routes
@@ -352,3 +349,6 @@ Route::middleware(['auth', 'verified'])->prefix('complaints')->name('user.compla
     Route::patch('/{complaint}/reopen', [ComplaintController::class, 'reopen'])->name('reopen');
     Route::post('/{complaint}/mark-responses-read', [ComplaintController::class, 'markResponsesRead'])->name('mark-responses-read');
 });
+
+
+

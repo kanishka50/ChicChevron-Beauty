@@ -39,34 +39,34 @@ class ReviewController extends BaseController
     /**
      * Show form to create reviews for purchased products
      */
-    public function create(Order $order)
-    {
-        // Ensure user can only review their own orders
-        if (Auth::id() !== $order->user_id) {
-            abort(403, 'Unauthorized access to this order.');
-        }
+    // public function create(Order $order)
+    // {
+    //     // Ensure user can only review their own orders
+    //     if (Auth::id() !== $order->user_id) {
+    //         abort(403, 'Unauthorized access to this order.');
+    //     }
 
-        // Check if order is completed
-        if ($order->status !== 'completed') {
-            return redirect()->route('user.orders.show', $order)
-                ->with('error', 'You can only review products from completed orders.');
-        }
+    //     // Check if order is completed
+    //     if ($order->status !== 'completed') {
+    //         return redirect()->route('user.orders.show', $order)
+    //             ->with('error', 'You can only review products from completed orders.');
+    //     }
 
-        // Get products from order that haven't been reviewed yet
-        $unreviewedItems = $order->items()
-            ->with('product')
-            ->whereDoesntHave('product.reviews', function($query) {
-                $query->where('user_id', Auth::id());
-            })
-            ->get();
+    //     // Get products from order that haven't been reviewed yet
+    //     $unreviewedItems = $order->items()
+    //         ->with('product')
+    //         ->whereDoesntHave('product.reviews', function($query) {
+    //             $query->where('user_id', Auth::id());
+    //         })
+    //         ->get();
 
-        if ($unreviewedItems->isEmpty()) {
-            return redirect()->route('user.orders.show', $order)
-                ->with('info', 'You have already reviewed all products from this order.');
-        }
+    //     if ($unreviewedItems->isEmpty()) {
+    //         return redirect()->route('user.orders.show', $order)
+    //             ->with('info', 'You have already reviewed all products from this order.');
+    //     }
 
-        return view('user.reviews.create', compact('order', 'unreviewedItems'));
-    }
+    //     return view('user.reviews.create', compact('order', 'unreviewedItems'));
+    // }
 
     /**
      * Store new reviews
@@ -227,4 +227,43 @@ private function updateProductRating($productId)
     {
         return $count == 1 ? ' has' : 's have';
     }
+
+
+    /**
+ * Show form to create review for a single product
+ */
+public function createSingle(Order $order, Product $product)
+{
+    // Ensure user can only review their own orders
+    if (Auth::id() !== $order->user_id) {
+        abort(403, 'Unauthorized access to this order.');
+    }
+
+    // Check if order is completed
+    if ($order->status !== 'completed') {
+        return redirect()->route('user.orders.show', $order)
+            ->with('error', 'You can only review products from completed orders.');
+    }
+
+    // Verify product was in the order
+    $orderItem = $order->items()
+        ->where('product_id', $product->id)
+        ->first();
+
+    if (!$orderItem) {
+        abort(404, 'Product not found in this order.');
+    }
+
+    // Check if already reviewed
+    $existingReview = Review::where('user_id', Auth::id())
+        ->where('product_id', $product->id)
+        ->first();
+
+    if ($existingReview) {
+        return redirect()->route('user.orders.show', $order)
+            ->with('info', 'You have already reviewed this product.');
+    }
+
+    return view('user.reviews.create-single', compact('order', 'product', 'orderItem'));
+}
 }

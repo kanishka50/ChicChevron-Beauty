@@ -166,12 +166,12 @@
                                     </a>
                                 @endif
                                 
-                                @if($order->status === 'completed')
+                                {{-- @if($order->status === 'completed')
                                     <a href="{{ route('user.reviews.create', $order) }}" 
                                        class="text-purple-600 hover:text-purple-800 font-medium text-sm">
                                         Leave Review
                                     </a>
-                                @endif
+                                @endif --}}
                                 
                             </div>
                             
