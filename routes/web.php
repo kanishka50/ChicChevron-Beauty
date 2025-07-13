@@ -331,12 +331,12 @@ Route::middleware(['auth', 'verified'])->prefix('account')->name('user.account.'
 // Reviews routes
 Route::middleware(['auth', 'verified'])->prefix('reviews')->name('user.reviews.')->group(function () {
     Route::get('/', [ReviewController::class, 'index'])->name('index');
-    // Route::get('/create/{order}', [ReviewController::class, 'create'])->name('create');
-    Route::post('/', [ReviewController::class, 'store'])->name('store');
+    Route::get('/create/{order}/{product}', [ReviewController::class, 'createSingle'])->name('create.single');
+    Route::post('/create/{order}/{product}', [ReviewController::class, 'storeSingle'])->name('store.single');
     Route::put('/{review}', [ReviewController::class, 'update'])->name('update');
     Route::delete('/{review}', [ReviewController::class, 'destroy'])->name('destroy');
-    Route::get('/create/{order}/{product}', [ReviewController::class, 'createSingle'])->name('create.single');
 });
+
 
 // Complaints routes
 Route::middleware(['auth', 'verified'])->prefix('complaints')->name('user.complaints.')->group(function () {

@@ -25,10 +25,9 @@
         </div>
 
         <!-- Review Form -->
-        <form action="{{ route('user.reviews.store') }}" method="POST">
+        <form action="{{ route('user.reviews.store.single', [$order, $product]) }}" method="POST">
             @csrf
-            <input type="hidden" name="order_id" value="{{ $order->id }}">
-
+            
             <div class="bg-white rounded-lg shadow p-6">
                 <!-- Product Info -->
                 <div class="flex items-start space-x-4 mb-6">
@@ -48,6 +47,11 @@
                                 @if(!empty($variantDetails['color']))
                                     <span class="text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded">
                                         Color: {{ $variantDetails['color'] }}
+                                    </span>
+                                @endif
+                                @if(!empty($variantDetails['scent']))
+                                    <span class="text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded">
+                                        Scent: {{ $variantDetails['scent'] }}
                                     </span>
                                 @endif
                             </div>
@@ -71,12 +75,8 @@
                             </button>
                         @endfor
                     </div>
-                    <input type="hidden" 
-                           name="reviews[{{ $product->id }}][rating]" 
-                           id="rating-input" 
-                           value=""
-                           required>
-                    @error('reviews.' . $product->id . '.rating')
+                    <input type="hidden" name="rating" id="rating-input" value="" required>
+                    @error('rating')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
                 </div>
@@ -88,11 +88,12 @@
                     </label>
                     <input type="text" 
                            id="title"
-                           name="reviews[{{ $product->id }}][title]" 
+                           name="title" 
                            placeholder="Summarize your experience"
                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+                           value="{{ old('title') }}"
                            required>
-                    @error('reviews.' . $product->id . '.title')
+                    @error('title')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
                 </div>
@@ -103,18 +104,18 @@
                         Your Review
                     </label>
                     <textarea id="comment"
-                              name="reviews[{{ $product->id }}][comment]" 
+                              name="comment" 
                               rows="4"
                               placeholder="Tell us about your experience with this product..."
                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
-                              required></textarea>
-                    @error('reviews.' . $product->id . '.comment')
+                              required>{{ old('comment') }}</textarea>
+                    @error('comment')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
                 </div>
             </div>
 
-            <!-- Submit Button -->
+            <!-- Submit Buttons -->
             <div class="mt-8 flex justify-between items-center">
                 <a href="{{ route('user.orders.show', $order) }}" 
                    class="text-gray-600 hover:text-gray-900">
@@ -130,8 +131,8 @@
 </div>
 
 <script>
-// Star rating functionality - simpler version for single product
-document.querySelectorAll('.star-btn').forEach((button, index) => {
+// Star rating functionality
+document.querySelectorAll('.star-btn').forEach((button) => {
     button.addEventListener('click', function(e) {
         e.preventDefault();
         const rating = parseInt(this.dataset.rating);
@@ -139,9 +140,9 @@ document.querySelectorAll('.star-btn').forEach((button, index) => {
         // Update hidden input
         document.getElementById('rating-input').value = rating;
         
-        // Update all stars
-        document.querySelectorAll('.star-btn').forEach((star, starIndex) => {
-            if (starIndex < rating) {
+        // Update star display
+        document.querySelectorAll('.star-btn').forEach((star, index) => {
+            if (index < rating) {
                 star.classList.remove('text-gray-300');
                 star.classList.add('text-yellow-400');
             } else {

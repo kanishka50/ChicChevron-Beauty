@@ -63,79 +63,116 @@
                     </div>
                     <div class="p-6">
                         <div class="space-y-4">
-                            @foreach($order->items as $item)
-    <div class="flex items-start space-x-4 pb-4 {{ !$loop->last ? 'border-b border-gray-200' : '' }}">
-        <div class="flex-shrink-0 w-20 h-20">
-            @if($item->product && $item->product->main_image)
-                <img src="{{ Storage::url($item->product->main_image) }}" 
-                     alt="{{ $item->product_name }}"
-                     class="w-full h-full object-cover rounded-md">
-            @else
-                <div class="w-full h-full bg-gray-200 rounded-md flex items-center justify-center">
-                    <i class="fas fa-image text-gray-400"></i>
+    @php
+        // Group items by product_id
+        $groupedItems = $order->items->groupBy('product_id');
+    @endphp
+
+    @foreach($groupedItems as $productId => $productItems)
+        @php
+            $firstItem = $productItems->first();
+            $product = $firstItem->product;
+            $hasReviewed = \App\Models\Review::where('user_id', auth()->id())
+                ->where('product_id', $product->id)
+                ->exists();
+        @endphp
+
+        <div class="border rounded-lg p-4 {{ $productItems->count() > 1 ? 'bg-gray-50' : 'bg-white' }}">
+            {{-- If multiple variants, show a header --}}
+            @if($productItems->count() > 1)
+                <div class="mb-3 pb-3 border-b">
+                    <h4 class="font-medium text-gray-900">{{ $product->name }}</h4>
+                    <p class="text-sm text-gray-600">{{ $productItems->count() }} variants ordered</p>
                 </div>
             @endif
-        </div>
-        <div class="flex-1">
-            <h3 class="text-sm font-medium text-gray-900">{{ $item->product_name }}</h3>
-            @if($item->variant_details)
-                @php $variantDetails = json_decode($item->variant_details, true); @endphp
-                <div class="flex space-x-2 mt-1">
-                    @if(!empty($variantDetails['size']))
-                        <span class="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded">
-                            Size: {{ $variantDetails['size'] }}
-                        </span>
-                    @endif
-                    @if(!empty($variantDetails['color']))
-                        <span class="inline-block bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded">
-                            Color: {{ $variantDetails['color'] }}
-                        </span>
-                    @endif
-                    @if(!empty($variantDetails['scent']))
-                        <span class="inline-block bg-purple-100 text-purple-800 text-xs px-2 py-0.5 rounded">
-                            Scent: {{ $variantDetails['scent'] }}
-                        </span>
-                    @endif
+
+            {{-- Show each variant --}}
+            @foreach($productItems as $item)
+                <div class="flex items-start space-x-4 {{ !$loop->last && $productItems->count() > 1 ? 'mb-3 pb-3 border-b border-gray-100' : '' }}">
+                    <div class="flex-shrink-0 w-20 h-20">
+                        @if($loop->first || $productItems->count() == 1)
+                            @if($item->product && $item->product->main_image)
+                                <img src="{{ Storage::url($item->product->main_image) }}" 
+                                     alt="{{ $item->product_name }}"
+                                     class="w-full h-full object-cover rounded-md">
+                            @else
+                                <div class="w-full h-full bg-gray-200 rounded-md flex items-center justify-center">
+                                    <i class="fas fa-image text-gray-400"></i>
+                                </div>
+                            @endif
+                        @else
+                            <div class="w-20"></div> {{-- Spacer for alignment when multiple variants --}}
+                        @endif
+                    </div>
+                    
+                    <div class="flex-1">
+                        @if($productItems->count() == 1)
+                            <h3 class="text-sm font-medium text-gray-900">{{ $item->product_name }}</h3>
+                        @endif
+                        
+                        @if($item->variant_details)
+                            @php $variantDetails = json_decode($item->variant_details, true); @endphp
+                            <div class="flex flex-wrap gap-2 mt-1">
+                                @if(!empty($variantDetails['size']))
+                                    <span class="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded">
+                                        Size: {{ $variantDetails['size'] }}
+                                    </span>
+                                @endif
+                                @if(!empty($variantDetails['color']))
+                                    <span class="inline-block bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded">
+                                        Color: {{ $variantDetails['color'] }}
+                                    </span>
+                                @endif
+                                @if(!empty($variantDetails['scent']))
+                                    <span class="inline-block bg-purple-100 text-purple-800 text-xs px-2 py-0.5 rounded">
+                                        Scent: {{ $variantDetails['scent'] }}
+                                    </span>
+                                @endif
+                            </div>
+                        @endif
+                        
+                        <div class="mt-1 flex items-center space-x-4">
+                            <span class="text-sm text-gray-600">Qty: {{ $item->quantity }}</span>
+                            <span class="text-sm text-gray-600">LKR {{ number_format($item->unit_price, 2) }} each</span>
+                        </div>
+                    </div>
+                    
+                    <div class="text-right">
+                        <p class="text-sm font-medium text-gray-900">LKR {{ number_format($item->total_price, 2) }}</p>
+                    </div>
                 </div>
-            @endif
-            <div class="mt-1 flex items-center space-x-4">
-                <span class="text-sm text-gray-600">Qty: {{ $item->quantity }}</span>
-                <span class="text-sm text-gray-600">LKR {{ number_format($item->unit_price, 2) }} each</span>
-            </div>
-        </div>
-        <div class="text-right">
-            <p class="text-sm font-medium text-gray-900">LKR {{ number_format($item->total_price, 2) }}</p>
-            
-            {{-- Review Button Section --}}
-            @if($order->status === 'completed' && $item->product)
-                @php
-                    $hasReviewed = \App\Models\Review::where('user_id', auth()->id())
-                        ->where('product_id', $item->product->id)
-                        ->exists();
-                @endphp
-                
-                <div class="mt-2">
+            @endforeach
+
+            {{-- Single review button for all variants --}}
+            @if($order->status === 'completed' && $product)
+                <div class="mt-3 pt-3 border-t {{ $productItems->count() > 1 ? 'bg-blue-50 -mx-4 -mb-4 px-4 pb-4 rounded-b-lg' : '' }}">
                     @if(!$hasReviewed)
-                        <a href="{{ route('user.reviews.create.single', [$order, $item->product]) }}" 
-                           class="inline-flex items-center text-xs text-pink-600 hover:text-pink-700 font-medium">
-                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <a href="{{ route('user.reviews.create.single', [$order, $product]) }}" 
+                           class="inline-flex items-center text-sm text-pink-600 hover:text-pink-700 font-medium">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path>
                             </svg>
-                            Write Review
+                            Write a Review for This Product
                         </a>
+                        @if($productItems->count() > 1)
+                            <p class="text-xs text-gray-500 mt-1">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                Your review will apply to all variants of this product
+                            </p>
+                        @endif
                     @else
-                        <span class="inline-flex items-center text-xs text-green-600">
-                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <span class="inline-flex items-center text-sm text-green-600">
+                            <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
                             </svg>
-                            Reviewed
+                            Product Reviewed
                         </span>
                     @endif
                 </div>
             @endif
         </div>
-    </div>
-@endforeach
+    @endforeach
+</div>
                         </div>
 
                         <!-- Order Summary -->

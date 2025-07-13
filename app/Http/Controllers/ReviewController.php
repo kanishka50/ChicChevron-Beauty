@@ -9,6 +9,7 @@ use App\Models\Review;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Routing\Controller as BaseController;
 
@@ -36,124 +37,6 @@ class ReviewController extends BaseController
         return view('user.reviews.index', compact('reviews'));
     }
 
-    /**
-     * Show form to create reviews for purchased products
-     */
-    // public function create(Order $order)
-    // {
-    //     // Ensure user can only review their own orders
-    //     if (Auth::id() !== $order->user_id) {
-    //         abort(403, 'Unauthorized access to this order.');
-    //     }
-
-    //     // Check if order is completed
-    //     if ($order->status !== 'completed') {
-    //         return redirect()->route('user.orders.show', $order)
-    //             ->with('error', 'You can only review products from completed orders.');
-    //     }
-
-    //     // Get products from order that haven't been reviewed yet
-    //     $unreviewedItems = $order->items()
-    //         ->with('product')
-    //         ->whereDoesntHave('product.reviews', function($query) {
-    //             $query->where('user_id', Auth::id());
-    //         })
-    //         ->get();
-
-    //     if ($unreviewedItems->isEmpty()) {
-    //         return redirect()->route('user.orders.show', $order)
-    //             ->with('info', 'You have already reviewed all products from this order.');
-    //     }
-
-    //     return view('user.reviews.create', compact('order', 'unreviewedItems'));
-    // }
-
-    /**
-     * Store new reviews
-     */
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'order_id' => 'required|exists:orders,id',
-            'reviews' => 'required|array|min:1',
-            'reviews.*.rating' => 'required|integer|between:1,5',
-            'reviews.*.title' => 'required|string|max:100',
-            'reviews.*.comment' => 'required|string|max:1000',
-        ]);
-
-        $order = Order::findOrFail($validated['order_id']);
-
-        // Ensure user can only review their own orders
-        if (Auth::id() !== $order->user_id) {
-            abort(403, 'Unauthorized access to this order.');
-        }
-
-        // Check if order is completed
-        if ($order->status !== 'completed') {
-            return redirect()->route('user.orders.show', $order)
-                ->with('error', 'You can only review products from completed orders.');
-        }
-
-        DB::beginTransaction();
-
-        try {
-            $reviewsCreated = 0;
-
-            foreach ($validated['reviews'] as $productId => $reviewData) {
-                // Verify product was in the order
-                $orderItem = $order->items()
-                    ->where('product_id', $productId)
-                    ->first();
-
-                if (!$orderItem) {
-                    continue;
-                }
-
-                // Check if user hasn't already reviewed this product
-                $existingReview = Review::where('user_id', Auth::id())
-                    ->where('product_id', $productId)
-                    ->first();
-
-                if ($existingReview) {
-                    continue;
-                }
-
-                // Create the review
-                Review::create([
-                    'user_id' => Auth::id(),
-                    'product_id' => $productId,
-                    'order_id' => $order->id,
-                    'rating' => $reviewData['rating'],
-                    'title' => $reviewData['title'],
-                    'comment' => $reviewData['comment'],
-                    'is_verified_purchase' => true,
-                    'is_approved' => true, // Auto-approve verified purchases
-                ]);
-
-                $reviewsCreated++;
-
-                // Update product rating
-                $this->updateProductRating($productId);
-            }
-
-            DB::commit();
-
-            if ($reviewsCreated > 0) {
-                return redirect()->route('user.orders.show', $order)
-                    ->with('success', "Thank you! Your review{$this->pluralize($reviewsCreated)} been submitted successfully.");
-            } else {
-                return redirect()->route('user.orders.show', $order)
-                    ->with('info', 'You have already reviewed these products.');
-            }
-
-        } catch (\Exception $e) {
-            DB::rollback();
-            
-            return redirect()->back()
-                ->withInput()
-                ->with('error', 'There was an error submitting your reviews. Please try again.');
-        }
-    }
 
     /**
      * Update a review
@@ -265,5 +148,78 @@ public function createSingle(Order $order, Product $product)
     }
 
     return view('user.reviews.create-single', compact('order', 'product', 'orderItem'));
+}
+
+/**
+ * Store a single product review
+ */
+public function storeSingle(Request $request, Order $order, Product $product)
+{
+    // Validation
+    $validated = $request->validate([
+        'rating' => 'required|integer|between:1,5',
+        'title' => 'required|string|max:100',
+        'comment' => 'required|string|max:1000',
+    ]);
+
+    // Authorization checks
+    if (Auth::id() !== $order->user_id) {
+        abort(403, 'Unauthorized access to this order.');
+    }
+
+    if ($order->status !== 'completed') {
+        return redirect()->route('user.orders.show', $order)
+            ->with('error', 'You can only review products from completed orders.');
+    }
+
+    // Verify product was in the order
+    $orderItem = $order->items()->where('product_id', $product->id)->first();
+    if (!$orderItem) {
+        abort(404, 'Product not found in this order.');
+    }
+
+    // Check if already reviewed
+    $existingReview = Review::where('user_id', Auth::id())
+        ->where('product_id', $product->id)
+        ->first();
+
+    if ($existingReview) {
+        return redirect()->route('user.orders.show', $order)
+            ->with('info', 'You have already reviewed this product.');
+    }
+
+    DB::beginTransaction();
+    try {
+        // Create the review
+        Review::create([
+            'user_id' => Auth::id(),
+            'product_id' => $product->id,
+            'order_id' => $order->id,
+            'rating' => $validated['rating'],
+            'title' => $validated['title'],
+            'comment' => $validated['comment'],
+            'is_approved' => true, // Auto-approve verified purchases
+        ]);
+
+        // Update product rating
+        $this->updateProductRating($product->id);
+
+        DB::commit();
+
+        return redirect()->route('user.orders.show', $order)
+            ->with('success', 'Thank you! Your review has been submitted successfully.');
+
+    } catch (\Exception $e) {
+        DB::rollback();
+        Log::error('Review submission error', [
+            'error' => $e->getMessage(),
+            'order_id' => $order->id,
+            'product_id' => $product->id
+        ]);
+        
+        return redirect()->back()
+            ->withInput()
+            ->with('error', 'There was an error submitting your review. Please try again.');
+    }
 }
 }
