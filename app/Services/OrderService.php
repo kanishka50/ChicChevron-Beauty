@@ -267,8 +267,8 @@ class OrderService
         
         // Get the selling price (variant price or product price)
         $unitPrice = $variantCombination 
-            ? $variantCombination->combination_price 
-            : $product->selling_price;
+        ? $variantCombination->effective_price 
+        : $product->effective_price;
 
         // Get FIFO cost price from inventory
         $costPrice = $this->getAverageCostPrice($product->id, $variantCombination?->id, $cartItem->quantity);

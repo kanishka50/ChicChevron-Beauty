@@ -57,8 +57,8 @@ class CartService
 
         // Calculate price
         $unitPrice = $variantCombination 
-            ? $variantCombination->combination_price 
-            : $product->selling_price;
+            ? $variantCombination->effective_price 
+            : $product->effective_price;
 
         // Create new cart item
         $cartItem = CartItem::create([

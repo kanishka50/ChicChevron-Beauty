@@ -49,6 +49,7 @@ class ProductVariantController extends Controller
             'sku_suffix' => 'required|string|max:50',
             'price' => 'required|numeric|min:0',
             'cost_price' => 'required|numeric|min:0',
+            'discount_price' => 'nullable|numeric|min:0|lt:price',
         ]);
 
         DB::beginTransaction();
@@ -108,6 +109,7 @@ class ProductVariantController extends Controller
             'sku_suffix' => 'required|string|max:50',
             'price' => 'required|numeric|min:0',
             'cost_price' => 'required|numeric|min:0',
+            'discount_price' => 'nullable|numeric|min:0|lt:price',
             'is_active' => 'boolean',
         ]);
 

@@ -39,6 +39,15 @@
                            required>
                 </div>
                 <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700">Discount Price (LKR)</label>
+                    <input type="number" 
+                        name="discount_price" 
+                        step="0.01" 
+                        min="0"
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50" 
+                        placeholder="Leave empty if no discount">
+                </div>
+                <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700">Cost Price (LKR)</label>
                     <input type="number" 
                            name="cost_price" 
@@ -110,6 +119,16 @@
                            min="0"
                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50" 
                            required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700">Discount Price (LKR)</label>
+                    <input type="number" 
+                        id="edit_discount_price"
+                        name="discount_price" 
+                        step="0.01" 
+                        min="0"
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50" 
+                        placeholder="Leave empty if no discount">
                 </div>
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700">Cost Price (LKR)</label>

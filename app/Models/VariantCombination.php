@@ -19,6 +19,7 @@ class VariantCombination extends Model
         'combination_sku',
         'combination_price',
         'combination_cost_price',
+        'discount_price',
     ];
 
     protected $casts = [
@@ -176,4 +177,26 @@ class VariantCombination extends Model
     {
         return $this->available_stock <= 0;
     }
+
+    public function getEffectivePriceAttribute()
+{
+    return $this->discount_price && $this->discount_price < $this->combination_price 
+        ? $this->discount_price 
+        : $this->combination_price;
+}
+
+public function getIsOnSaleAttribute()
+{
+    return $this->discount_price && $this->discount_price < $this->combination_price;
+}
+
+// Get discount percentage
+public function getDiscountPercentageAttribute()
+{
+    if ($this->is_on_sale) {
+        return round((($this->combination_price - $this->discount_price) / $this->combination_price) * 100);
+    }
+    return 0;
+}
+
 }

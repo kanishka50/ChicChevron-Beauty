@@ -187,6 +187,7 @@ function editVariant(variantId) {
             document.getElementById('edit_price').value = variant.price;
             document.getElementById('edit_cost_price').value = variant.cost_price;
             document.getElementById('edit_is_active').checked = variant.is_active;
+            document.getElementById('edit_discount_price').value = variant.discount_price || '';
             
             openEditVariantModal();
         } else {

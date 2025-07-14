@@ -31,6 +31,7 @@
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Size</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SKU</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Discount</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cost</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Margin</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
@@ -42,7 +43,23 @@
                     <tr id="variant-{{ $variant->id }}">
                         <td class="px-6 py-4 whitespace-nowrap">{{ $variant->variant_value }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $variant->full_sku }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap">LKR {{ number_format($variant->price, 2) }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            @if($combination->discount_price && $combination->discount_price < $combination->combination_price)
+                                <span class="line-through text-gray-500">LKR {{ number_format($combination->combination_price, 2) }}</span><br>
+                                <span class="text-red-600 font-semibold">LKR {{ number_format($combination->discount_price, 2) }}</span>
+                            @else
+                                LKR {{ number_format($combination->combination_price, 2) }}
+                            @endif
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            @if($variant->discount_price && $variant->discount_price < $variant->price)
+                                <span class="text-green-600 text-sm">
+                                    -{{ round((($variant->price - $variant->discount_price) / $variant->price) * 100) }}%
+                                </span>
+                            @else
+                                -
+                            @endif
+                        </td>
                         <td class="px-6 py-4 whitespace-nowrap">LKR {{ number_format($variant->cost_price, 2) }}</td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <span class="text-sm {{ $variant->profit_margin > 0 ? 'text-green-600' : 'text-red-600' }}">

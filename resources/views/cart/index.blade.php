@@ -58,7 +58,14 @@
 
                                 <!-- Price and Quantity -->
                                 <div class="text-right">
-                                    <p class="text-lg font-medium text-gray-900">{{ $item->unit_price_formatted }}</p>
+                                    @if($item->product->is_on_sale && !$item->variantCombination)
+                                        <p class="text-sm text-gray-500 line-through">
+                                            Rs. {{ number_format($item->product->selling_price, 2) }}
+                                        </p>
+                                        <p class="text-lg font-medium text-pink-600">{{ $item->unit_price_formatted }}</p>
+                                    @else
+                                        <p class="text-lg font-medium text-gray-900">{{ $item->unit_price_formatted }}</p>
+                                    @endif
                                     
                                     <!-- Quantity Controls -->
                                     <div class="flex items-center mt-3 space-x-2">
