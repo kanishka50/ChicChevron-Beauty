@@ -14,14 +14,10 @@ class ProductVariant extends Model
         'variant_type',
         'variant_value',
         'sku_suffix',
-        'price',
-        'cost_price',
         'is_active',
     ];
 
     protected $casts = [
-        'price' => 'decimal:2',
-        'cost_price' => 'decimal:2',
         'is_active' => 'boolean',
     ];
 
@@ -65,17 +61,6 @@ class ProductVariant extends Model
         return $this->product->sku . '-' . $this->sku_suffix;
     }
 
-    /**
-     * Get the profit margin for this variant.
-     */
-    public function getProfitMarginAttribute()
-    {
-        if ($this->cost_price <= 0) {
-            return 0;
-        }
-
-        return round((($this->price - $this->cost_price) / $this->price) * 100, 2);
-    }
 
     /**
      * Scope for active variants.

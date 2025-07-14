@@ -703,10 +703,12 @@ public function hasStock()
      * Scope for on sale products
      */
     public function scopeOnSale($query)
-    {
-        return $query->whereNotNull('discount_price')
-                     ->whereRaw('discount_price < selling_price');
-    }
+{
+    return $query->whereHas('variantCombinations', function ($q) {
+        $q->whereNotNull('discount_price')
+          ->whereRaw('discount_price < combination_price');
+    });
+}
 
 
     /**

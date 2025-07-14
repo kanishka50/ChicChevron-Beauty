@@ -17,10 +17,6 @@ class ProductVariantController extends Controller
      */
     public function index(Product $product)
     {
-        if (!$product->has_variants) {
-            return redirect()->route('admin.products.edit', $product)
-                ->with('error', 'This product does not have variants enabled.');
-        }
 
         $product->load(['variants' => function ($query) {
             $query->orderBy('variant_type')->orderBy('variant_value');
@@ -47,9 +43,6 @@ class ProductVariantController extends Controller
             'variant_type' => 'required|in:size,color,scent',
             'variant_value' => 'required|string|max:100',
             'sku_suffix' => 'required|string|max:50',
-            'price' => 'required|numeric|min:0',
-            'cost_price' => 'required|numeric|min:0',
-            'discount_price' => 'nullable|numeric|min:0|lt:price',
         ]);
 
         DB::beginTransaction();
@@ -73,8 +66,6 @@ class ProductVariantController extends Controller
                 'variant_type' => $request->variant_type,
                 'variant_value' => $request->variant_value,
                 'sku_suffix' => $request->sku_suffix,
-                'price' => $request->price,
-                'cost_price' => $request->cost_price,
                 'is_active' => true,
             ]);
 
@@ -107,9 +98,6 @@ class ProductVariantController extends Controller
         $request->validate([
             'variant_value' => 'required|string|max:100',
             'sku_suffix' => 'required|string|max:50',
-            'price' => 'required|numeric|min:0',
-            'cost_price' => 'required|numeric|min:0',
-            'discount_price' => 'nullable|numeric|min:0|lt:price',
             'is_active' => 'boolean',
         ]);
 
@@ -119,8 +107,6 @@ class ProductVariantController extends Controller
             $variant->update($request->only([
                 'variant_value',
                 'sku_suffix',
-                'price',
-                'cost_price',
                 'is_active'
             ]));
 
@@ -195,144 +181,136 @@ class ProductVariantController extends Controller
     /**
      * Update variant combinations for a product.
      */
-    private function updateVariantCombinations(Product $product)
-    {
-        $sizeVariants = $product->variants()->ofType('size')->active()->get();
-        $colorVariants = $product->variants()->ofType('color')->active()->get();
-        $scentVariants = $product->variants()->ofType('scent')->active()->get();
+    /**
+ * Update variant combinations for a product.
+ */
+private function updateVariantCombinations(Product $product)
+{
+    $sizeVariants = $product->variants()->ofType('size')->active()->get();
+    $colorVariants = $product->variants()->ofType('color')->active()->get();
+    $scentVariants = $product->variants()->ofType('scent')->active()->get();
 
-        // If no variants exist, return
-        if ($sizeVariants->isEmpty() && $colorVariants->isEmpty() && $scentVariants->isEmpty()) {
-            return;
-        }
+    // If no variants exist, return
+    if ($sizeVariants->isEmpty() && $colorVariants->isEmpty() && $scentVariants->isEmpty()) {
+        return;
+    }
 
-        // Generate all possible combinations
-        $combinations = [];
+    // Generate all possible combinations
+    $combinations = [];
 
-        // Handle different combination scenarios
-        if ($sizeVariants->isNotEmpty() && $colorVariants->isNotEmpty() && $scentVariants->isNotEmpty()) {
-            // All three types
-            foreach ($sizeVariants as $size) {
-                foreach ($colorVariants as $color) {
-                    foreach ($scentVariants as $scent) {
-                        $combinations[] = [
-                            'size' => $size,
-                            'color' => $color,
-                            'scent' => $scent
-                        ];
-                    }
-                }
-            }
-        } elseif ($sizeVariants->isNotEmpty() && $colorVariants->isNotEmpty()) {
-            // Size and Color
-            foreach ($sizeVariants as $size) {
-                foreach ($colorVariants as $color) {
-                    $combinations[] = [
-                        'size' => $size,
-                        'color' => $color,
-                        'scent' => null
-                    ];
-                }
-            }
-        } elseif ($sizeVariants->isNotEmpty() && $scentVariants->isNotEmpty()) {
-            // Size and Scent
-            foreach ($sizeVariants as $size) {
-                foreach ($scentVariants as $scent) {
-                    $combinations[] = [
-                        'size' => $size,
-                        'color' => null,
-                        'scent' => $scent
-                    ];
-                }
-            }
-        } elseif ($colorVariants->isNotEmpty() && $scentVariants->isNotEmpty()) {
-            // Color and Scent
+    // Handle different combination scenarios
+    if ($sizeVariants->isNotEmpty() && $colorVariants->isNotEmpty() && $scentVariants->isNotEmpty()) {
+        // All three types
+        foreach ($sizeVariants as $size) {
             foreach ($colorVariants as $color) {
                 foreach ($scentVariants as $scent) {
                     $combinations[] = [
-                        'size' => null,
+                        'size' => $size,
                         'color' => $color,
                         'scent' => $scent
                     ];
                 }
             }
-        } else {
-            // Single variant type
-            if ($sizeVariants->isNotEmpty()) {
-                foreach ($sizeVariants as $size) {
-                    $combinations[] = ['size' => $size, 'color' => null, 'scent' => null];
-                }
-            }
-            if ($colorVariants->isNotEmpty()) {
-                foreach ($colorVariants as $color) {
-                    $combinations[] = ['size' => null, 'color' => $color, 'scent' => null];
-                }
-            }
-            if ($scentVariants->isNotEmpty()) {
-                foreach ($scentVariants as $scent) {
-                    $combinations[] = ['size' => null, 'color' => null, 'scent' => $scent];
-                }
+        }
+    } elseif ($sizeVariants->isNotEmpty() && $colorVariants->isNotEmpty()) {
+        // Size and Color
+        foreach ($sizeVariants as $size) {
+            foreach ($colorVariants as $color) {
+                $combinations[] = [
+                    'size' => $size,
+                    'color' => $color,
+                    'scent' => null
+                ];
             }
         }
-
-        // Create or update combinations
-        foreach ($combinations as $combo) {
-            $skuParts = [$product->sku];
-            $price = $product->selling_price;
-            $costPrice = $product->cost_price;
-
-            if ($combo['size']) {
-                $skuParts[] = $combo['size']->sku_suffix;
-                $price = $combo['size']->price;
-                $costPrice = $combo['size']->cost_price;
+    } elseif ($sizeVariants->isNotEmpty() && $scentVariants->isNotEmpty()) {
+        // Size and Scent
+        foreach ($sizeVariants as $size) {
+            foreach ($scentVariants as $scent) {
+                $combinations[] = [
+                    'size' => $size,
+                    'color' => null,
+                    'scent' => $scent
+                ];
             }
-            if ($combo['color']) {
-                $skuParts[] = $combo['color']->sku_suffix;
-                // Use color price only if no size variant
-                if (!$combo['size']) {
-                    $price = $combo['color']->price;
-                    $costPrice = $combo['color']->cost_price;
-                }
+        }
+    } elseif ($colorVariants->isNotEmpty() && $scentVariants->isNotEmpty()) {
+        // Color and Scent
+        foreach ($colorVariants as $color) {
+            foreach ($scentVariants as $scent) {
+                $combinations[] = [
+                    'size' => null,
+                    'color' => $color,
+                    'scent' => $scent
+                ];
             }
-            if ($combo['scent']) {
-                $skuParts[] = $combo['scent']->sku_suffix;
-                // Use scent price only if no other variants
-                if (!$combo['size'] && !$combo['color']) {
-                    $price = $combo['scent']->price;
-                    $costPrice = $combo['scent']->cost_price;
-                }
+        }
+    } else {
+        // Single variant type
+        if ($sizeVariants->isNotEmpty()) {
+            foreach ($sizeVariants as $size) {
+                $combinations[] = ['size' => $size, 'color' => null, 'scent' => null];
             }
-
-            $combinationSku = implode('-', $skuParts);
-
-            $combination = VariantCombination::updateOrCreate(
-                [
-                    'product_id' => $product->id,
-                    'size_variant_id' => $combo['size']?->id,
-                    'color_variant_id' => $combo['color']?->id,
-                    'scent_variant_id' => $combo['scent']?->id,
-                ],
-                [
-                    'combination_sku' => $combinationSku,
-                    'combination_price' => $price,
-                    'combination_cost_price' => $costPrice,
-                ]
-            );
-
-            // Create inventory record if it doesn't exist
-            Inventory::firstOrCreate(
-                [
-                    'product_id' => $product->id,
-                    'variant_combination_id' => $combination->id,
-                ],
-                [
-                    'current_stock' => 0,
-                    'reserved_stock' => 0,
-                    'low_stock_threshold' => 10,
-                ]
-            );
+        }
+        if ($colorVariants->isNotEmpty()) {
+            foreach ($colorVariants as $color) {
+                $combinations[] = ['size' => null, 'color' => $color, 'scent' => null];
+            }
+        }
+        if ($scentVariants->isNotEmpty()) {
+            foreach ($scentVariants as $scent) {
+                $combinations[] = ['size' => null, 'color' => null, 'scent' => $scent];
+            }
         }
     }
+
+    // Create or update combinations
+    foreach ($combinations as $combo) {
+        $skuParts = [$product->sku];
+        $price = 0; // Will be set manually
+        $costPrice = 0; // Will be set manually
+
+        if ($combo['size']) {
+            $skuParts[] = $combo['size']->sku_suffix;
+        }
+        if ($combo['color']) {
+            $skuParts[] = $combo['color']->sku_suffix;
+        }
+        if ($combo['scent']) {
+            $skuParts[] = $combo['scent']->sku_suffix;
+        }
+
+        $combinationSku = implode('-', $skuParts);
+
+        $combination = VariantCombination::updateOrCreate(
+            [
+                'product_id' => $product->id,
+                'size_variant_id' => $combo['size']?->id,
+                'color_variant_id' => $combo['color']?->id,
+                'scent_variant_id' => $combo['scent']?->id,
+            ],
+            [
+                'combination_sku' => $combinationSku,
+                'combination_price' => $price,
+                'combination_cost_price' => $costPrice,
+                'is_active' => true,
+            ]
+        );
+
+        // Create inventory record if it doesn't exist
+        Inventory::firstOrCreate(
+            [
+                'product_id' => $product->id,
+                'variant_combination_id' => $combination->id,
+            ],
+            [
+                'current_stock' => 0,
+                'reserved_stock' => 0,
+                'low_stock_threshold' => 10,
+            ]
+        );
+    }
+}
 
     /**
      * Deactivate related combinations when a variant is deactivated.
@@ -374,8 +352,75 @@ public function storeCombination(Request $request, Product $product)
         'discount_price' => 'nullable|numeric|min:0|lt:combination_price',
     ]);
     
-    // Create manual combination
-    // ... implementation
+    DB::beginTransaction();
+    
+    try {
+        // Create SKU parts
+        $skuParts = [$product->sku];
+        
+        if ($request->size_variant_id) {
+            $sizeVariant = ProductVariant::find($request->size_variant_id);
+            $skuParts[] = $sizeVariant->sku_suffix;
+        }
+        
+        if ($request->color_variant_id) {
+            $colorVariant = ProductVariant::find($request->color_variant_id);
+            $skuParts[] = $colorVariant->sku_suffix;
+        }
+        
+        if ($request->scent_variant_id) {
+            $scentVariant = ProductVariant::find($request->scent_variant_id);
+            $skuParts[] = $scentVariant->sku_suffix;
+        }
+        
+        $combinationSku = implode('-', $skuParts);
+        
+        // Create or update combination
+        $combination = VariantCombination::updateOrCreate(
+            [
+                'product_id' => $product->id,
+                'size_variant_id' => $request->size_variant_id,
+                'color_variant_id' => $request->color_variant_id,
+                'scent_variant_id' => $request->scent_variant_id,
+            ],
+            [
+                'combination_sku' => $combinationSku,
+                'combination_price' => $request->combination_price,
+                'combination_cost_price' => $request->combination_cost_price,
+                'discount_price' => $request->discount_price,
+                'is_active' => true,
+            ]
+        );
+        
+        // Create inventory if doesn't exist
+        Inventory::firstOrCreate(
+            [
+                'product_id' => $product->id,
+                'variant_combination_id' => $combination->id,
+            ],
+            [
+                'current_stock' => 0,
+                'reserved_stock' => 0,
+                'low_stock_threshold' => 10,
+            ]
+        );
+        
+        DB::commit();
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Variant combination created successfully.',
+            'combination' => $combination->load(['sizeVariant', 'colorVariant', 'scentVariant'])
+        ]);
+        
+    } catch (\Exception $e) {
+        DB::rollBack();
+        
+        return response()->json([
+            'success' => false,
+            'message' => 'Error creating combination: ' . $e->getMessage()
+        ], 500);
+    }
 }
 
 }

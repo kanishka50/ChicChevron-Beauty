@@ -20,11 +20,13 @@ class VariantCombination extends Model
         'combination_price',
         'combination_cost_price',
         'discount_price',
+        'is_active',
     ];
 
     protected $casts = [
         'combination_price' => 'decimal:2',
         'combination_cost_price' => 'decimal:2',
+        'is_active' => 'boolean',
     ];
 
     /**

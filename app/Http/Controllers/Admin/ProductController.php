@@ -206,24 +206,24 @@ public function store(ProductRequest $request)
      * Show the form for editing the specified product.
      */
     public function edit(Product $product)
-    {
-        $brands = Brand::active()->orderBy('name')->get();
-        $categories = Category::active()->ordered()->get();
-        $productTypes = ProductType::orderBy('name')->get();
-        $textures = Texture::orderBy('name')->get();
-        $colors = Color::all();
-        
-        $product->load(['images', 'ingredients', 'colors']);
-        
-        return view('admin.products.edit', compact(
-            'product',
-            'brands', 
-            'categories', 
-            'productTypes', 
-            'textures',
-            'colors'
-        ));
-    }
+{
+    $brands = Brand::active()->orderBy('name')->get();
+    $categories = Category::active()->ordered()->get();
+    $productTypes = ProductType::orderBy('name')->get();
+    $textures = Texture::orderBy('name')->get();
+    // REMOVE: $colors = Color::all();
+    
+    $product->load(['images', 'ingredients']); // REMOVED 'colors'
+    
+    return view('admin.products.edit', compact(
+        'product',
+        'brands', 
+        'categories', 
+        'productTypes', 
+        'textures'
+        // REMOVED: 'colors'
+    ));
+}
 
     /**
      * Update the specified product in storage.
