@@ -265,10 +265,11 @@ class OrderService
         $product = $cartItem->product;
         $variantCombination = $cartItem->variantCombination;
         
-        // Get the selling price (variant price or product price)
-        $unitPrice = $variantCombination 
-        ? $variantCombination->effective_price 
-        : $product->effective_price;
+        // Get the selling price 
+        if (!$variantCombination) {
+            throw new \Exception('Invalid order item - missing variant information.');
+        }
+        $unitPrice = $variantCombination->effective_price;
 
         // Get FIFO cost price from inventory
         $costPrice = $this->getAverageCostPrice($product->id, $variantCombination?->id, $cartItem->quantity);
@@ -315,8 +316,8 @@ class OrderService
             $variantCombination = $cartItem->variantCombination;
             
             $unitPrice = $variantCombination 
-                ? $variantCombination->combination_price 
-                : $product->selling_price;
+            ? $variantCombination->effective_price  // Use effective_price (includes discount)
+            : throw new \Exception('Invalid cart item - missing variant');
                 
             $itemTotal = $unitPrice * $cartItem->quantity;
             $subtotal += $itemTotal;

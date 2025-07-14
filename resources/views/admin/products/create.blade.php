@@ -151,77 +151,17 @@
                             <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
                         @enderror
                     </div>
+
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                        <p class="text-blue-800">
+                            <strong>Note:</strong> Pricing is set at the variant level. After creating the product, you'll be redirected to add variants and set prices.
+                        </p>
+                    </div>
+                    
                 </div>
             </div>
 
-            <!-- Pricing Information -->
-            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-                <h2 class="text-xl font-semibold text-gray-800 mb-4">Pricing Information</h2>
-                
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <!-- Cost Price -->
-                    <div>
-                        <label for="cost_price" class="block text-sm font-medium text-gray-700 mb-2">
-                            Cost Price (LKR) <span class="text-red-500">*</span>
-                        </label>
-                        <input type="number" 
-                               name="cost_price" 
-                               id="cost_price" 
-                               value="{{ old('cost_price') }}"
-                               step="0.01"
-                               min="0"
-                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @error('cost_price') border-red-500 @enderror"
-                               required>
-                        @error('cost_price')
-                            <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <!-- Selling Price -->
-                    <div>
-                        <label for="selling_price" class="block text-sm font-medium text-gray-700 mb-2">
-                            Selling Price (LKR) <span class="text-red-500">*</span>
-                        </label>
-                        <input type="number" 
-                               name="selling_price" 
-                               id="selling_price" 
-                               value="{{ old('selling_price') }}"
-                               step="0.01"
-                               min="0"
-                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @error('selling_price') border-red-500 @enderror"
-                               required>
-                        @error('selling_price')
-                            <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <!-- Discount Price -->
-                    <div>
-                        <label for="discount_price" class="block text-sm font-medium text-gray-700 mb-2">
-                            Discount Price (LKR)
-                        </label>
-                        <input type="number" 
-                               name="discount_price" 
-                               id="discount_price" 
-                               value="{{ old('discount_price') }}"
-                               step="0.01"
-                               min="0"
-                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @error('discount_price') border-red-500 @enderror">
-                        @error('discount_price')
-                            <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-                        @enderror
-                        <p class="mt-1 text-sm text-gray-500">Leave empty if no discount</p>
-                    </div>
-                </div>
-
-                <!-- Profit Margin Display -->
-                <div class="mt-4 p-4 bg-gray-50 rounded-lg">
-                    <p class="text-sm text-gray-700">
-                        <span class="font-medium">Profit Margin:</span>
-                        <span id="profit-margin" class="ml-2 font-bold text-green-600">0%</span>
-                    </p>
-                </div>
-            </div>
+            
 
             <!-- Product Images -->
             @include('admin.products.partials.image-upload')

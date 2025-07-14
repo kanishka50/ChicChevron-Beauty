@@ -35,6 +35,8 @@ Route::middleware('admin')->group(function () {
         Route::delete('/{product}', [ProductController::class, 'destroy'])->name('destroy');
         Route::post('/{product}/toggle-status', [ProductController::class, 'toggleStatus'])->name('toggle-status');
         Route::delete('/images/{image}', [ProductController::class, 'deleteImage'])->name('images.destroy');
+
+        Route::post('/{product}/combinations', [ProductVariantController::class, 'storeCombination'])->name('variants.combinations.store');
         
         // Variant management routes
         Route::get('/{product}/variants', [ProductVariantController::class, 'index'])->name('variants');

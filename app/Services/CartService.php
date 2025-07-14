@@ -56,9 +56,10 @@ class CartService
         }
 
         // Calculate price
-        $unitPrice = $variantCombination 
-            ? $variantCombination->effective_price 
-            : $product->effective_price;
+        if (!$variantCombination) {
+        throw new \Exception('Please select product options.');
+        }
+        $unitPrice = $variantCombination->effective_price;
 
         // Create new cart item
         $cartItem = CartItem::create([
@@ -123,6 +124,11 @@ class CartService
      */
     public function getAvailableStock($productId, $variantCombinationId = null)
     {
+
+        if (!$variantCombinationId) {
+        return 0;
+    }
+    
         $inventory = Inventory::where('product_id', $productId)
                              ->where('variant_combination_id', $variantCombinationId)
                              ->first();

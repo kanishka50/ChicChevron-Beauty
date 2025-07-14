@@ -20,14 +20,10 @@ class Product extends Model
         'category_id',
         'product_type_id',
         'texture_id',
-        'cost_price',
-        'selling_price',
-        'discount_price',
         'main_image',
         'how_to_use',
         'suitable_for',
         'fragrance',
-        'has_variants',
         'is_active',
         'views_count',
         'average_rating',
@@ -35,13 +31,12 @@ class Product extends Model
     ];
 
     protected $casts = [
-        'cost_price' => 'decimal:2',
-        'selling_price' => 'decimal:2',
-        'discount_price' => 'decimal:2',
-        'has_variants' => 'boolean',
         'is_active' => 'boolean',
         'views_count' => 'integer',
+        'average_rating' => 'decimal:2',
+        'reviews_count' => 'integer',
     ];
+    
 
     /**
      * Get the sluggable field for the trait.
@@ -262,17 +257,6 @@ class Product extends Model
     // =====================================================
 
     /**
-     * Get the display price (considers discount).
-     */
-    public function getDisplayPriceAttribute()
-    {
-        if ($this->discount_price && $this->discount_price < $this->selling_price) {
-            return $this->discount_price;
-        }
-        return $this->selling_price;
-    }
-
-    /**
      * Get the main image URL.
      */
     public function getMainImageUrlAttribute()
@@ -309,16 +293,7 @@ class Product extends Model
         return $this->reviews()->count();
     }
 
-    /**
-     * Get discount percentage.
-     */
-    public function getDiscountPercentageAttribute()
-    {
-        if ($this->discount_price && $this->discount_price < $this->selling_price) {
-            return round((($this->selling_price - $this->discount_price) / $this->selling_price) * 100);
-        }
-        return 0;
-    }
+
 
     /**
      * Check if product is new (created within last 30 days).
@@ -340,21 +315,43 @@ class Product extends Model
      * Get price range for variant products.
      */
     public function getPriceRangeAttribute()
-    {
-        if (!$this->has_variants || $this->variantCombinations->isEmpty()) {
-            return [
-                'min' => $this->display_price,
-                'max' => $this->display_price,
-            ];
-        }
+{
+    $prices = $this->variantCombinations()
+        ->where('is_active', true)
+        ->pluck('combination_price');
 
-        $prices = $this->variantCombinations->pluck('combination_price');
-
-        return [
-            'min' => $prices->min(),
-            'max' => $prices->max(),
-        ];
+    if ($prices->isEmpty()) {
+        return ['min' => 0, 'max' => 0];
     }
+
+    return [
+        'min' => $prices->min(),
+        'max' => $prices->max(),
+    ];
+}
+
+
+/**
+ * Get effective price range (considering discounts)
+ */
+public function getEffectivePriceRangeAttribute()
+{
+    $effectivePrices = $this->variantCombinations()
+        ->where('is_active', true)
+        ->get()
+        ->map(function ($combination) {
+            return $combination->effective_price;
+        });
+
+    if ($effectivePrices->isEmpty()) {
+        return ['min' => 0, 'max' => 0];
+    }
+
+    return [
+        'min' => $effectivePrices->min(),
+        'max' => $effectivePrices->max(),
+    ];
+}
 
     /**
      * Get formatted price range.
@@ -438,18 +435,16 @@ class Product extends Model
      * Get available variant combinations.
      */
     public function getAvailableVariantCombinations()
-    {
-        if (!$this->has_variants) {
-            return collect();
-        }
-
-        return $this->variantCombinations()
-            ->with(['sizeVariant', 'colorVariant', 'scentVariant', 'inventory'])
-            ->whereHas('inventory', function ($query) {
-                $query->whereRaw('(current_stock - reserved_stock) > 0');
-            })
-            ->get();
-    }
+{
+    // Remove has_variants check
+    return $this->variantCombinations()
+        ->with(['sizeVariant', 'colorVariant', 'scentVariant', 'inventory'])
+        ->where('is_active', true)
+        ->whereHas('inventory', function ($query) {
+            $query->whereRaw('(current_stock - reserved_stock) > 0');
+        })
+        ->get();
+}
 
     /**
      * Get variant options grouped by type.
@@ -509,29 +504,32 @@ class Product extends Model
      */
     public function getStructuredDataAttribute()
     {
-        $data = [
-            '@context' => 'https://schema.org',
-            '@type' => 'Product',
-            'name' => $this->name,
-            'description' => $this->meta_description,
-            'sku' => $this->sku,
-            'image' => $this->main_image_url,
-            'url' => $this->url,
-            'brand' => [
-                '@type' => 'Brand',
-                'name' => $this->brand->name ?? 'ChicChevron Beauty',
+        $priceRange = $this->effective_price_range;
+    
+    $data = [
+        '@context' => 'https://schema.org',
+        '@type' => 'Product',
+        'name' => $this->name,
+        'description' => $this->meta_description,
+        'sku' => $this->sku,
+        'image' => $this->main_image_url,
+        'url' => $this->url,
+        'brand' => [
+            '@type' => 'Brand',
+            'name' => $this->brand->name ?? 'ChicChevron Beauty',
+        ],
+        'offers' => [
+            '@type' => 'AggregateOffer',
+            'lowPrice' => $priceRange['min'],
+            'highPrice' => $priceRange['max'],
+            'priceCurrency' => 'LKR',
+            'availability' => $this->in_stock ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+            'seller' => [
+                '@type' => 'Organization',
+                'name' => 'ChicChevron Beauty',
             ],
-            'offers' => [
-                '@type' => 'Offer',
-                'price' => $this->display_price,
-                'priceCurrency' => 'LKR',
-                'availability' => $this->in_stock ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
-                'seller' => [
-                    '@type' => 'Organization',
-                    'name' => 'ChicChevron Beauty',
-                ],
-            ],
-        ];
+        ],
+    ];
 
         if ($this->average_rating > 0) {
             $data['aggregateRating'] = [
@@ -598,23 +596,15 @@ public static function getBestSellers($limit = 8)
      */
 public function getStockLevel()
 {
-    if ($this->has_variants) {
-        // For variant products, return total stock across all combinations
-        return $this->variantCombinations()
-            ->with('inventory')
-            ->get()
-            ->sum(function ($combination) {
-                return $combination->inventory 
-                    ? ($combination->inventory->current_stock - $combination->inventory->reserved_stock)
-                    : 0;
-            });
-    } else {
-        // For simple products, return inventory stock
-        $inventory = $this->inventory()->first();
-        return $inventory 
-            ? ($inventory->current_stock - $inventory->reserved_stock)
-            : 0;
-    }
+    // Remove the has_variants check since ALL products have variants
+    return $this->variantCombinations()
+        ->with('inventory')
+        ->get()
+        ->sum(function ($combination) {
+            return $combination->inventory 
+                ? ($combination->inventory->current_stock - $combination->inventory->reserved_stock)
+                : 0;
+        });
 }
 
 /**
@@ -645,40 +635,6 @@ public function hasStock()
         return max(0, $inventory->current_stock - $inventory->reserved_stock);
     }
 
-    /**
-     * Get the effective selling price (considering discount)
-     */
-    public function getEffectivePriceAttribute()
-{
-    return $this->discount_price && $this->discount_price < $this->selling_price 
-        ? $this->discount_price 
-        : $this->selling_price;
-}
-
-    /**
-     * Get formatted effective price
-     */
-    public function getFormattedPriceAttribute()
-    {
-        return 'Rs. ' . number_format($this->effective_price, 2);
-    }
-
-    /**
-     * Get formatted original price
-     */
-    public function getFormattedOriginalPriceAttribute()
-    {
-        return 'Rs. ' . number_format($this->selling_price, 2);
-    }
-
-    /**
-     * Check if product is on discount
-     */
-    
-    public function getIsOnSaleAttribute()
-{
-    return $this->discount_price && $this->discount_price < $this->selling_price;
-}
     
 
     /**
@@ -694,8 +650,8 @@ public function hasStock()
             ];
         }
 
-        // Check if variant is required but not provided
-        if ($this->has_variants && !$variantCombinationId) {
+        // ALWAYS require variant combination
+        if (!$variantCombinationId) {
             return [
                 'can_add' => false,
                 'message' => 'Please select product options.'
@@ -751,6 +707,49 @@ public function hasStock()
         return $query->whereNotNull('discount_price')
                      ->whereRaw('discount_price < selling_price');
     }
+
+
+    /**
+ * Get starting price (lowest variant combination price)
+ */
+public function getStartingPriceAttribute()
+{
+    return $this->variantCombinations()
+        ->where('is_active', true)
+        ->min('combination_price') ?? 0;
+}
+
+/**
+ * Get starting discounted price if any
+ */
+public function getStartingDiscountPriceAttribute()
+{
+    $lowestPriceCombination = $this->variantCombinations()
+        ->where('is_active', true)
+        ->orderBy('combination_price')
+        ->first();
+    
+    return $lowestPriceCombination?->discount_price;
+}
+
+/**
+ * Check if any variant is on sale
+ */
+public function getHasDiscountAttribute()
+{
+    return $this->variantCombinations()
+        ->whereNotNull('discount_price')
+        ->whereRaw('discount_price < combination_price')
+        ->exists();
+}
+
+/**
+ * Always return true since all products have variants
+ */
+public function getHasVariantsAttribute()
+{
+    return true;
+}
 
     
 }

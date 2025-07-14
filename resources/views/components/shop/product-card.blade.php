@@ -68,11 +68,19 @@
 
         <!-- Price -->
         <div class="mt-2 flex items-center space-x-2">
-            @if($product->discount_price && $product->discount_price < $product->selling_price)
-                <span class="text-lg font-bold text-pink-600">Rs. {{ number_format($product->discount_price, 2) }}</span>
-                <span class="text-sm text-gray-500 line-through">Rs. {{ number_format($product->selling_price, 2) }}</span>
+            @if($product->has_discount)
+                <span class="text-lg font-bold text-pink-600">
+                    From Rs. {{ number_format($product->starting_discount_price ?? $product->starting_price, 2) }}
+                </span>
+                @if($product->starting_discount_price)
+                    <span class="text-sm text-gray-500 line-through">
+                        Rs. {{ number_format($product->starting_price, 2) }}
+                    </span>
+                @endif
             @else
-                <span class="text-lg font-bold text-gray-900">Rs. {{ number_format($product->selling_price, 2) }}</span>
+                <span class="text-lg font-bold text-gray-900">
+                    From Rs. {{ number_format($product->starting_price, 2) }}
+                </span>
             @endif
         </div>
 
@@ -143,7 +151,7 @@
         @if($product->hasStock())
             @if($product->has_variants)
                 <a href="{{ route('products.show', $product->slug) }}" 
-                   class="mt-3 w-full bg-gray-100 text-gray-900 py-2 px-4 rounded-lg hover:bg-gray-200 transition-colors text-center text-sm font-medium block">
+                class="mt-3 w-full bg-gray-100 text-gray-900 py-2 px-4 rounded-lg hover:bg-gray-200 transition-colors text-center text-sm font-medium block">
                     Select Options
                 </a>
             @else

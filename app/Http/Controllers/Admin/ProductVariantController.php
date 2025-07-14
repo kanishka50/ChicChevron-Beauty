@@ -362,4 +362,20 @@ public function show(ProductVariant $variant)
         ], 500);
     }
 }
+
+public function storeCombination(Request $request, Product $product)
+{
+    $request->validate([
+        'size_variant_id' => 'nullable|exists:product_variants,id',
+        'color_variant_id' => 'nullable|exists:product_variants,id', 
+        'scent_variant_id' => 'nullable|exists:product_variants,id',
+        'combination_price' => 'required|numeric|min:0',
+        'combination_cost_price' => 'required|numeric|min:0',
+        'discount_price' => 'nullable|numeric|min:0|lt:combination_price',
+    ]);
+    
+    // Create manual combination
+    // ... implementation
+}
+
 }
