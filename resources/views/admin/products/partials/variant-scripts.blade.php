@@ -11,6 +11,14 @@ function closeAddVariantModal() {
     document.getElementById('addVariantForm').reset();
 }
 
+function openAddCombinationModal() {
+    document.getElementById('addCombinationModal').classList.remove('hidden');
+}
+function closeAddCombinationModal() {
+    document.getElementById('addCombinationModal').classList.add('hidden');
+    document.getElementById('addCombinationForm').reset();
+}
+
 function openEditVariantModal() {
     document.getElementById('editVariantModal').classList.remove('hidden');
 }
@@ -163,6 +171,101 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     }
+
+
+
+
+     const editCombinationForm = document.getElementById('editCombinationForm');
+if (editCombinationForm) {
+    editCombinationForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        const combinationId = document.getElementById('edit_combination_id').value;
+        const submitBtn = this.querySelector('button[type="submit"]');
+        
+        // Disable submit button
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Updating...';
+        
+        fetch(`/admin/products/combinations/${combinationId}`, {
+            method: 'PUT',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('Combination price updated successfully!', 'success');
+                closeEditCombinationModal();
+                setTimeout(() => {
+                    location.reload();
+                }, 1000);
+            } else {
+                showNotification(data.message || 'Error updating combination', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Error updating combination', 'error');
+        })
+        .finally(() => {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Update Price';
+        });
+    });
+}
+
+
+
+
+// Add Combination Form Handler
+const addCombinationForm = document.getElementById('addCombinationForm');
+if (addCombinationForm) {
+    addCombinationForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const productId = '{{ $product->id }}';
+        
+        // Disable submit button
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Adding...';
+        
+        fetch(`/admin/products/${productId}/combinations`, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('Combination added successfully!', 'success');
+                closeAddCombinationModal();
+                setTimeout(() => {
+                    location.reload();
+                }, 1000);
+            } else {
+                showNotification(data.message || 'Error adding combination', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Error adding combination', 'error');
+        })
+        .finally(() => {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Add Combination';
+        });
+    });
+}
 });
 
 // Edit Variant
@@ -179,15 +282,13 @@ function editVariant(variantId) {
         if (data.success) {
             const variant = data.variant;
             
-            // Populate edit form
+            // Populate edit form (REMOVE PRICE FIELDS)
             document.getElementById('edit_variant_id').value = variant.id;
             document.getElementById('edit_variant_type').value = variant.variant_type;
             document.getElementById('edit_variant_value').value = variant.variant_value;
             document.getElementById('edit_sku_suffix').value = variant.sku_suffix;
-            document.getElementById('edit_price').value = variant.price;
-            document.getElementById('edit_cost_price').value = variant.cost_price;
             document.getElementById('edit_is_active').checked = variant.is_active;
-            document.getElementById('edit_discount_price').value = variant.discount_price || '';
+            // REMOVED: price, cost_price, discount_price
             
             openEditVariantModal();
         } else {
@@ -292,6 +393,52 @@ function getNotificationClasses(type) {
     }
 }
 
+
+
+
+function openEditCombinationModal() {
+    document.getElementById('editCombinationModal').classList.remove('hidden');
+}
+
+function closeEditCombinationModal() {
+    document.getElementById('editCombinationModal').classList.add('hidden');
+    document.getElementById('editCombinationForm').reset();
+}
+
+function editCombination(combinationId) {
+    fetch(`/admin/products/combinations/${combinationId}`, {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const combination = data.combination;
+            
+            // Populate form
+            document.getElementById('edit_combination_id').value = combination.id;
+            document.getElementById('combination_details').innerHTML = combination.variant_details;
+            document.getElementById('edit_combination_price').value = combination.combination_price;
+            document.getElementById('edit_combination_discount_price').value = combination.discount_price || '';
+            document.getElementById('edit_combination_cost_price').value = combination.combination_cost_price;
+            document.getElementById('edit_combination_is_active').checked = combination.is_active;
+            
+            openEditCombinationModal();
+        } else {
+            showNotification('Error loading combination data', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error loading combination data', 'error');
+    });
+}
+
+
+
 // Close modals when clicking outside
 document.addEventListener('click', function(e) {
     if (e.target.classList.contains('fixed') && e.target.classList.contains('inset-0')) {
@@ -304,6 +451,12 @@ document.addEventListener('click', function(e) {
         if (!document.getElementById('updateStockModal').classList.contains('hidden')) {
             closeUpdateStockModal();
         }
+        if (!document.getElementById('addCombinationModal').classList.contains('hidden')) {
+            closeAddCombinationModal();
+        }
+        if (!document.getElementById('editCombinationModal').classList.contains('hidden')) {
+            closeEditCombinationModal();
+        }
     }
 });
 
@@ -313,6 +466,8 @@ document.addEventListener('keydown', function(e) {
         closeAddVariantModal();
         closeEditVariantModal();
         closeUpdateStockModal();
+        closeAddCombinationModal();        
+        closeEditCombinationModal(); 
     }
 });
 </script>

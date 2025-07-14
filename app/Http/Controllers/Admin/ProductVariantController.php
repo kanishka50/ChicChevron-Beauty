@@ -423,4 +423,74 @@ public function storeCombination(Request $request, Product $product)
     }
 }
 
+
+
+
+/**
+ * Get combination details for editing
+ */
+public function getCombination(VariantCombination $combination)
+{
+    try {
+        $combination->load(['sizeVariant', 'colorVariant', 'scentVariant']);
+        
+        return response()->json([
+            'success' => true,
+            'combination' => [
+                'id' => $combination->id,
+                'combination_price' => $combination->combination_price,
+                'discount_price' => $combination->discount_price,
+                'combination_cost_price' => $combination->combination_cost_price,
+                'is_active' => $combination->is_active,
+                'variant_details' => $combination->variant_details,
+            ]
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Error loading combination: ' . $e->getMessage()
+        ], 500);
+    }
+}
+
+/**
+ * Update combination prices
+ */
+public function updateCombination(Request $request, VariantCombination $combination)
+{
+    $request->validate([
+        'combination_price' => 'required|numeric|min:0',
+        'combination_cost_price' => 'required|numeric|min:0',
+        'discount_price' => 'nullable|numeric|min:0|lt:combination_price',
+        'is_active' => 'boolean',
+    ]);
+    
+    DB::beginTransaction();
+    
+    try {
+        $combination->update([
+            'combination_price' => $request->combination_price,
+            'combination_cost_price' => $request->combination_cost_price,
+            'discount_price' => $request->discount_price,
+            'is_active' => $request->boolean('is_active', true),
+        ]);
+        
+        DB::commit();
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Combination price updated successfully.',
+            'combination' => $combination
+        ]);
+        
+    } catch (\Exception $e) {
+        DB::rollBack();
+        
+        return response()->json([
+            'success' => false,
+            'message' => 'Error updating combination: ' . $e->getMessage()
+        ], 500);
+    }
+}
+
 }

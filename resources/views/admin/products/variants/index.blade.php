@@ -30,10 +30,6 @@
                 <tr>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Size</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SKU</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Discount</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cost</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Margin</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
@@ -43,29 +39,6 @@
                     <tr id="variant-{{ $variant->id }}">
                         <td class="px-6 py-4 whitespace-nowrap">{{ $variant->variant_value }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $variant->full_sku }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            @if($variant->discount_price && $variant->discount_price < $variant->price)
-                                <span class="line-through text-gray-500">LKR {{ number_format($variant->price, 2) }}</span><br>
-                                <span class="text-red-600 font-semibold">LKR {{ number_format($variant->discount_price, 2) }}</span>
-                            @else
-                                LKR {{ number_format($variant->price, 2) }}
-                            @endif
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            @if($variant->discount_price && $variant->discount_price < $variant->price)
-                                <span class="text-green-600 text-sm">
-                                    -{{ round((($variant->price - $variant->discount_price) / $variant->price) * 100) }}%
-                                </span>
-                            @else
-                                -
-                            @endif
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">LKR {{ number_format($variant->cost_price, 2) }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="text-sm {{ $variant->profit_margin > 0 ? 'text-green-600' : 'text-red-600' }}">
-                                {{ $variant->profit_margin }}%
-                            </span>
-                        </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ $variant->is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
                                 {{ $variant->is_active ? 'Active' : 'Inactive' }}
@@ -78,7 +51,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" class="px-6 py-4 text-center text-gray-500">No size variants added yet</td>
+                        <td colspan="4" class="px-6 py-4 text-center text-gray-500">No size variants added yet</td>
                     </tr>
                 @endforelse
             </tbody>
@@ -96,9 +69,6 @@
                 <tr>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Color</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SKU</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cost</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Margin</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
@@ -108,13 +78,6 @@
                     <tr id="variant-{{ $variant->id }}">
                         <td class="px-6 py-4 whitespace-nowrap">{{ $variant->variant_value }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $variant->full_sku }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap">LKR {{ number_format($variant->price, 2) }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap">LKR {{ number_format($variant->cost_price, 2) }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="text-sm {{ $variant->profit_margin > 0 ? 'text-green-600' : 'text-red-600' }}">
-                                {{ $variant->profit_margin }}%
-                            </span>
-                        </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ $variant->is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
                                 {{ $variant->is_active ? 'Active' : 'Inactive' }}
@@ -127,7 +90,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" class="px-6 py-4 text-center text-gray-500">No color variants added yet</td>
+                        <td colspan="4" class="px-6 py-4 text-center text-gray-500">No color variants added yet</td>
                     </tr>
                 @endforelse
             </tbody>
@@ -145,9 +108,6 @@
                 <tr>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Scent</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SKU</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cost</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Margin</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
@@ -157,13 +117,6 @@
                     <tr id="variant-{{ $variant->id }}">
                         <td class="px-6 py-4 whitespace-nowrap">{{ $variant->variant_value }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $variant->full_sku }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap">LKR {{ number_format($variant->price, 2) }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap">LKR {{ number_format($variant->cost_price, 2) }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="text-sm {{ $variant->profit_margin > 0 ? 'text-green-600' : 'text-red-600' }}">
-                                {{ $variant->profit_margin }}%
-                            </span>
-                        </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ $variant->is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
                                 {{ $variant->is_active ? 'Active' : 'Inactive' }}
@@ -176,7 +129,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" class="px-6 py-4 text-center text-gray-500">No scent variants added yet</td>
+                        <td colspan="4" class="px-6 py-4 text-center text-gray-500">No scent variants added yet</td>
                     </tr>
                 @endforelse
             </tbody>
@@ -186,9 +139,17 @@
 
 <!-- Variant Combinations -->
 @if($product->variantCombinations->isNotEmpty())
-    <div class="bg-white rounded-lg shadow-md p-6">
-        <h2 class="text-xl font-semibold text-gray-800 mb-4">Variant Combinations & Inventory</h2>
-        <p class="text-sm text-gray-600 mb-4">These combinations are automatically generated based on your variants. Manage stock levels for each combination.</p>
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+        <div class="flex justify-between items-center mb-4">
+            <div>
+                <h2 class="text-xl font-semibold text-gray-800">Variant Combinations & Pricing</h2>
+                <p class="text-sm text-gray-600 mt-1">Set prices and manage inventory for each combination.</p>
+            </div>
+            <button onclick="openAddCombinationModal()" 
+                    class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded text-sm">
+                Add Manual Combination
+            </button>
+        </div>
         
         <x-admin.table>
             <thead class="bg-gray-50">
@@ -196,7 +157,10 @@
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Combination</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SKU</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Discount</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cost</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
             </thead>
@@ -222,20 +186,55 @@
                                 @endif
                             </div>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $combination->sku }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap">LKR {{ number_format($combination->price, 2) }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $combination->combination_sku }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            @if($combination->combination_price > 0)
+                                <span class="font-medium">LKR {{ number_format($combination->combination_price, 2) }}</span>
+                            @else
+                                <span class="text-red-600 text-sm">Not set</span>
+                            @endif
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            @if($combination->discount_price)
+                                <span class="text-green-600">LKR {{ number_format($combination->discount_price, 2) }}</span>
+                            @else
+                                -
+                            @endif
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            @if($combination->combination_cost_price > 0)
+                                <span class="text-gray-600 text-sm">LKR {{ number_format($combination->combination_cost_price, 2) }}</span>
+                            @else
+                                <span class="text-gray-400 text-sm">Not set</span>
+                            @endif
+                        </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <span class="text-sm {{ $combination->inventory && $combination->inventory->current_stock > 10 ? 'text-green-600' : 'text-red-600' }}">
                                 {{ $combination->inventory ? $combination->inventory->current_stock : 0 }} units
                             </span>
                         </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ $combination->is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                                {{ $combination->is_active ? 'Active' : 'Inactive' }}
+                            </span>
+                        </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm">
-                            <button onclick="updateStock({{ $combination->id }})" class="text-indigo-600 hover:text-indigo-900">Update Stock</button>
+                            <button onclick="editCombination({{ $combination->id }})" class="text-indigo-600 hover:text-indigo-900 mr-2">Edit Price</button>
+                            <button onclick="updateStock({{ $combination->id }})" class="text-green-600 hover:text-green-900">Stock</button>
                         </td>
                     </tr>
                 @endforeach
             </tbody>
         </x-admin.table>
+    </div>
+@else
+    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+        <p class="text-yellow-800">
+            <svg class="inline w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+            </svg>
+            No variant combinations yet. Add variants above to create combinations.
+        </p>
     </div>
 @endif
 

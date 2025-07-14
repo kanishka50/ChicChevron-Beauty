@@ -91,31 +91,6 @@
     </button>
 </div>
 
-<!-- Colors -->
-<div class="bg-white rounded-lg shadow-md p-6 mb-6">
-    <h2 class="text-xl font-semibold text-gray-800 mb-4">Available Colors</h2>
-    
-    <div class="grid grid-cols-3 md:grid-cols-6 gap-3">
-        @foreach($colors as $color)
-            <label class="flex items-center space-x-2 cursor-pointer">
-                <input type="checkbox" 
-                       name="colors[]" 
-                       value="{{ $color->id }}"
-                       {{ in_array($color->id, old('colors', [])) ? 'checked' : '' }}
-                       class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
-                <span class="flex items-center space-x-2">
-                    <span class="w-4 h-4 rounded-full border border-gray-300" 
-                          style="background-color: {{ $color->hex_code }}"></span>
-                    <span class="text-sm text-gray-700">{{ $color->name }}</span>
-                </span>
-            </label>
-        @endforeach
-    </div>
-    
-    @if($colors->isEmpty())
-        <p class="text-gray-500 text-sm">No colors available. Please add colors first.</p>
-    @endif
-</div>
 
 <!-- Product Status -->
 <div class="bg-white rounded-lg shadow-md p-6 mb-6">
