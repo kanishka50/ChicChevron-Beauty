@@ -44,11 +44,11 @@
                         <td class="px-6 py-4 whitespace-nowrap">{{ $variant->variant_value }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $variant->full_sku }}</td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            @if($combination->discount_price && $combination->discount_price < $combination->combination_price)
-                                <span class="line-through text-gray-500">LKR {{ number_format($combination->combination_price, 2) }}</span><br>
-                                <span class="text-red-600 font-semibold">LKR {{ number_format($combination->discount_price, 2) }}</span>
+                            @if($variant->discount_price && $variant->discount_price < $variant->price)
+                                <span class="line-through text-gray-500">LKR {{ number_format($variant->price, 2) }}</span><br>
+                                <span class="text-red-600 font-semibold">LKR {{ number_format($variant->discount_price, 2) }}</span>
                             @else
-                                LKR {{ number_format($combination->combination_price, 2) }}
+                                LKR {{ number_format($variant->price, 2) }}
                             @endif
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
