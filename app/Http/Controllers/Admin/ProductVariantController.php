@@ -12,9 +12,6 @@ use Illuminate\Support\Str;
 
 class ProductVariantController extends Controller
 {
-    /**
-     * Display product variants.
-     */
     public function index(Product $product)
     {
         $variants = $product->variants()
@@ -25,9 +22,11 @@ class ProductVariantController extends Controller
         return view('admin.products.variants.index', compact('product', 'variants'));
     }
 
-    /**
-     * Store a new variant.
-     */
+    public function create(Product $product)
+    {
+        return view('admin.products.variants.create', compact('product'));
+    }
+
     public function store(Request $request, Product $product)
     {
         $request->validate([
@@ -82,13 +81,13 @@ class ProductVariantController extends Controller
             ]);
 
             // Update product has_variants flag
-            if (!$product->has_variants || $product->variants()->count() > 1) {
+            if ($product->variants()->count() > 1) {
                 $product->update(['has_variants' => true]);
             }
 
             DB::commit();
 
-            return redirect()->route('admin.products.variants', $product)
+            return redirect()->route('admin.products.variants.index', $product)
                 ->with('success', 'Variant created successfully.');
 
         } catch (\Exception $e) {
@@ -99,17 +98,11 @@ class ProductVariantController extends Controller
         }
     }
 
-    /**
-     * Show variant edit form.
-     */
     public function edit(ProductVariant $variant)
     {
         return view('admin.products.variants.edit', compact('variant'));
     }
 
-    /**
-     * Update a variant.
-     */
     public function update(Request $request, ProductVariant $variant)
     {
         $request->validate([
@@ -146,7 +139,7 @@ class ProductVariantController extends Controller
 
             DB::commit();
 
-            return redirect()->route('admin.products.variants', $variant->product)
+            return redirect()->route('admin.products.variants.index', $variant->product)
                 ->with('success', 'Variant updated successfully.');
 
         } catch (\Exception $e) {
@@ -157,9 +150,6 @@ class ProductVariantController extends Controller
         }
     }
 
-    /**
-     * Toggle variant status.
-     */
     public function toggleStatus(ProductVariant $variant)
     {
         $variant->update(['is_active' => !$variant->is_active]);
@@ -171,19 +161,14 @@ class ProductVariantController extends Controller
         ]);
     }
 
-    /**
-     * Delete a variant.
-     */
     public function destroy(ProductVariant $variant)
     {
-        // Check if this is the last variant
         if ($variant->product->variants()->count() === 1) {
             return back()->withErrors(['error' => 'Cannot delete the last variant.']);
         }
 
-        // Check if variant has been ordered
         if ($variant->orderItems()->exists()) {
-            return back()->withErrors(['error' => 'Cannot delete variant that has been ordered. Deactivate it instead.']);
+            return back()->withErrors(['error' => 'Cannot delete variant that has been ordered.']);
         }
 
         DB::beginTransaction();
@@ -192,14 +177,13 @@ class ProductVariantController extends Controller
             $product = $variant->product;
             $variant->delete();
             
-            // Update has_variants flag if only one variant left
             if ($product->variants()->count() === 1) {
                 $product->update(['has_variants' => false]);
             }
             
             DB::commit();
 
-            return redirect()->route('admin.products.variants', $product)
+            return redirect()->route('admin.products.variants.index', $product)
                 ->with('success', 'Variant deleted successfully.');
 
         } catch (\Exception $e) {
@@ -209,9 +193,6 @@ class ProductVariantController extends Controller
         }
     }
 
-    /**
-     * Generate SKU for variant.
-     */
     private function generateSku(Product $product, Request $request)
     {
         $skuParts = [$product->sku];
@@ -227,16 +208,5 @@ class ProductVariantController extends Controller
         }
         
         return implode('-', $skuParts);
-    }
-
-    /**
-     * Get variant for AJAX requests
-     */
-    public function show(ProductVariant $variant)
-    {
-        return response()->json([
-            'success' => true,
-            'variant' => $variant->load('inventory')
-        ]);
     }
 }

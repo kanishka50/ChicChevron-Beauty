@@ -6,7 +6,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\CartItem;
 use App\Models\Product;
-use App\Models\VariantCombination;
+use App\Models\ProductVariant;
 use App\Services\InventoryService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -23,7 +23,7 @@ class OrderService
     }
 
     /**
-     * Create order from cart items (your existing method - keep as is)
+     * Create order from cart items
      */
     public function createFromCart($user, $cartItems, $shippingData, $paymentMethod, $promotionCode = null)
     {
@@ -94,8 +94,7 @@ class OrderService
     }
 
     /**
-     * NEW: Create order for CheckoutController (simpler format)
-     * This method adapts your existing logic to work with the checkout form
+     * Create order for CheckoutController (simpler format)
      */
     public function createOrder(array $orderData, $cartItems)
     {
@@ -154,42 +153,40 @@ class OrderService
     }
 
     /**
-     * NEW: Map checkout form data to your order database structure
+     * Map checkout form data to your order database structure
      */
     protected function mapCheckoutDataToOrderFormat(array $checkoutData)
-{
-    // Simply map the address fields directly - no splitting needed
-    return [
-        'order_number' => $checkoutData['order_number'],
-        'user_id' => $checkoutData['user_id'],
-        'customer_email' => $checkoutData['customer_email'],
-        'status' => $checkoutData['status'],
-        'payment_method' => $checkoutData['payment_method'],
-        'payment_status' => $checkoutData['payment_status'],
-        
-        // Map to shipping fields in database
-        'shipping_name' => $checkoutData['customer_name'],
-        'shipping_phone' => $checkoutData['customer_phone'],
-        'shipping_address_line_1' => $checkoutData['address_line_1'] ?? $checkoutData['delivery_address'], // Use new field or fall back to old
-        'shipping_address_line_2' => $checkoutData['address_line_2'] ?? null,
-        'shipping_city' => $checkoutData['city'] ?? $checkoutData['delivery_city'],
-        'shipping_district' => $checkoutData['district'] ?? $checkoutData['delivery_city'], // Use district or fall back to city
-        'shipping_postal_code' => $checkoutData['postal_code'] ?? $checkoutData['delivery_postal_code'],
-        
-        // Totals
-        'subtotal' => $checkoutData['subtotal'],
-        'discount_amount' => $checkoutData['discount_amount'],
-        'shipping_amount' => $checkoutData['shipping_amount'],
-        'total_amount' => $checkoutData['total_amount'],
-        
-        // Notes for delivery
-        'notes' => $checkoutData['delivery_notes'] ?? null,
-    ];
-}
-
+    {
+        return [
+            'order_number' => $checkoutData['order_number'],
+            'user_id' => $checkoutData['user_id'],
+            'customer_email' => $checkoutData['customer_email'],
+            'status' => $checkoutData['status'],
+            'payment_method' => $checkoutData['payment_method'],
+            'payment_status' => $checkoutData['payment_status'],
+            
+            // Map to shipping fields in database
+            'shipping_name' => $checkoutData['customer_name'],
+            'shipping_phone' => $checkoutData['customer_phone'],
+            'shipping_address_line_1' => $checkoutData['address_line_1'] ?? $checkoutData['delivery_address'],
+            'shipping_address_line_2' => $checkoutData['address_line_2'] ?? null,
+            'shipping_city' => $checkoutData['city'] ?? $checkoutData['delivery_city'],
+            'shipping_district' => $checkoutData['district'] ?? $checkoutData['delivery_city'],
+            'shipping_postal_code' => $checkoutData['postal_code'] ?? $checkoutData['delivery_postal_code'],
+            
+            // Totals
+            'subtotal' => $checkoutData['subtotal'],
+            'discount_amount' => $checkoutData['discount_amount'],
+            'shipping_amount' => $checkoutData['shipping_amount'],
+            'total_amount' => $checkoutData['total_amount'],
+            
+            // Notes for delivery
+            'notes' => $checkoutData['delivery_notes'] ?? null,
+        ];
+    }
 
     /**
-     * NEW: Simple totals calculation for checkout (without complex promotions)
+     * Simple totals calculation for checkout (without complex promotions)
      */
     protected function calculateSimpleOrderTotals($cartItems)
     {
@@ -199,7 +196,7 @@ class OrderService
             $subtotal += $cartItem->quantity * $cartItem->unit_price;
         }
 
-        // Simple shipping calculation (you can enhance this)
+        // Simple shipping calculation
         $shippingAmount = $subtotal >= 5000 ? 0 : 300; // Free shipping over Rs. 5000
 
         return [
@@ -211,33 +208,34 @@ class OrderService
     }
 
     /**
-     * NEW: Simple order item creation for checkout
+     * Simple order item creation for checkout
      */
     protected function createOrderItemFromCart($order, $cartItem)
     {
         $product = $cartItem->product;
-        $variantCombination = $cartItem->variantCombination;
+        $productVariant = $cartItem->productVariant;
         
         // Get cost price using your existing method
-        $costPrice = $this->getAverageCostPrice($product->id, $variantCombination?->id, $cartItem->quantity);
+        $costPrice = $this->getAverageCostPrice($product->id, $productVariant?->id, $cartItem->quantity);
 
         // Prepare variant details for storage
         $variantDetails = null;
-        if ($variantCombination) {
+        if ($productVariant) {
             $variantDetails = json_encode([
-                'size' => $variantCombination->sizeVariant?->variant_value,
-                'color' => $variantCombination->colorVariant?->variant_value,
-                'scent' => $variantCombination->scentVariant?->variant_value,
-                'combination_sku' => $variantCombination->combination_sku,
+                'size' => $productVariant->size,
+                'color' => $productVariant->color,
+                'scent' => $productVariant->scent,
+                'name' => $productVariant->name,
+                'sku' => $productVariant->sku,
             ]);
         }
 
         return OrderItem::create([
             'order_id' => $order->id,
             'product_id' => $product->id,
-            'variant_combination_id' => $variantCombination?->id,
+            'product_variant_id' => $productVariant?->id,
             'product_name' => $product->name,
-            'product_sku' => $variantCombination ? $variantCombination->combination_sku : $product->sku,
+            'product_sku' => $productVariant ? $productVariant->sku : $product->sku,
             'variant_details' => $variantDetails,
             'quantity' => $cartItem->quantity,
             'unit_price' => $cartItem->unit_price,
@@ -248,57 +246,56 @@ class OrderService
     }
 
     /**
-     * NEW: Generate simple order number
+     * Generate simple order number
      */
     public function generateOrderNumber()
     {
         return 'CHB-' . date('Ymd') . '-' . str_pad(Order::count() + 1, 4, '0', STR_PAD_LEFT);
     }
 
-  
-
-   
-     
+    /**
+     * Create individual order item with inventory cost tracking
+     */
     protected function createOrderItem($order, $cartItem, $discountPerItem = 0)
-{
-    $product = $cartItem->product;
-    $productVariant = $cartItem->productVariant;
-    
-    if (!$productVariant) {
-        throw new \Exception('Invalid order item - missing variant information.');
+    {
+        $product = $cartItem->product;
+        $productVariant = $cartItem->productVariant;
+        
+        if (!$productVariant) {
+            throw new \Exception('Invalid order item - missing variant information.');
+        }
+        
+        $unitPrice = $productVariant->effective_price;
+
+        // Get FIFO cost price from inventory
+        $costPrice = $this->getAverageCostPrice($product->id, $productVariant->id, $cartItem->quantity);
+
+        // Prepare variant details for storage
+        $variantDetails = json_encode([
+            'size' => $productVariant->size,
+            'color' => $productVariant->color,
+            'scent' => $productVariant->scent,
+            'name' => $productVariant->name,
+            'sku' => $productVariant->sku,
+        ]);
+
+        return OrderItem::create([
+            'order_id' => $order->id,
+            'product_id' => $product->id,
+            'product_variant_id' => $productVariant->id,
+            'product_name' => $product->name,
+            'product_sku' => $productVariant->sku,
+            'variant_details' => $variantDetails,
+            'quantity' => $cartItem->quantity,
+            'unit_price' => $unitPrice,
+            'cost_price' => $costPrice,
+            'discount_amount' => $discountPerItem,
+            'total_price' => ($unitPrice * $cartItem->quantity) - $discountPerItem,
+        ]);
     }
-    
-    $unitPrice = $productVariant->effective_price;
-
-    // Get FIFO cost price from inventory
-    $costPrice = $this->getAverageCostPrice($product->id, $productVariant->id, $cartItem->quantity);
-
-    // Prepare variant details for storage
-    $variantDetails = json_encode([
-        'size' => $productVariant->size,
-        'color' => $productVariant->color,
-        'scent' => $productVariant->scent,
-        'name' => $productVariant->name,
-        'sku' => $productVariant->sku,
-    ]);
-
-    return OrderItem::create([
-        'order_id' => $order->id,
-        'product_id' => $product->id,
-        'product_variant_id' => $productVariant->id,
-        'product_name' => $product->name,
-        'product_sku' => $productVariant->sku,
-        'variant_details' => $variantDetails,
-        'quantity' => $cartItem->quantity,
-        'unit_price' => $unitPrice,
-        'cost_price' => $costPrice,
-        'discount_amount' => $discountPerItem,
-        'total_price' => ($unitPrice * $cartItem->quantity) - $discountPerItem,
-    ]);
-}
 
     /**
-     * Calculate order totals including promotions (your existing method)
+     * Calculate order totals including promotions
      */
     public function calculateOrderTotals($cartItems, $promotionCode = null)
     {
@@ -309,20 +306,19 @@ class OrderService
 
         // Calculate subtotal
         foreach ($cartItems as $cartItem) {
-    $product = $cartItem->product;
-    $variantCombination = $cartItem->variantCombination;
-    
-    // Always require variant combination
-    if (!$variantCombination) {
-        throw new \Exception('Invalid cart item - missing variant information.');
-    }
-    
-    $unitPrice = $variantCombination->effective_price;
-    
-    $itemTotal = $unitPrice * $cartItem->quantity;
-    $subtotal += $itemTotal;
-    $itemPrices[$cartItem->id] = $itemTotal;
-}
+            $product = $cartItem->product;
+            $productVariant = $cartItem->productVariant;
+            
+            if (!$productVariant) {
+                throw new \Exception('Invalid cart item - missing variant information.');
+            }
+            
+            $unitPrice = $productVariant->effective_price;
+            
+            $itemTotal = $unitPrice * $cartItem->quantity;
+            $subtotal += $itemTotal;
+            $itemPrices[$cartItem->id] = $itemTotal;
+        }
 
         // Apply promotion if provided
         $discountAmount = 0;
@@ -339,8 +335,8 @@ class OrderService
             }
         }
 
-        // Calculate shipping (free for now, can be enhanced later)
-        $shippingAmount = 0;
+        // Calculate shipping
+        $shippingAmount = $subtotal >= 5000 ? 0 : 300;
 
         return [
             'subtotal' => $subtotal,
@@ -353,14 +349,14 @@ class OrderService
     }
 
     /**
-     * Reserve stock for all items in the order (your existing method)
+     * Reserve stock for all items in the order
      */
     public function reserveStockForOrder($order)
     {
         foreach ($order->items as $item) {
             $this->inventoryService->reserveStock(
                 $item->product_id,
-                $item->variant_combination_id,
+                $item->product_variant_id,
                 $item->quantity,
                 'order',
                 $order->id
@@ -369,14 +365,14 @@ class OrderService
     }
 
     /**
-     * Confirm reserved stock (after successful payment) (your existing method)
+     * Confirm reserved stock (after successful payment)
      */
     public function confirmStockForOrder($order)
     {
         foreach ($order->items as $item) {
             $this->inventoryService->confirmReservedStock(
                 $item->product_id,
-                $item->variant_combination_id,
+                $item->product_variant_id,
                 $item->quantity,
                 'order',
                 $order->id
@@ -385,14 +381,14 @@ class OrderService
     }
 
     /**
-     * Release reserved stock (on order cancellation) (your existing method)
+     * Release reserved stock (on order cancellation)
      */
     public function releaseStockForOrder($order)
     {
         foreach ($order->items as $item) {
             $this->inventoryService->releaseReservedStock(
                 $item->product_id,
-                $item->variant_combination_id,
+                $item->product_variant_id,
                 $item->quantity,
                 'order',
                 $order->id
@@ -401,7 +397,7 @@ class OrderService
     }
 
     /**
-     * Update order status with proper workflow validation (your existing method)
+     * Update order status with proper workflow validation
      */
     public function updateOrderStatus($order, $newStatus, $comment = null, $adminId = null)
     {
@@ -423,19 +419,17 @@ class OrderService
         DB::beginTransaction();
         
         try {
-
             // Handle COD payment completion BEFORE updating order status
-        if ($newStatus === 'completed' && $order->payment_method === 'cod' && $order->payment_status === 'pending') {
-            // Use a timestamp 1 second before current time
-            $paymentTimestamp = now()->subSecond();
-            
-            $order->payment_status = 'completed';
-            $order->payment_reference = 'COD-' . now()->timestamp;
-            $order->save();
-            
-            // Add payment status history with earlier timestamp
-            $order->addStatusHistory('payment_completed', 'Payment received via Cash on Delivery', $adminId, $paymentTimestamp);
-        }
+            if ($newStatus === 'completed' && $order->payment_method === 'cod' && $order->payment_status === 'pending') {
+                $paymentTimestamp = now()->subSecond();
+                
+                $order->payment_status = 'completed';
+                $order->payment_reference = 'COD-' . now()->timestamp;
+                $order->save();
+                
+                // Add payment status history with earlier timestamp
+                $order->addStatusHistory('payment_completed', 'Payment received via Cash on Delivery', $adminId, $paymentTimestamp);
+            }
 
             // Handle inventory changes based on status
             if ($newStatus === 'cancelled') {
@@ -449,47 +443,47 @@ class OrderService
             // Update order status
             $order->updateStatus($newStatus, $comment, $adminId);
 
-            // SEND EMAIL NOTIFICATION - NEW CODE
-        if ($order->user && $order->user->email) {
-            try {
-                // Get admin name if available
-                $adminName = null;
-                if ($adminId) {
-                    $admin = \App\Models\Admin::find($adminId);
-                    $adminName = $admin ? $admin->name : 'Support Team';
-                }
+            // Send email notification
+            if ($order->user && $order->user->email) {
+                try {
+                    // Get admin name if available
+                    $adminName = null;
+                    if ($adminId) {
+                        $admin = \App\Models\Admin::find($adminId);
+                        $adminName = $admin ? $admin->name : 'Support Team';
+                    }
 
-                // Send the email
-                Mail::to($order->user->email)
-                    ->send(new OrderStatusUpdate($order, $newStatus, $comment, $adminName));
-                
-                Log::info('Order status email sent successfully', [
+                    // Send the email
+                    Mail::to($order->user->email)
+                        ->send(new OrderStatusUpdate($order, $newStatus, $comment, $adminName));
+                    
+                    Log::info('Order status email sent successfully', [
+                        'order_id' => $order->id,
+                        'order_number' => $order->order_number,
+                        'status' => $newStatus,
+                        'email' => $order->user->email
+                    ]);
+                } catch (\Exception $emailException) {
+                    // Log email error but don't fail the whole transaction
+                    Log::error('Failed to send order status email', [
+                        'order_id' => $order->id,
+                        'order_number' => $order->order_number,
+                        'error' => $emailException->getMessage()
+                    ]);
+                    
+                    // Add a note about email failure to order history
+                    $order->addStatusHistory(
+                        $newStatus,
+                        'Note: Email notification failed to send. Error: ' . $emailException->getMessage(),
+                        $adminId
+                    );
+                }
+            } else {
+                Log::warning('No email sent - user email not available', [
                     'order_id' => $order->id,
-                    'order_number' => $order->order_number,
-                    'status' => $newStatus,
-                    'email' => $order->user->email
+                    'order_number' => $order->order_number
                 ]);
-            } catch (\Exception $emailException) {
-                // Log email error but don't fail the whole transaction
-                Log::error('Failed to send order status email', [
-                    'order_id' => $order->id,
-                    'order_number' => $order->order_number,
-                    'error' => $emailException->getMessage()
-                ]);
-                
-                // Add a note about email failure to order history
-                $order->addStatusHistory(
-                    $newStatus,
-                    'Note: Email notification failed to send. Error: ' . $emailException->getMessage(),
-                    $adminId
-                );
             }
-        } else {
-            Log::warning('No email sent - user email not available', [
-                'order_id' => $order->id,
-                'order_number' => $order->order_number
-            ]);
-        }
 
             DB::commit();
 
@@ -505,15 +499,15 @@ class OrderService
     }
 
     /**
-     * Get average cost price using FIFO from inventory (your existing method)
+     * Get average cost price using FIFO from inventory
      */
-    protected function getAverageCostPrice($productId, $variantCombinationId, $quantity)
+    protected function getAverageCostPrice($productId, $productVariantId, $quantity)
     {
         try {
-            // Use your existing inventory service to get FIFO cost
-            $stockDetails = $this->inventoryService->getStockDetails($productId, $variantCombinationId);
+            // Use inventory service to get FIFO cost
+            $stockDetails = $this->inventoryService->getStockDetails($productId, $productVariantId);
             
-            if (empty($stockDetails)) {
+            if (empty($stockDetails['batches'])) {
                 return 0;
             }
 
@@ -521,11 +515,11 @@ class OrderService
             $totalCost = 0;
             $remainingQuantity = $quantity;
             
-            foreach ($stockDetails as $batch) {
+            foreach ($stockDetails['batches'] as $batch) {
                 if ($remainingQuantity <= 0) break;
                 
-                $takeFromBatch = min($remainingQuantity, $batch['available_quantity']);
-                $totalCost += $takeFromBatch * $batch['cost_per_unit'];
+                $takeFromBatch = min($remainingQuantity, $batch->available_quantity);
+                $totalCost += $takeFromBatch * $batch->cost_per_unit;
                 $remainingQuantity -= $takeFromBatch;
             }
             
@@ -534,7 +528,7 @@ class OrderService
         } catch (\Exception $e) {
             Log::warning('Could not calculate cost price for order item', [
                 'product_id' => $productId,
-                'variant_combination_id' => $variantCombinationId,
+                'product_variant_id' => $productVariantId,
                 'error' => $e->getMessage()
             ]);
             return 0;
@@ -542,7 +536,7 @@ class OrderService
     }
 
     /**
-     * Validate and get promotion details (your existing method)
+     * Validate and get promotion details
      */
     protected function validateAndGetPromotion($promotionCode)
     {
@@ -552,7 +546,7 @@ class OrderService
     }
 
     /**
-     * Record promotion usage (your existing method)
+     * Record promotion usage
      */
     protected function recordPromotionUsage($order, $promotion, $user)
     {
@@ -561,7 +555,7 @@ class OrderService
     }
 
     /**
-     * Get order statistics for dashboard (your existing method)
+     * Get order statistics for dashboard
      */
     public function getOrderStatistics($date = null)
     {
@@ -578,11 +572,11 @@ class OrderService
     }
 
     /**
-     * Get orders with filters for admin panel (your existing method)
+     * Get orders with filters for admin panel
      */
     public function getOrdersWithFilters($filters = [])
     {
-        $query = Order::with(['user', 'items.product', 'items.variantCombination'])
+        $query = Order::with(['user', 'items.product', 'items.productVariant'])
                      ->orderBy('created_at', 'desc');
 
         if (!empty($filters['status'])) {
@@ -613,7 +607,7 @@ class OrderService
     }
 
     /**
-     * Clear user's cart after successful order (your existing method)
+     * Clear user's cart after successful order
      */
     public function clearUserCart($user)
     {

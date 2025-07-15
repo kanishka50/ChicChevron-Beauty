@@ -25,6 +25,7 @@ class Product extends Model
         'suitable_for',
         'fragrance',
         'is_active',
+        'has_variants',
         'views_count',
         'average_rating',
         'reviews_count',
@@ -32,12 +33,12 @@ class Product extends Model
 
     protected $casts = [
         'is_active' => 'boolean',
+        'has_variants' => 'boolean',
         'views_count' => 'integer',
         'average_rating' => 'decimal:2',
         'reviews_count' => 'integer',
     ];
     
-
     /**
      * Get the sluggable field for the trait.
      */
@@ -107,13 +108,28 @@ class Product extends Model
     }
 
     /**
- * Get the product variants.
- */
-public function variants()
-{
-    return $this->hasMany(ProductVariant::class);
-}
+     * Get the product variants.
+     */
+    public function variants()
+    {
+        return $this->hasMany(ProductVariant::class);
+    }
 
+    /**
+     * Get active variants.
+     */
+    public function activeVariants()
+    {
+        return $this->hasMany(ProductVariant::class)->where('is_active', true);
+    }
+
+    /**
+     * Get the default variant (for products without multiple variants).
+     */
+    public function defaultVariant()
+    {
+        return $this->variants()->first();
+    }
 
     /**
      * Get the reviews.
@@ -140,15 +156,7 @@ public function variants()
     }
 
     /**
-     * Get the inventory record.
-     */
-    public function inventory()
-    {
-        return $this->hasOne(Inventory::class)->whereNull('variant_combination_id');
-    }
-
-    /**
-     * Get all inventory records (including variants).
+     * Get all inventory records (for all variants).
      */
     public function allInventory()
     {
@@ -196,8 +204,6 @@ public function variants()
      */
     public function scopeFeatured($query)
     {
-        // This assumes you have a featured flag or can determine featured products
-        // For now, we'll use products with reviews or high view count
         return $query->where(function ($q) {
             $q->whereHas('reviews')
               ->orWhere('views_count', '>', 100);
@@ -209,7 +215,7 @@ public function variants()
      */
     public function scopeInStock($query)
     {
-        return $query->whereHas('allInventory', function ($inventoryQuery) {
+        return $query->whereHas('variants.inventory', function ($inventoryQuery) {
             $inventoryQuery->whereRaw('(current_stock - reserved_stock) > 0');
         });
     }
@@ -219,7 +225,7 @@ public function variants()
      */
     public function scopeOutOfStock($query)
     {
-        return $query->whereDoesntHave('allInventory', function ($inventoryQuery) {
+        return $query->whereDoesntHave('variants.inventory', function ($inventoryQuery) {
             $inventoryQuery->whereRaw('(current_stock - reserved_stock) > 0');
         });
     }
@@ -245,6 +251,34 @@ public function variants()
         });
     }
 
+    /**
+     * Scope for new arrivals (products created in last 30 days)
+     */
+    public function scopeNewArrivals($query)
+    {
+        return $query->where('created_at', '>=', now()->subDays(30));
+    }
+
+    /**
+     * Scope for best sellers (based on order count)
+     */
+    public function scopeBestSellers($query)
+    {
+        return $query->withCount(['orderItems'])
+                     ->orderBy('order_items_count', 'desc');
+    }
+
+    /**
+     * Scope for on sale products
+     */
+    public function scopeOnSale($query)
+    {
+        return $query->whereHas('variants', function ($q) {
+            $q->whereNotNull('discount_price')
+              ->whereRaw('discount_price < price');
+        });
+    }
+
     // =====================================================
     // ACCESSOR METHODS
     // =====================================================
@@ -260,7 +294,114 @@ public function variants()
         return asset('images/placeholder-product.jpg');
     }
 
-    
+    /**
+     * Check if product has multiple variants.
+     */
+    public function getHasMultipleVariantsAttribute()
+    {
+        return $this->variants()->count() > 1;
+    }
+
+    /**
+     * Get effective price from first active variant
+     */
+    public function getEffectivePriceAttribute()
+    {
+        $variant = $this->activeVariants()->first();
+        return $variant ? $variant->effective_price : 0;
+    }
+
+    /**
+     * Get starting price (lowest variant price)
+     */
+    public function getStartingPriceAttribute()
+    {
+        return $this->activeVariants()
+            ->min('price') ?? 0;
+    }
+
+    /**
+     * Get starting discounted price if any
+     */
+    public function getStartingDiscountPriceAttribute()
+    {
+        $lowestPriceVariant = $this->activeVariants()
+            ->orderBy('price')
+            ->first();
+        
+        return $lowestPriceVariant?->discount_price;
+    }
+
+    /**
+     * Check if any variant is on sale
+     */
+    public function getHasDiscountAttribute()
+    {
+        return $this->activeVariants()
+            ->whereNotNull('discount_price')
+            ->whereRaw('discount_price < price')
+            ->exists();
+    }
+
+    /**
+     * Get price range for products with multiple variants
+     */
+    public function getPriceRangeAttribute()
+    {
+        if (!$this->has_multiple_variants) {
+            return null;
+        }
+        
+        $prices = $this->activeVariants()->pluck('price');
+        
+        if ($prices->isEmpty()) {
+            return null;
+        }
+        
+        $min = $prices->min();
+        $max = $prices->max();
+        
+        if ($min == $max) {
+            return 'Rs. ' . number_format($min, 2);
+        }
+        
+        return 'Rs. ' . number_format($min, 2) . ' - Rs. ' . number_format($max, 2);
+    }
+
+    /**
+     * Get effective price range (considering discounts)
+     */
+    public function getEffectivePriceRangeAttribute()
+    {
+        $effectivePrices = $this->activeVariants()
+            ->get()
+            ->map(function ($variant) {
+                return $variant->effective_price;
+            });
+
+        if ($effectivePrices->isEmpty()) {
+            return ['min' => 0, 'max' => 0];
+        }
+
+        return [
+            'min' => $effectivePrices->min(),
+            'max' => $effectivePrices->max(),
+        ];
+    }
+
+    /**
+     * Get formatted price range.
+     */
+    public function getFormattedPriceRangeAttribute()
+    {
+        $range = $this->effective_price_range;
+        
+        if ($range['min'] == $range['max']) {
+            return 'Rs. ' . number_format($range['min'], 2);
+        }
+        
+        return 'Rs. ' . number_format($range['min'], 2) . ' - Rs. ' . number_format($range['max'], 2);
+    }
 
     /**
      * Check if product is in stock.
@@ -286,8 +427,6 @@ public function variants()
         return $this->reviews()->count();
     }
 
-
-
     /**
      * Check if product is new (created within last 30 days).
      */
@@ -304,110 +443,57 @@ public function variants()
         return route('products.show', $this->slug);
     }
 
-
-
-
-/**
- * Get effective price range (considering discounts)
- */
-public function getEffectivePriceRangeAttribute()
-{
-    $effectivePrices = $this->variantCombinations()
-        ->where('is_active', true)
-        ->get()
-        ->map(function ($combination) {
-            return $combination->effective_price;
-        });
-
-    if ($effectivePrices->isEmpty()) {
-        return ['min' => 0, 'max' => 0];
-    }
-
-    return [
-        'min' => $effectivePrices->min(),
-        'max' => $effectivePrices->max(),
-    ];
-}
-
     /**
-     * Get formatted price range.
+     * Get SEO meta description.
      */
-    public function getFormattedPriceRangeAttribute()
+    public function getMetaDescriptionAttribute()
     {
-        $range = $this->price_range;
-        
-        if ($range['min'] == $range['max']) {
-            return 'Rs. ' . number_format($range['min'], 2);
-        }
-        
-        return 'Rs. ' . number_format($range['min'], 2) . ' - Rs. ' . number_format($range['max'], 2);
+        $description = strip_tags($this->description);
+        return \Illuminate\Support\Str::limit($description, 160);
     }
 
-
-
-
-
-
-
-
-    /**UDATED METHODS FOR ONLY USE PRODUCT VARINT TABLE WITHOUT VARIANTS COMBINATION */
     /**
- * Get active variants.
- */
-public function activeVariants()
-{
-    return $this->variants()->where('is_active', true);
-}
+     * Get structured data for SEO.
+     */
+    public function getStructuredDataAttribute()
+    {
+        $priceRange = $this->effective_price_range;
+    
+        $data = [
+            '@context' => 'https://schema.org',
+            '@type' => 'Product',
+            'name' => $this->name,
+            'description' => $this->meta_description,
+            'sku' => $this->sku,
+            'image' => $this->main_image_url,
+            'url' => $this->url,
+            'brand' => [
+                '@type' => 'Brand',
+                'name' => $this->brand->name ?? 'ChicChevron Beauty',
+            ],
+            'offers' => [
+                '@type' => 'AggregateOffer',
+                'lowPrice' => $priceRange['min'],
+                'highPrice' => $priceRange['max'],
+                'priceCurrency' => 'LKR',
+                'availability' => $this->in_stock ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+                'seller' => [
+                    '@type' => 'Organization',
+                    'name' => 'ChicChevron Beauty',
+                ],
+            ],
+        ];
 
-/**
- * Get the default variant (for products without multiple variants).
- */
-public function defaultVariant()
-{
-    return $this->variants()->first();
-}
+        if ($this->average_rating > 0) {
+            $data['aggregateRating'] = [
+                '@type' => 'AggregateRating',
+                'ratingValue' => $this->average_rating,
+                'reviewCount' => $this->review_count,
+            ];
+        }
 
-/**
- * Check if product has multiple variants.
- */
-public function getHasMultipleVariantsAttribute()
-{
-    return $this->variants()->count() > 1;
-}
-
-/**
- * Get effective price from first active variant
- */
-public function getEffectivePriceAttribute()
-{
-    $variant = $this->activeVariants()->first();
-    return $variant ? $variant->effective_price : 0;
-}
-
-/**
- * Get price range for products with multiple variants
- */
-public function getPriceRangeAttribute()
-{
-    if (!$this->has_multiple_variants) {
-        return null;
+        return $data;
     }
-    
-    $prices = $this->activeVariants()->pluck('price');
-    
-    if ($prices->isEmpty()) {
-        return null;
-    }
-    
-    $min = $prices->min();
-    $max = $prices->max();
-    
-    if ($min == $max) {
-        return 'Rs. ' . number_format($min, 2);
-    }
-    
-    return 'Rs. ' . number_format($min, 2) . ' - Rs. ' . number_format($max, 2);
-}
 
     // =====================================================
     // HELPER METHODS
@@ -474,200 +560,95 @@ public function getPriceRangeAttribute()
     }
 
     /**
-     * Get available variant combinations.
+     * Get available variants.
      */
-    public function getAvailableVariantCombinations()
-{
-    // Remove has_variants check
-    return $this->variantCombinations()
-        ->with(['sizeVariant', 'colorVariant', 'scentVariant', 'inventory'])
-        ->where('is_active', true)
-        ->whereHas('inventory', function ($query) {
-            $query->whereRaw('(current_stock - reserved_stock) > 0');
-        })
-        ->get();
-}
+    public function getAvailableVariants()
+    {
+        return $this->activeVariants()
+            ->with('inventory')
+            ->whereHas('inventory', function ($query) {
+                $query->whereRaw('(current_stock - reserved_stock) > 0');
+            })
+            ->get();
+    }
 
     /**
-     * Get variant options grouped by type.
+     * Get variant options grouped by attribute.
      */
     public function getVariantOptions()
     {
-        if (!$this->has_variants) {
-            return [];
-        }
-
+        $variants = $this->activeVariants()->get();
+        
         return [
-            'sizes' => $this->variants()->where('variant_type', 'size')->get(),
-            'colors' => $this->variants()->where('variant_type', 'color')->get(),
-            'scents' => $this->variants()->where('variant_type', 'scent')->get(),
+            'sizes' => $variants->pluck('size')->filter()->unique()->values(),
+            'colors' => $variants->pluck('color')->filter()->unique()->values(),
+            'scents' => $variants->pluck('scent')->filter()->unique()->values(),
         ];
     }
 
     /**
-     * Find variant combination by variant IDs.
+     * Find variant by attributes.
      */
-    public function findVariantCombination($sizeId = null, $colorId = null, $scentId = null)
+    public function findVariantByAttributes($size = null, $color = null, $scent = null)
     {
-        return $this->variantCombinations()
-            ->where(function ($query) use ($sizeId, $colorId, $scentId) {
-                if ($sizeId) {
-                    $query->where('size_variant_id', $sizeId);
+        return $this->variants()
+            ->where(function ($query) use ($size, $color, $scent) {
+                if ($size !== null) {
+                    $query->where('size', $size);
                 } else {
-                    $query->whereNull('size_variant_id');
+                    $query->whereNull('size');
                 }
                 
-                if ($colorId) {
-                    $query->where('color_variant_id', $colorId);
+                if ($color !== null) {
+                    $query->where('color', $color);
                 } else {
-                    $query->whereNull('color_variant_id');
+                    $query->whereNull('color');
                 }
                 
-                if ($scentId) {
-                    $query->where('scent_variant_id', $scentId);
+                if ($scent !== null) {
+                    $query->where('scent', $scent);
                 } else {
-                    $query->whereNull('scent_variant_id');
+                    $query->whereNull('scent');
                 }
             })
             ->first();
     }
 
     /**
-     * Get SEO meta description.
+     * Get total stock level across all variants
      */
-    public function getMetaDescriptionAttribute()
+    public function getStockLevel()
     {
-        $description = strip_tags($this->description);
-        return \Illuminate\Support\Str::limit($description, 160);
+        return $this->variants()
+            ->with('inventory')
+            ->get()
+            ->sum(function ($variant) {
+                return $variant->inventory 
+                    ? ($variant->inventory->current_stock - $variant->inventory->reserved_stock)
+                    : 0;
+            });
     }
 
     /**
-     * Get structured data for SEO.
+     * Check if product has stock
      */
-    public function getStructuredDataAttribute()
+    public function hasStock()
     {
-        $priceRange = $this->effective_price_range;
-    
-    $data = [
-        '@context' => 'https://schema.org',
-        '@type' => 'Product',
-        'name' => $this->name,
-        'description' => $this->meta_description,
-        'sku' => $this->sku,
-        'image' => $this->main_image_url,
-        'url' => $this->url,
-        'brand' => [
-            '@type' => 'Brand',
-            'name' => $this->brand->name ?? 'ChicChevron Beauty',
-        ],
-        'offers' => [
-            '@type' => 'AggregateOffer',
-            'lowPrice' => $priceRange['min'],
-            'highPrice' => $priceRange['max'],
-            'priceCurrency' => 'LKR',
-            'availability' => $this->in_stock ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
-            'seller' => [
-                '@type' => 'Organization',
-                'name' => 'ChicChevron Beauty',
-            ],
-        ],
-    ];
-
-        if ($this->average_rating > 0) {
-            $data['aggregateRating'] = [
-                '@type' => 'AggregateRating',
-                'ratingValue' => $this->average_rating,
-                'reviewCount' => $this->review_count,
-            ];
-        }
-
-        return $data;
+        return $this->getStockLevel() > 0;
     }
 
-    // =====================================================
-    // STATIC METHODS
-    // =====================================================
-
     /**
- * Get featured products for homepage.
- */
-public static function getFeaturedProducts($limit = 8)
-{
-    return static::active()
-        ->with(['brand', 'category', 'images', 'inventory'])
-        ->featured()
-        ->inStock()
-        ->limit($limit)
-        ->get();
-}
-
-    /**
- * Get new arrivals for homepage.
- */
-public static function getNewArrivals($limit = 8)
-{
-    return static::active()
-        ->with(['brand', 'category', 'images', 'inventory'])
-        ->latest('created_at')
-        ->inStock()
-        ->limit($limit)
-        ->get();
-}
-
-/**
- * Get best sellers for homepage.
- */
-public static function getBestSellers($limit = 8)
-{
-    return static::active()
-        ->with(['brand', 'category', 'images', 'inventory'])
-        ->inStock()
-        ->limit($limit)
-        ->get();
-}
-
-
-
-
-    // =====================================================
-    // CART-SPECIFIC METHODS (ADD TO EXISTING MODEL)
-    // =====================================================
-
-    /**
-     * Check if product has any stock available (enhanced for cart)
+     * Get available stock for specific variant
      */
-public function getStockLevel()
-{
-    // Remove the has_variants check since ALL products have variants
-    return $this->variantCombinations()
-        ->with('inventory')
-        ->get()
-        ->sum(function ($combination) {
-            return $combination->inventory 
-                ? ($combination->inventory->current_stock - $combination->inventory->reserved_stock)
-                : 0;
-        });
-}
-
-/**
- * Check if product has stock
- */
-public function hasStock()
-{
-    return $this->getStockLevel() > 0;
-}
-
-    /**
-     * Get available stock for specific variant or main product
-     */
-    public function getAvailableStock($variantCombinationId = null)
+    public function getAvailableStock($productVariantId = null)
     {
-        if ($variantCombinationId) {
+        if ($productVariantId) {
             $inventory = $this->allInventory()
-                             ->where('variant_combination_id', $variantCombinationId)
+                             ->where('product_variant_id', $productVariantId)
                              ->first();
         } else {
-            $inventory = $this->inventory;
+            // Get total stock across all variants
+            return $this->getStockLevel();
         }
 
         if (!$inventory) {
@@ -677,12 +658,10 @@ public function hasStock()
         return max(0, $inventory->current_stock - $inventory->reserved_stock);
     }
 
-    
-
     /**
      * Check if product can be added to cart
      */
-    public function canBeAddedToCart($variantCombinationId = null, $quantity = 1)
+    public function canBeAddedToCart($productVariantId = null, $quantity = 1)
     {
         // Check if product is active
         if (!$this->is_active) {
@@ -692,16 +671,25 @@ public function hasStock()
             ];
         }
 
-        // ALWAYS require variant combination
-        if (!$variantCombinationId) {
+        // Always require variant selection
+        if (!$productVariantId) {
             return [
                 'can_add' => false,
                 'message' => 'Please select product options.'
             ];
         }
 
+        // Check if variant exists and is active
+        $variant = $this->variants()->find($productVariantId);
+        if (!$variant || !$variant->is_active) {
+            return [
+                'can_add' => false,
+                'message' => 'Selected variant is not available.'
+            ];
+        }
+
         // Check stock availability
-        $availableStock = $this->getAvailableStock($variantCombinationId);
+        $availableStock = $this->getAvailableStock($productVariantId);
         
         if ($availableStock < $quantity) {
             return [
@@ -721,79 +709,44 @@ public function hasStock()
     }
 
     // =====================================================
-    // ADDITIONAL SCOPES FOR CART (ADD TO EXISTING MODEL)
+    // STATIC METHODS
     // =====================================================
 
     /**
-     * Scope for new arrivals (products created in last 30 days)
+     * Get featured products for homepage.
      */
-    public function scopeNewArrivals($query)
+    public static function getFeaturedProducts($limit = 8)
     {
-        return $query->where('created_at', '>=', now()->subDays(30));
+        return static::active()
+            ->with(['brand', 'category', 'images', 'variants.inventory'])
+            ->featured()
+            ->inStock()
+            ->limit($limit)
+            ->get();
     }
 
     /**
-     * Scope for best sellers (based on order count)
+     * Get new arrivals for homepage.
      */
-    public function scopeBestSellers($query)
+    public static function getNewArrivals($limit = 8)
     {
-        return $query->withCount(['orderItems'])
-                     ->orderBy('order_items_count', 'desc');
+        return static::active()
+            ->with(['brand', 'category', 'images', 'variants.inventory'])
+            ->latest('created_at')
+            ->inStock()
+            ->limit($limit)
+            ->get();
     }
 
     /**
-     * Scope for on sale products
+     * Get best sellers for homepage.
      */
-    public function scopeOnSale($query)
-{
-    return $query->whereHas('variantCombinations', function ($q) {
-        $q->whereNotNull('discount_price')
-          ->whereRaw('discount_price < combination_price');
-    });
-}
-
-
-    /**
- * Get starting price (lowest variant combination price)
- */
-public function getStartingPriceAttribute()
-{
-    return $this->variantCombinations()
-        ->where('is_active', true)
-        ->min('combination_price') ?? 0;
-}
-
-/**
- * Get starting discounted price if any
- */
-public function getStartingDiscountPriceAttribute()
-{
-    $lowestPriceCombination = $this->variantCombinations()
-        ->where('is_active', true)
-        ->orderBy('combination_price')
-        ->first();
-    
-    return $lowestPriceCombination?->discount_price;
-}
-
-/**
- * Check if any variant is on sale
- */
-public function getHasDiscountAttribute()
-{
-    return $this->variantCombinations()
-        ->whereNotNull('discount_price')
-        ->whereRaw('discount_price < combination_price')
-        ->exists();
-}
-
-/**
- * Always return true since all products have variants
- */
-public function getHasVariantsAttribute()
-{
-    return true;
-}
-
-    
+    public static function getBestSellers($limit = 8)
+    {
+        return static::active()
+            ->with(['brand', 'category', 'images', 'variants.inventory'])
+            ->inStock()
+            ->limit($limit)
+            ->get();
+    }
 }

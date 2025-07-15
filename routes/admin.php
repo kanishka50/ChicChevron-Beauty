@@ -36,7 +36,7 @@ Route::middleware('admin')->group(function () {
         Route::post('/{product}/toggle-status', [ProductController::class, 'toggleStatus'])->name('toggle-status');
         Route::delete('/images/{image}', [ProductController::class, 'deleteImage'])->name('images.destroy');
 
-        // Product Variants Management
+// Product Variants Management
 Route::prefix('products/{product}/variants')->name('products.variants.')->group(function () {
     Route::get('/', [ProductVariantController::class, 'index'])->name('index');
     Route::get('/create', [ProductVariantController::class, 'create'])->name('create');
@@ -48,7 +48,6 @@ Route::prefix('variants')->name('variants.')->group(function () {
     Route::put('/{variant}', [ProductVariantController::class, 'update'])->name('update');
     Route::post('/{variant}/toggle-status', [ProductVariantController::class, 'toggleStatus'])->name('toggle-status');
     Route::delete('/{variant}', [ProductVariantController::class, 'destroy'])->name('destroy');
-    Route::get('/{variant}', [ProductVariantController::class, 'show'])->name('show');
 });
     });
 

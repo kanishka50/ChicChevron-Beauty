@@ -1,71 +1,67 @@
-<div class="variant-selector space-y-4" data-product-id="{{ $product->id }}">
-    @if($product->has_variants)
-        <!-- Size Variants -->
-        @if($sizeVariants->isNotEmpty())
-            <div class="variant-group">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Size</label>
-                <div class="flex flex-wrap gap-2">
-                    @foreach($sizeVariants as $variant)
-                        <button type="button" 
-                                class="variant-option size-variant px-3 py-2 border border-gray-300 rounded-md text-sm hover:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500"
-                                data-variant-type="size"
-                                data-variant-id="{{ $variant->id }}"
-                                data-variant-value="{{ $variant->variant_value }}">
-                            {{ $variant->variant_value }}
-                        </button>
-                    @endforeach
+<div class="variant-selector" data-product-id="{{ $product->id }}">
+    @if($product->has_multiple_variants)
+        <div class="space-y-4">
+            @php
+                $sizes = $product->variants->pluck('size')->filter()->unique();
+                $colors = $product->variants->pluck('color')->filter()->unique();
+                $scents = $product->variants->pluck('scent')->filter()->unique();
+            @endphp
+            
+            @if($sizes->count() > 0)
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Size</label>
+                    <div class="flex flex-wrap gap-2">
+                        @foreach($sizes as $size)
+                            <button type="button" 
+                                    class="variant-option size-option px-4 py-2 border rounded-md hover:border-pink-500"
+                                    data-variant-type="size"
+                                    data-value="{{ $size }}">
+                                {{ $size }}
+                            </button>
+                        @endforeach
+                    </div>
                 </div>
-            </div>
-        @endif
-
-        <!-- Color Variants -->
-        @if($colorVariants->isNotEmpty())
-            <div class="variant-group">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Color</label>
-                <div class="flex flex-wrap gap-2">
-                    @foreach($colorVariants as $variant)
-                        <button type="button" 
-                                class="variant-option color-variant w-8 h-8 rounded-full border-2 border-gray-300 hover:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500"
-                                data-variant-type="color"
-                                data-variant-id="{{ $variant->id }}"
-                                data-variant-value="{{ $variant->variant_value }}"
-                                style="background-color: {{ $variant->color_hex ?? '#ccc' }}"
-                                title="{{ $variant->variant_value }}">
-                        </button>
-                    @endforeach
+            @endif
+            
+            @if($colors->count() > 0)
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Color</label>
+                    <div class="flex flex-wrap gap-2">
+                        @foreach($colors as $color)
+                            <button type="button" 
+                                    class="variant-option color-option px-4 py-2 border rounded-md hover:border-pink-500"
+                                    data-variant-type="color"
+                                    data-value="{{ $color }}">
+                                {{ $color }}
+                            </button>
+                        @endforeach
+                    </div>
                 </div>
-            </div>
-        @endif
-
-        <!-- Scent Variants -->
-        @if($scentVariants->isNotEmpty())
-            <div class="variant-group">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Scent</label>
-                <div class="flex flex-wrap gap-2">
-                    @foreach($scentVariants as $variant)
-                        <button type="button" 
-                                class="variant-option scent-variant px-3 py-2 border border-gray-300 rounded-md text-sm hover:border-pink-500 focus:outline-none focus:ring-2 focus:ring-pink-500"
-                                data-variant-type="scent"
-                                data-variant-id="{{ $variant->id }}"
-                                data-variant-value="{{ $variant->variant_value }}">
-                            {{ $variant->variant_value }}
-                        </button>
-                    @endforeach
+            @endif
+            
+            @if($scents->count() > 0)
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Scent</label>
+                    <div class="flex flex-wrap gap-2">
+                        @foreach($scents as $scent)
+                            <button type="button" 
+                                    class="variant-option scent-option px-4 py-2 border rounded-md hover:border-pink-500"
+                                    data-variant-type="scent"
+                                    data-value="{{ $scent }}">
+                                {{ $scent }}
+                            </button>
+                        @endforeach
+                    </div>
                 </div>
-            </div>
-        @endif
-
-        <!-- Hidden inputs to store selected variants -->
-        <input type="hidden" id="selected-size-variant" name="size_variant_id">
-        <input type="hidden" id="selected-color-variant" name="color_variant_id">
-        <input type="hidden" id="selected-scent-variant" name="scent_variant_id">
-        <input type="hidden" id="selected-combination-id" name="variant_combination_id">
-
-        <!-- Price and Stock Display -->
-        <div class="variant-info mt-4">
+            @endif
+        </div>
+        
+        <input type="hidden" id="selected-variant-id" name="product_variant_id" value="">
+        
+        <div class="mt-4">
             <div class="price-display">
                 <span class="text-2xl font-bold text-gray-900" id="variant-price">
-                    Rs. {{ number_format($product->selling_price, 2) }}
+                    Select options
                 </span>
             </div>
             <div class="stock-display mt-2">
@@ -74,6 +70,14 @@
                 </span>
             </div>
         </div>
+    @else
+        @php $defaultVariant = $product->variants->first(); @endphp
+        <input type="hidden" name="product_variant_id" value="{{ $defaultVariant->id }}">
+        <div class="price-display">
+            <span class="text-2xl font-bold text-gray-900">
+                Rs. {{ number_format($defaultVariant->price, 2) }}
+            </span>
+        </div>
     @endif
 </div>
 
@@ -81,73 +85,55 @@
 document.addEventListener('DOMContentLoaded', function() {
     const variantSelector = document.querySelector('.variant-selector');
     if (!variantSelector) return;
-
-    const combinations = @json($variantCombinations);
-    const productId = variantSelector.dataset.productId;
     
-    let selectedVariants = {
+    const variants = @json($product->variants);
+    let selectedOptions = {
         size: null,
         color: null,
         scent: null
     };
-
-    // Variant selection handling
-    variantSelector.addEventListener('click', function(e) {
-        if (e.target.classList.contains('variant-option')) {
-            const button = e.target;
-            const variantType = button.dataset.variantType;
-            const variantId = button.dataset.variantId;
-
-            // Remove active class from other options of same type
-            const sameTypeButtons = variantSelector.querySelectorAll(`.${variantType}-variant`);
-            sameTypeButtons.forEach(btn => {
+    
+    // Handle variant selection
+    document.querySelectorAll('.variant-option').forEach(button => {
+        button.addEventListener('click', function() {
+            const type = this.dataset.variantType;
+            const value = this.dataset.value;
+            
+            // Update visual state
+            document.querySelectorAll(`.${type}-option`).forEach(btn => {
                 btn.classList.remove('border-pink-500', 'bg-pink-100');
-                btn.classList.add('border-gray-300');
             });
-
-            // Add active class to selected option
-            button.classList.remove('border-gray-300');
-            button.classList.add('border-pink-500', 'bg-pink-100');
-
-            // Store selection
-            selectedVariants[variantType] = variantId;
-            document.getElementById(`selected-${variantType}-variant`).value = variantId;
-
-            // Update combination
-            updateVariantCombination();
-        }
-    });
-
-    function updateVariantCombination() {
-        // Find matching combination
-        const matchingCombination = combinations.find(combo => {
-            return (!selectedVariants.size || combo.size_variant_id == selectedVariants.size) &&
-                   (!selectedVariants.color || combo.color_variant_id == selectedVariants.color) &&
-                   (!selectedVariants.scent || combo.scent_variant_id == selectedVariants.scent);
+            this.classList.add('border-pink-500', 'bg-pink-100');
+            
+            // Update selection
+            selectedOptions[type] = value;
+            
+            // Find matching variant
+            updateSelectedVariant();
         });
-
-        if (matchingCombination) {
-            // Update hidden field
-            document.getElementById('selected-combination-id').value = matchingCombination.id;
-            
-            // Update price display
+    });
+    
+    function updateSelectedVariant() {
+        const matchingVariant = variants.find(v => {
+            return (!selectedOptions.size || v.size === selectedOptions.size) &&
+                   (!selectedOptions.color || v.color === selectedOptions.color) &&
+                   (!selectedOptions.scent || v.scent === selectedOptions.scent);
+        });
+        
+        if (matchingVariant) {
+            document.getElementById('selected-variant-id').value = matchingVariant.id;
             document.getElementById('variant-price').textContent = 
-                'Rs. ' + parseFloat(matchingCombination.combination_price).toLocaleString('en-US', {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2
-                });
-
-            // Update stock display
-            const inventory = matchingCombination.inventory;
-            const availableStock = inventory ? (inventory.current_stock - inventory.reserved_stock) : 0;
+                'Rs. ' + new Intl.NumberFormat().format(matchingVariant.price);
             
-            const stockDisplay = document.getElementById('variant-stock');
-            if (availableStock > 0) {
-                stockDisplay.textContent = `${availableStock} in stock`;
-                stockDisplay.className = 'text-sm text-green-600';
-            } else {
-                stockDisplay.textContent = 'Out of stock';
-                stockDisplay.className = 'text-sm text-red-600';
+            const stockText = matchingVariant.available_stock > 0 
+                ? `${matchingVariant.available_stock} in stock`
+                : 'Out of stock';
+            document.getElementById('variant-stock').textContent = stockText;
+            
+            // Enable/disable add to cart button
+            const addToCartBtn = document.getElementById('add-to-cart-btn');
+            if (addToCartBtn) {
+                addToCartBtn.disabled = matchingVariant.available_stock === 0;
             }
         }
     }

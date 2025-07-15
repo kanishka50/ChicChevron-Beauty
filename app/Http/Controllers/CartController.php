@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\CartItem;
 use App\Models\Product;
-use App\Models\VariantCombination;
+use App\Models\ProductVariant;
 use App\Services\CartService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -38,7 +38,7 @@ class CartController extends Controller
     {
         $request->validate([
             'product_id' => 'required|exists:products,id',
-            'variant_combination_id' => 'nullable|exists:variant_combinations,id',
+            'product_variant_id' => 'nullable|exists:product_variants,id',
             'quantity' => 'required|integer|min:1|max:10'
         ]);
 
@@ -53,28 +53,40 @@ class CartController extends Controller
                 ], 400);
             }
 
-            // Validate variant if product has variants
-            $variantCombination = null;
-            if ($product->has_variants) {
-                if (!$request->variant_combination_id) {
+            // All products now have variants, so we always need a variant selection
+            $productVariant = null;
+            if (!$request->product_variant_id) {
+                // If no variant specified, check if product has only one variant (default)
+                if ($product->variants()->count() === 1) {
+                    $productVariant = $product->defaultVariant();
+                } else {
                     return response()->json([
                         'success' => false,
                         'message' => 'Please select product options.'
                     ], 400);
                 }
+            } else {
+                $productVariant = ProductVariant::findOrFail($request->product_variant_id);
                 
-                $variantCombination = VariantCombination::findOrFail($request->variant_combination_id);
-                
-                if ($variantCombination->product_id !== $product->id) {
+                // Validate variant belongs to product
+                if ($productVariant->product_id !== $product->id) {
                     return response()->json([
                         'success' => false,
                         'message' => 'Invalid product variant.'
                     ], 400);
                 }
+                
+                // Check if variant is active
+                if (!$productVariant->is_active) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Selected variant is not available.'
+                    ], 400);
+                }
             }
 
             // Check stock availability
-            $availableStock = $this->cartService->getAvailableStock($product->id, $request->variant_combination_id);
+            $availableStock = $this->cartService->getAvailableStock($product->id, $productVariant->id);
             
             if ($availableStock < $request->quantity) {
                 return response()->json([
@@ -88,7 +100,7 @@ class CartController extends Controller
             // Add to cart
             $cartItem = $this->cartService->addToCart(
                 $product,
-                $variantCombination,
+                $productVariant,
                 $request->quantity
             );
 
@@ -133,7 +145,7 @@ class CartController extends Controller
             // Check stock availability for new quantity
             $availableStock = $this->cartService->getAvailableStock(
                 $cartItem->product_id, 
-                $cartItem->variant_combination_id
+                $cartItem->product_variant_id
             );
 
             if ($availableStock < $request->quantity) {
@@ -256,7 +268,9 @@ class CartController extends Controller
                     'total_price' => $item->total_price_formatted,
                     'product_image' => $item->product->main_image 
                         ? asset('storage/' . $item->product->main_image) 
-                        : '/placeholder.jpg'
+                        : '/placeholder.jpg',
+                    'product_url' => route('products.show', $item->product->slug),
+                    'is_available' => $item->is_available
                 ];
             }),
             'summary' => $cartSummary
@@ -318,6 +332,77 @@ class CartController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error removing promotion.'
+            ], 500);
+        }
+    }
+
+    /**
+     * Quick add to cart (for single variant products or with variant ID)
+     */
+    public function quickAdd(Request $request)
+    {
+        $request->validate([
+            'product_id' => 'required|exists:products,id',
+            'product_variant_id' => 'nullable|exists:product_variants,id'
+        ]);
+
+        try {
+            $product = Product::findOrFail($request->product_id);
+            
+            if (!$product->is_active) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This product is no longer available.'
+                ], 400);
+            }
+
+            // For quick add, if no variant specified and product has single variant
+            $productVariant = null;
+            if (!$request->product_variant_id) {
+                if ($product->variants()->count() === 1) {
+                    $productVariant = $product->defaultVariant();
+                } else {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Please select product options from the product page.'
+                    ], 400);
+                }
+            } else {
+                $productVariant = ProductVariant::findOrFail($request->product_variant_id);
+            }
+
+            if (!$productVariant || !$productVariant->is_active) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Selected variant is not available.'
+                ], 400);
+            }
+
+            // Check stock
+            $availableStock = $this->cartService->getAvailableStock($product->id, $productVariant->id);
+            
+            if ($availableStock < 1) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This item is out of stock.'
+                ], 400);
+            }
+
+            // Add single quantity
+            $cartItem = $this->cartService->addToCart($product, $productVariant, 1);
+            $cartSummary = $this->cartService->getCartSummary();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Added to cart!',
+                'cart_count' => $cartSummary['total_items'],
+                'cart_total' => $cartSummary['subtotal_formatted']
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error adding to cart.'
             ], 500);
         }
     }

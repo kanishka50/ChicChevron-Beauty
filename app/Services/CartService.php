@@ -4,7 +4,7 @@ namespace App\Services;
 
 use App\Models\CartItem;
 use App\Models\Product;
-use App\Models\VariantCombination;
+use App\Models\ProductVariant;
 use App\Models\Inventory;
 use App\Models\Promotion;
 use Illuminate\Support\Facades\Auth;
@@ -18,7 +18,7 @@ class CartService
      */
     public function getCartItems()
     {
-        $query = CartItem::with(['product.brand', 'product.category', 'variantCombination'])
+        $query = CartItem::with(['product.brand', 'product.category', 'productVariant'])
                           ->where($this->getCartIdentifier())
                           ->orderBy('created_at', 'desc');
 
@@ -32,48 +32,56 @@ class CartService
     {
         return CartItem::where('id', $cartItemId)
                       ->where($this->getCartIdentifier())
-                      ->with(['product', 'variantCombination'])
+                      ->with(['product', 'productVariant'])
                       ->first();
     }
 
     /**
      * Add product to cart
      */
-    public function addToCart(Product $product, VariantCombination $variantCombination = null, $quantity = 1)
+    public function addToCart(Product $product, ProductVariant $productVariant = null, $quantity = 1)
     {
         $identifier = $this->getCartIdentifier();
 
-        // REQUIRE variant combination for all products
-    if (!$variantCombination) {
-        throw new \Exception('Please select product options.');
-    }
+        // For products with variants, variant is required
+        if ($product->has_variants && !$productVariant) {
+            throw new \Exception('Please select product options.');
+        }
+        
+        // For products without variants, get the default variant
+        if (!$product->has_variants && !$productVariant) {
+            $productVariant = $product->defaultVariant();
+            if (!$productVariant) {
+                throw new \Exception('Product variant not found.');
+            }
+        }
         
         // Check if item already exists in cart
-        // Check if item already exists in cart
-    $existingItem = CartItem::where($identifier)
-                           ->where('product_id', $product->id)
-                           ->where('variant_combination_id', $variantCombination->id)
-                           ->first();
+        $existingItem = CartItem::where($identifier)
+                               ->where('product_id', $product->id)
+                               ->where('product_variant_id', $productVariant->id)
+                               ->first();
 
-    if ($existingItem) {
-        // Update quantity of existing item
-        $newQuantity = $existingItem->quantity + $quantity;
-        return $this->updateQuantity($existingItem->id, $newQuantity);
-    }
+        if ($existingItem) {
+            // Update quantity of existing item
+            $newQuantity = $existingItem->quantity + $quantity;
+            return $this->updateQuantity($existingItem->id, $newQuantity);
+        }
 
-    // Calculate price - always use variant combination
-    $unitPrice = $variantCombination->effective_price;
+        // Calculate price from variant
+        $unitPrice = $productVariant->effective_price;
 
-    // Create new cart item
-    $cartItem = CartItem::create([
-        'user_id' => Auth::id(),
-        'session_id' => Auth::guest() ? Session::getId() : null,
-        'product_id' => $product->id,
-        'variant_combination_id' => $variantCombination->id,
-        'quantity' => $quantity,
-    ]);
+        // Create new cart item
+        $cartItem = CartItem::create([
+            'user_id' => Auth::id(),
+            'session_id' => Auth::guest() ? Session::getId() : null,
+            'product_id' => $product->id,
+            'product_variant_id' => $productVariant->id,
+            'quantity' => $quantity,
+            'unit_price' => $unitPrice,
+        ]);
 
-        return $cartItem->load(['product', 'variantCombination']);
+        return $cartItem->load(['product', 'productVariant']);
     }
 
     /**
@@ -87,7 +95,7 @@ class CartService
 
         $cartItem->update(['quantity' => $quantity]);
         
-        return $cartItem->load(['product', 'variantCombination']);
+        return $cartItem->load(['product', 'productVariant']);
     }
 
     /**
@@ -124,15 +132,14 @@ class CartService
     /**
      * Get available stock for product/variant
      */
-    public function getAvailableStock($productId, $variantCombinationId = null)
+    public function getAvailableStock($productId, $productVariantId = null)
     {
-
-        if (!$variantCombinationId) {
-        return 0;
-    }
+        if (!$productVariantId) {
+            return 0;
+        }
 
         $inventory = Inventory::where('product_id', $productId)
-                             ->where('variant_combination_id', $variantCombinationId)
+                             ->where('product_variant_id', $productVariantId)
                              ->first();
 
         if (!$inventory) {
@@ -340,7 +347,7 @@ class CartService
             // Check if user already has this item in cart
             $existingItem = CartItem::where('user_id', $userId)
                                    ->where('product_id', $guestItem->product_id)
-                                   ->where('variant_combination_id', $guestItem->variant_combination_id)
+                                   ->where('product_variant_id', $guestItem->product_variant_id)
                                    ->first();
 
             if ($existingItem) {
@@ -379,15 +386,21 @@ class CartService
                 continue;
             }
 
+            // Check if variant is still active
+            if (!$item->productVariant || !$item->productVariant->is_active) {
+                $errors[] = "Selected variant for '{$item->product->name}' is no longer available.";
+                continue;
+            }
+
             // Check stock availability
             $availableStock = $this->getAvailableStock(
                 $item->product_id, 
-                $item->variant_combination_id
+                $item->product_variant_id
             );
 
             if ($availableStock < $item->quantity) {
-                $variantDetails = $item->variant_combination 
-                    ? " ({$item->variant_combination->combination_sku})"
+                $variantDetails = $item->productVariant 
+                    ? " ({$item->productVariant->name})"
                     : '';
                     
                 $errors[] = "Only {$availableStock} units available for '{$item->product->name}{$variantDetails}'.";

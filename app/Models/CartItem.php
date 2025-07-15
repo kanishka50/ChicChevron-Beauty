@@ -1,5 +1,5 @@
 <?php
-
+// ===== CartItem Model =====
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -14,7 +14,7 @@ class CartItem extends Model
         'user_id',
         'session_id',
         'product_id',
-        'variant_combination_id',
+        'product_variant_id', // CHANGED from variant_combination_id
         'quantity',
         'unit_price',
     ];
@@ -41,6 +41,14 @@ class CartItem extends Model
     }
 
     /**
+     * Get the product variant associated with the cart item.
+     */
+    public function productVariant()
+    {
+        return $this->belongsTo(ProductVariant::class);
+    }
+
+    /**
      * Calculate total price for this cart item.
      */
     public function getTotalPriceAttribute()
@@ -64,7 +72,17 @@ class CartItem extends Model
         return 'Rs. ' . number_format($this->unit_price, 2);
     }
 
+    /**
+     * Get variant details in a readable format.
+     */
+    public function getVariantDetailsFormattedAttribute()
+    {
+        if (!$this->productVariant) {
+            return null;
+        }
 
+        return $this->productVariant->name;
+    }
 
     /**
      * Get product image URL.
@@ -99,8 +117,12 @@ class CartItem extends Model
             return false;
         }
 
+        if (!$this->productVariant || !$this->productVariant->is_active) {
+            return false;
+        }
+
         $inventory = Inventory::where('product_id', $this->product_id)
-                             ->where('variant_combination_id', $this->variant_combination_id)
+                             ->where('product_variant_id', $this->product_variant_id)
                              ->first();
 
         if (!$inventory) {
@@ -117,7 +139,7 @@ class CartItem extends Model
     public function getAvailableStockAttribute()
     {
         $inventory = Inventory::where('product_id', $this->product_id)
-                             ->where('variant_combination_id', $this->variant_combination_id)
+                             ->where('product_variant_id', $this->product_variant_id)
                              ->first();
 
         if (!$inventory) {
@@ -154,25 +176,4 @@ class CartItem extends Model
         
         return $query->where('session_id', \Illuminate\Support\Facades\Session::getId());
     }
-
-
-
-    /*UPDATED FUNCTIONS FOR ONLY USE PRODUCT VARIANT TABLE */
-    // Change the relationship name
-public function productVariant()
-{
-    return $this->belongsTo(ProductVariant::class);
-}
-
-// Update the accessor
-public function getVariantDetailsFormattedAttribute()
-{
-    if (!$this->productVariant) {
-        return null;
-    }
-
-    return $this->productVariant->name;
-}
-
-
 }

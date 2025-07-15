@@ -5,7 +5,7 @@ namespace App\Services;
 use App\Models\Inventory;
 use App\Models\InventoryMovement;
 use App\Models\Product;
-use App\Models\VariantCombination;
+use App\Models\ProductVariant;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -16,7 +16,7 @@ class InventoryService
      */
     public function addStock(
         $productId, 
-        $variantCombinationId = null, 
+        $productVariantId = null, 
         $quantity, 
         $costPerUnit, 
         $reason = 'Stock received',
@@ -27,10 +27,10 @@ class InventoryService
         
         try {
             // Get or create inventory record
-            $inventory = $this->getOrCreateInventory($productId, $variantCombinationId);
+            $inventory = $this->getOrCreateInventory($productId, $productVariantId);
             
             // Generate batch number
-            $batchNumber = $this->generateBatchNumber($productId, $variantCombinationId);
+            $batchNumber = $this->generateBatchNumber($productId, $productVariantId);
             
             // Create inventory movement
             $movement = InventoryMovement::create([
@@ -68,7 +68,7 @@ class InventoryService
      */
     public function removeStock(
         $productId, 
-        $variantCombinationId = null, 
+        $productVariantId = null, 
         $quantity, 
         $reason = 'Stock sold',
         $referenceType = null,
@@ -78,7 +78,7 @@ class InventoryService
         
         try {
             // Get inventory record
-            $inventory = $this->getOrCreateInventory($productId, $variantCombinationId);
+            $inventory = $this->getOrCreateInventory($productId, $productVariantId);
             
             // Check if enough stock available
             $availableStock = $inventory->current_stock - $inventory->reserved_stock;
@@ -139,12 +139,12 @@ class InventoryService
     /**
      * Reserve stock for orders (temporarily holds stock)
      */
-    public function reserveStock($productId, $variantCombinationId = null, $quantity, $referenceType = 'order', $referenceId = null)
+    public function reserveStock($productId, $productVariantId = null, $quantity, $referenceType = 'order', $referenceId = null)
     {
         DB::beginTransaction();
         
         try {
-            $inventory = $this->getOrCreateInventory($productId, $variantCombinationId);
+            $inventory = $this->getOrCreateInventory($productId, $productVariantId);
             
             // Check if enough stock available
             $availableStock = $inventory->current_stock - $inventory->reserved_stock;
@@ -185,12 +185,12 @@ class InventoryService
     /**
      * Release reserved stock (cancel reservation)
      */
-    public function releaseReservedStock($productId, $variantCombinationId = null, $quantity, $referenceType = 'order', $referenceId = null)
+    public function releaseReservedStock($productId, $productVariantId = null, $quantity, $referenceType = 'order', $referenceId = null)
     {
         DB::beginTransaction();
         
         try {
-            $inventory = $this->getOrCreateInventory($productId, $variantCombinationId);
+            $inventory = $this->getOrCreateInventory($productId, $productVariantId);
             
             // Decrease reserved stock
             $inventory->decrement('reserved_stock', max(0, min($quantity, $inventory->reserved_stock)));
@@ -225,16 +225,16 @@ class InventoryService
     /**
      * Convert reserved stock to actual sale (FIFO removal)
      */
-    public function confirmReservedStock($productId, $variantCombinationId = null, $quantity, $referenceType = 'order', $referenceId = null)
+    public function confirmReservedStock($productId, $productVariantId = null, $quantity, $referenceType = 'order', $referenceId = null)
     {
         DB::beginTransaction();
         
         try {
             // First release the reservation
-            $this->releaseReservedStock($productId, $variantCombinationId, $quantity, $referenceType, $referenceId);
+            $this->releaseReservedStock($productId, $productVariantId, $quantity, $referenceType, $referenceId);
             
             // Then remove stock using FIFO
-            $result = $this->removeStock($productId, $variantCombinationId, $quantity, 'Stock sold', $referenceType, $referenceId);
+            $result = $this->removeStock($productId, $productVariantId, $quantity, 'Stock sold', $referenceType, $referenceId);
             
             DB::commit();
             
@@ -249,12 +249,12 @@ class InventoryService
     /**
      * Adjust stock (manual correction)
      */
-    public function adjustStock($productId, $variantCombinationId = null, $newQuantity, $reason = 'Manual adjustment')
+    public function adjustStock($productId, $productVariantId = null, $newQuantity, $reason = 'Manual adjustment')
     {
         DB::beginTransaction();
         
         try {
-            $inventory = $this->getOrCreateInventory($productId, $variantCombinationId);
+            $inventory = $this->getOrCreateInventory($productId, $productVariantId);
             $currentStock = $inventory->current_stock;
             $difference = $newQuantity - $currentStock;
             
@@ -297,9 +297,9 @@ class InventoryService
     /**
      * Get current stock levels with FIFO batch details
      */
-    public function getStockDetails($productId, $variantCombinationId = null)
+    public function getStockDetails($productId, $productVariantId = null)
     {
-        $inventory = $this->getOrCreateInventory($productId, $variantCombinationId);
+        $inventory = $this->getOrCreateInventory($productId, $productVariantId);
         $batches = $this->getAvailableBatches($inventory->id);
         
         return [
@@ -317,7 +317,7 @@ class InventoryService
      */
     public function getLowStockItems()
     {
-        return Inventory::with(['product', 'variantCombination'])
+        return Inventory::with(['product', 'productVariant'])
             ->whereRaw('(current_stock - reserved_stock) <= low_stock_threshold')
             ->where('current_stock', '>', 0)
             ->orderBy('current_stock')
@@ -329,7 +329,7 @@ class InventoryService
      */
     public function getOutOfStockItems()
     {
-        return Inventory::with(['product', 'variantCombination'])
+        return Inventory::with(['product', 'productVariant'])
             ->whereRaw('(current_stock - reserved_stock) <= 0')
             ->get();
     }
@@ -337,12 +337,12 @@ class InventoryService
     /**
      * Generate unique batch number
      */
-    private function generateBatchNumber($productId, $variantCombinationId = null)
+    private function generateBatchNumber($productId, $productVariantId = null)
     {
         $prefix = 'BATCH';
         $date = now()->format('Ymd');
         $productCode = str_pad($productId, 4, '0', STR_PAD_LEFT);
-        $variantCode = $variantCombinationId ? str_pad($variantCombinationId, 3, '0', STR_PAD_LEFT) : '000';
+        $variantCode = $productVariantId ? str_pad($productVariantId, 3, '0', STR_PAD_LEFT) : '000';
         $random = strtoupper(Str::random(3));
         
         return "{$prefix}-{$date}-{$productCode}-{$variantCode}-{$random}";
@@ -351,12 +351,12 @@ class InventoryService
     /**
      * Get or create inventory record
      */
-    private function getOrCreateInventory($productId, $variantCombinationId = null)
+    private function getOrCreateInventory($productId, $productVariantId = null)
     {
         return Inventory::firstOrCreate(
             [
                 'product_id' => $productId,
-                'variant_combination_id' => $variantCombinationId,
+                'product_variant_id' => $productVariantId,
             ],
             [
                 'current_stock' => 0,
@@ -391,5 +391,44 @@ class InventoryService
             ->having('available_quantity', '>', 0)
             ->orderBy('oldest_date', 'asc') // FIFO: oldest first
             ->get();
+    }
+    
+    /**
+     * Transfer stock between variants
+     */
+    public function transferStock(
+        $fromProductId,
+        $fromVariantId,
+        $toProductId,
+        $toVariantId,
+        $quantity,
+        $reason = 'Stock transfer'
+    ) {
+        DB::beginTransaction();
+        
+        try {
+            // Get cost from source variant
+            $stockDetails = $this->getStockDetails($fromProductId, $fromVariantId);
+            $averageCost = $stockDetails['average_cost'];
+            
+            // Remove from source
+            $this->removeStock($fromProductId, $fromVariantId, $quantity, $reason . ' (from)', 'transfer');
+            
+            // Add to destination
+            $this->addStock($toProductId, $toVariantId, $quantity, $averageCost, $reason . ' (to)', 'transfer');
+            
+            DB::commit();
+            
+            return [
+                'success' => true,
+                'quantity_transferred' => $quantity,
+                'from_variant' => ProductVariant::find($fromVariantId),
+                'to_variant' => ProductVariant::find($toVariantId)
+            ];
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
     }
 }
