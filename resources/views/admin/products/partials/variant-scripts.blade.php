@@ -175,23 +175,32 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 
-     const editCombinationForm = document.getElementById('editCombinationForm');
+const editCombinationForm = document.getElementById('editCombinationForm');
 if (editCombinationForm) {
     editCombinationForm.addEventListener('submit', function(e) {
         e.preventDefault();
         
-        const formData = new FormData(this);
         const combinationId = document.getElementById('edit_combination_id').value;
         const submitBtn = this.querySelector('button[type="submit"]');
+        
+        // Get form values
+        const data = {
+            combination_price: document.getElementById('edit_combination_price').value,
+            combination_cost_price: document.getElementById('edit_combination_cost_price').value,
+            discount_price: document.getElementById('edit_combination_discount_price').value || null,
+            is_active: document.getElementById('edit_combination_is_active').checked ? 1 : 0,
+            _method: 'PUT'
+        };
         
         // Disable submit button
         submitBtn.disabled = true;
         submitBtn.textContent = 'Updating...';
         
         fetch(`/admin/products/combinations/${combinationId}`, {
-            method: 'PUT',
-            body: formData,
+            method: 'POST', // Use POST with method spoofing
+            body: JSON.stringify(data),
             headers: {
+                'Content-Type': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest',
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
             }
@@ -466,8 +475,8 @@ document.addEventListener('keydown', function(e) {
         closeAddVariantModal();
         closeEditVariantModal();
         closeUpdateStockModal();
-        closeAddCombinationModal();        
-        closeEditCombinationModal(); 
+        closeAddCombinationModal();
+        closeEditCombinationModal();
     }
 });
 </script>

@@ -37,8 +37,8 @@ Route::middleware('admin')->group(function () {
         Route::delete('/images/{image}', [ProductController::class, 'deleteImage'])->name('images.destroy');
 
         Route::post('/{product}/combinations', [ProductVariantController::class, 'storeCombination'])->name('variants.combinations.store');
-        Route::put('/products/combinations/{combination}', [ProductVariantController::class, 'updateCombination'])->name('products.combinations.update');
-        Route::get('/products/combinations/{combination}', [ProductVariantController::class, 'getCombination'])->name('products.combinations.show');
+        Route::put('/combinations/{combination}', [ProductVariantController::class, 'updateCombination'])->name('products.combinations.update');
+        Route::get('/combinations/{combination}', [ProductVariantController::class, 'getCombination'])->name('products.combinations.show');
         
         // Variant management routes
         Route::get('/{product}/variants', [ProductVariantController::class, 'index'])->name('variants');

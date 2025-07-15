@@ -312,17 +312,20 @@ class OrderService
 
         // Calculate subtotal
         foreach ($cartItems as $cartItem) {
-            $product = $cartItem->product;
-            $variantCombination = $cartItem->variantCombination;
-            
-            $unitPrice = $variantCombination 
-            ? $variantCombination->effective_price  // Use effective_price (includes discount)
-            : throw new \Exception('Invalid cart item - missing variant');
-                
-            $itemTotal = $unitPrice * $cartItem->quantity;
-            $subtotal += $itemTotal;
-            $itemPrices[$cartItem->id] = $itemTotal;
-        }
+    $product = $cartItem->product;
+    $variantCombination = $cartItem->variantCombination;
+    
+    // Always require variant combination
+    if (!$variantCombination) {
+        throw new \Exception('Invalid cart item - missing variant information.');
+    }
+    
+    $unitPrice = $variantCombination->effective_price;
+    
+    $itemTotal = $unitPrice * $cartItem->quantity;
+    $subtotal += $itemTotal;
+    $itemPrices[$cartItem->id] = $itemTotal;
+}
 
         // Apply promotion if provided
         $discountAmount = 0;

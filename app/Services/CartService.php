@@ -42,34 +42,36 @@ class CartService
     public function addToCart(Product $product, VariantCombination $variantCombination = null, $quantity = 1)
     {
         $identifier = $this->getCartIdentifier();
+
+        // REQUIRE variant combination for all products
+    if (!$variantCombination) {
+        throw new \Exception('Please select product options.');
+    }
         
         // Check if item already exists in cart
-        $existingItem = CartItem::where($identifier)
-                               ->where('product_id', $product->id)
-                               ->where('variant_combination_id', $variantCombination?->id)
-                               ->first();
+        // Check if item already exists in cart
+    $existingItem = CartItem::where($identifier)
+                           ->where('product_id', $product->id)
+                           ->where('variant_combination_id', $variantCombination->id)
+                           ->first();
 
-        if ($existingItem) {
-            // Update quantity of existing item
-            $newQuantity = $existingItem->quantity + $quantity;
-            return $this->updateQuantity($existingItem->id, $newQuantity);
-        }
+    if ($existingItem) {
+        // Update quantity of existing item
+        $newQuantity = $existingItem->quantity + $quantity;
+        return $this->updateQuantity($existingItem->id, $newQuantity);
+    }
 
-        // Calculate price
-        if (!$variantCombination) {
-        throw new \Exception('Please select product options.');
-        }
-        $unitPrice = $variantCombination->effective_price;
+    // Calculate price - always use variant combination
+    $unitPrice = $variantCombination->effective_price;
 
-        // Create new cart item
-        $cartItem = CartItem::create([
-            'user_id' => Auth::id(),
-            'session_id' => Auth::guest() ? Session::getId() : null,
-            'product_id' => $product->id,
-            'variant_combination_id' => $variantCombination?->id,
-            'quantity' => $quantity,
-            'unit_price' => $unitPrice,
-        ]);
+    // Create new cart item
+    $cartItem = CartItem::create([
+        'user_id' => Auth::id(),
+        'session_id' => Auth::guest() ? Session::getId() : null,
+        'product_id' => $product->id,
+        'variant_combination_id' => $variantCombination->id,
+        'quantity' => $quantity,
+    ]);
 
         return $cartItem->load(['product', 'variantCombination']);
     }
@@ -128,7 +130,7 @@ class CartService
         if (!$variantCombinationId) {
         return 0;
     }
-    
+
         $inventory = Inventory::where('product_id', $productId)
                              ->where('variant_combination_id', $variantCombinationId)
                              ->first();
