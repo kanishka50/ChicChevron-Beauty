@@ -4,20 +4,29 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\ManagesInventory;
 
 class ProductVariant extends Model
 {
-    use HasFactory;
+    use HasFactory, ManagesInventory;
 
     protected $fillable = [
         'product_id',
-        'variant_type',
-        'variant_value',
-        'sku_suffix',
+        'size',
+        'color', 
+        'scent',
+        'sku',
+        'name',
+        'price',
+        'cost_price',
+        'discount_price',
         'is_active',
     ];
 
     protected $casts = [
+        'price' => 'decimal:2',
+        'cost_price' => 'decimal:2',
+        'discount_price' => 'decimal:2',
         'is_active' => 'boolean',
     ];
 
@@ -30,37 +39,50 @@ class ProductVariant extends Model
     }
 
     /**
-     * Get the variant combinations where this variant is used as size.
+     * Get the inventory for this variant.
      */
-    public function sizeInCombinations()
+    public function inventory()
     {
-        return $this->hasMany(VariantCombination::class, 'size_variant_id');
+        return $this->hasOne(Inventory::class);
     }
 
     /**
-     * Get the variant combinations where this variant is used as color.
+     * Get cart items for this variant.
      */
-    public function colorInCombinations()
+    public function cartItems()
     {
-        return $this->hasMany(VariantCombination::class, 'color_variant_id');
+        return $this->hasMany(CartItem::class);
     }
 
     /**
-     * Get the variant combinations where this variant is used as scent.
+     * Get order items for this variant.
      */
-    public function scentInCombinations()
+    public function orderItems()
     {
-        return $this->hasMany(VariantCombination::class, 'scent_variant_id');
+        return $this->hasMany(OrderItem::class);
     }
 
     /**
-     * Get the full SKU for this variant.
+     * Get the effective price (considering discount).
      */
-    public function getFullSkuAttribute()
+    public function getEffectivePriceAttribute()
     {
-        return $this->product->sku . '-' . $this->sku_suffix;
+        if ($this->discount_price && $this->discount_price < $this->price) {
+            return $this->discount_price;
+        }
+        return $this->price;
     }
 
+    /**
+     * Get available stock.
+     */
+    public function getAvailableStockAttribute()
+    {
+        $inventory = $this->inventory;
+        if (!$inventory) return 0;
+        
+        return max(0, $inventory->current_stock - $inventory->reserved_stock);
+    }
 
     /**
      * Scope for active variants.
@@ -71,10 +93,34 @@ class ProductVariant extends Model
     }
 
     /**
-     * Scope for variants by type.
+     * Get profit margin percentage.
      */
-    public function scopeOfType($query, $type)
+    public function getProfitMarginAttribute()
     {
-        return $query->where('variant_type', $type);
+        if ($this->cost_price <= 0) return 0;
+        
+        return round((($this->price - $this->cost_price) / $this->cost_price) * 100, 2);
+    }
+
+    /**
+     * Check if variant has specific attribute
+     */
+    public function hasAttribute($type)
+    {
+        return !empty($this->$type);
+    }
+
+    /**
+     * Get variant attributes as array
+     */
+    public function getAttributesArray()
+    {
+        $attributes = [];
+        
+        if ($this->size) $attributes['size'] = $this->size;
+        if ($this->color) $attributes['color'] = $this->color;
+        if ($this->scent) $attributes['scent'] = $this->scent;
+        
+        return $attributes;
     }
 }

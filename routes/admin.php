@@ -36,16 +36,20 @@ Route::middleware('admin')->group(function () {
         Route::post('/{product}/toggle-status', [ProductController::class, 'toggleStatus'])->name('toggle-status');
         Route::delete('/images/{image}', [ProductController::class, 'deleteImage'])->name('images.destroy');
 
-        Route::post('/{product}/combinations', [ProductVariantController::class, 'storeCombination'])->name('variants.combinations.store');
-        Route::put('/combinations/{combination}', [ProductVariantController::class, 'updateCombination'])->name('products.combinations.update');
-        Route::get('/combinations/{combination}', [ProductVariantController::class, 'getCombination'])->name('products.combinations.show');
-        
-        // Variant management routes
-        Route::get('/{product}/variants', [ProductVariantController::class, 'index'])->name('variants');
-        Route::post('/{product}/variants', [ProductVariantController::class, 'store'])->name('variants.store');
-        Route::put('/variants/{variant}', [ProductVariantController::class, 'update'])->name('variants.update');
-        Route::delete('/variants/{variant}', [ProductVariantController::class, 'destroy'])->name('variants.destroy');
-        Route::get('/variants/{variant}', [ProductVariantController::class, 'show'])->name('variants.show');
+        // Product Variants Management
+Route::prefix('products/{product}/variants')->name('products.variants.')->group(function () {
+    Route::get('/', [ProductVariantController::class, 'index'])->name('index');
+    Route::get('/create', [ProductVariantController::class, 'create'])->name('create');
+    Route::post('/', [ProductVariantController::class, 'store'])->name('store');
+});
+
+Route::prefix('variants')->name('variants.')->group(function () {
+    Route::get('/{variant}/edit', [ProductVariantController::class, 'edit'])->name('edit');
+    Route::put('/{variant}', [ProductVariantController::class, 'update'])->name('update');
+    Route::post('/{variant}/toggle-status', [ProductVariantController::class, 'toggleStatus'])->name('toggle-status');
+    Route::delete('/{variant}', [ProductVariantController::class, 'destroy'])->name('destroy');
+    Route::get('/{variant}', [ProductVariantController::class, 'show'])->name('show');
+});
     });
 
     // Inventory Management Routes

@@ -107,20 +107,13 @@ class Product extends Model
     }
 
     /**
-     * Get the product variants.
-     */
-    public function variants()
-    {
-        return $this->hasMany(ProductVariant::class);
-    }
+ * Get the product variants.
+ */
+public function variants()
+{
+    return $this->hasMany(ProductVariant::class);
+}
 
-    /**
-     * Get the variant combinations.
-     */
-    public function variantCombinations()
-    {
-        return $this->hasMany(VariantCombination::class);
-    }
 
     /**
      * Get the reviews.
@@ -311,24 +304,7 @@ class Product extends Model
         return route('products.show', $this->slug);
     }
 
-    /**
-     * Get price range for variant products.
-     */
-    public function getPriceRangeAttribute()
-{
-    $prices = $this->variantCombinations()
-        ->where('is_active', true)
-        ->pluck('combination_price');
 
-    if ($prices->isEmpty()) {
-        return ['min' => 0, 'max' => 0];
-    }
-
-    return [
-        'min' => $prices->min(),
-        'max' => $prices->max(),
-    ];
-}
 
 
 /**
@@ -366,6 +342,72 @@ public function getEffectivePriceRangeAttribute()
         
         return 'Rs. ' . number_format($range['min'], 2) . ' - Rs. ' . number_format($range['max'], 2);
     }
+
+
+
+
+
+
+
+
+    /**UDATED METHODS FOR ONLY USE PRODUCT VARINT TABLE WITHOUT VARIANTS COMBINATION */
+    /**
+ * Get active variants.
+ */
+public function activeVariants()
+{
+    return $this->variants()->where('is_active', true);
+}
+
+/**
+ * Get the default variant (for products without multiple variants).
+ */
+public function defaultVariant()
+{
+    return $this->variants()->first();
+}
+
+/**
+ * Check if product has multiple variants.
+ */
+public function getHasMultipleVariantsAttribute()
+{
+    return $this->variants()->count() > 1;
+}
+
+/**
+ * Get effective price from first active variant
+ */
+public function getEffectivePriceAttribute()
+{
+    $variant = $this->activeVariants()->first();
+    return $variant ? $variant->effective_price : 0;
+}
+
+/**
+ * Get price range for products with multiple variants
+ */
+public function getPriceRangeAttribute()
+{
+    if (!$this->has_multiple_variants) {
+        return null;
+    }
+    
+    $prices = $this->activeVariants()->pluck('price');
+    
+    if ($prices->isEmpty()) {
+        return null;
+    }
+    
+    $min = $prices->min();
+    $max = $prices->max();
+    
+    if ($min == $max) {
+        return 'Rs. ' . number_format($min, 2);
+    }
+    
+    return 'Rs. ' . number_format($min, 2) . ' - Rs. ' . number_format($max, 2);
+}
 
     // =====================================================
     // HELPER METHODS

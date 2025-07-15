@@ -41,14 +41,6 @@ class CartItem extends Model
     }
 
     /**
-     * Get the variant combination associated with the cart item.
-     */
-    public function variantCombination()
-    {
-        return $this->belongsTo(VariantCombination::class);
-    }
-
-    /**
      * Calculate total price for this cart item.
      */
     public function getTotalPriceAttribute()
@@ -72,31 +64,7 @@ class CartItem extends Model
         return 'Rs. ' . number_format($this->unit_price, 2);
     }
 
-    /**
-     * Get variant details in a readable format.
-     */
-    public function getVariantDetailsFormattedAttribute()
-    {
-        if (!$this->variantCombination) {
-            return null;
-        }
 
-        $details = [];
-        
-        if ($this->variantCombination->sizeVariant) {
-            $details[] = 'Size: ' . $this->variantCombination->sizeVariant->variant_value;
-        }
-        
-        if ($this->variantCombination->colorVariant) {
-            $details[] = 'Color: ' . $this->variantCombination->colorVariant->variant_value;
-        }
-        
-        if ($this->variantCombination->scentVariant) {
-            $details[] = 'Scent: ' . $this->variantCombination->scentVariant->variant_value;
-        }
-
-        return implode(' | ', $details);
-    }
 
     /**
      * Get product image URL.
@@ -186,4 +154,25 @@ class CartItem extends Model
         
         return $query->where('session_id', \Illuminate\Support\Facades\Session::getId());
     }
+
+
+
+    /*UPDATED FUNCTIONS FOR ONLY USE PRODUCT VARIANT TABLE */
+    // Change the relationship name
+public function productVariant()
+{
+    return $this->belongsTo(ProductVariant::class);
+}
+
+// Update the accessor
+public function getVariantDetailsFormattedAttribute()
+{
+    if (!$this->productVariant) {
+        return null;
+    }
+
+    return $this->productVariant->name;
+}
+
+
 }

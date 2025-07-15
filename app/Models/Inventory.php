@@ -32,13 +32,11 @@ class Inventory extends Model
         return $this->belongsTo(Product::class);
     }
     
-    /**
-     * Get the variant combination this inventory belongs to
-     */
-    public function variantCombination(): BelongsTo
-    {
-        return $this->belongsTo(VariantCombination::class);
-    }
+    // Change the relationship
+public function productVariant()
+{
+    return $this->belongsTo(ProductVariant::class);
+}
     
     /**
      * Get all movements for this inventory

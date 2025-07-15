@@ -255,50 +255,47 @@ class OrderService
         return 'CHB-' . date('Ymd') . '-' . str_pad(Order::count() + 1, 4, '0', STR_PAD_LEFT);
     }
 
-    // KEEP ALL YOUR EXISTING METHODS BELOW (no changes needed)
+  
 
-    /**
-     * Create individual order item with inventory cost tracking (your existing method)
-     */
+   
+     
     protected function createOrderItem($order, $cartItem, $discountPerItem = 0)
-    {
-        $product = $cartItem->product;
-        $variantCombination = $cartItem->variantCombination;
-        
-        // Get the selling price 
-        if (!$variantCombination) {
-            throw new \Exception('Invalid order item - missing variant information.');
-        }
-        $unitPrice = $variantCombination->effective_price;
-
-        // Get FIFO cost price from inventory
-        $costPrice = $this->getAverageCostPrice($product->id, $variantCombination?->id, $cartItem->quantity);
-
-        // Prepare variant details for storage
-        $variantDetails = null;
-        if ($variantCombination) {
-            $variantDetails = json_encode([
-                'size' => $variantCombination->sizeVariant?->variant_value,
-                'color' => $variantCombination->colorVariant?->variant_value,
-                'scent' => $variantCombination->scentVariant?->variant_value,
-                'combination_sku' => $variantCombination->combination_sku,
-            ]);
-        }
-
-        return OrderItem::create([
-            'order_id' => $order->id,
-            'product_id' => $product->id,
-            'variant_combination_id' => $variantCombination?->id,
-            'product_name' => $product->name,
-            'product_sku' => $variantCombination ? $variantCombination->combination_sku : $product->sku,
-            'variant_details' => $variantDetails,
-            'quantity' => $cartItem->quantity,
-            'unit_price' => $unitPrice,
-            'cost_price' => $costPrice,
-            'discount_amount' => $discountPerItem,
-            'total_price' => ($unitPrice * $cartItem->quantity) - $discountPerItem,
-        ]);
+{
+    $product = $cartItem->product;
+    $productVariant = $cartItem->productVariant;
+    
+    if (!$productVariant) {
+        throw new \Exception('Invalid order item - missing variant information.');
     }
+    
+    $unitPrice = $productVariant->effective_price;
+
+    // Get FIFO cost price from inventory
+    $costPrice = $this->getAverageCostPrice($product->id, $productVariant->id, $cartItem->quantity);
+
+    // Prepare variant details for storage
+    $variantDetails = json_encode([
+        'size' => $productVariant->size,
+        'color' => $productVariant->color,
+        'scent' => $productVariant->scent,
+        'name' => $productVariant->name,
+        'sku' => $productVariant->sku,
+    ]);
+
+    return OrderItem::create([
+        'order_id' => $order->id,
+        'product_id' => $product->id,
+        'product_variant_id' => $productVariant->id,
+        'product_name' => $product->name,
+        'product_sku' => $productVariant->sku,
+        'variant_details' => $variantDetails,
+        'quantity' => $cartItem->quantity,
+        'unit_price' => $unitPrice,
+        'cost_price' => $costPrice,
+        'discount_amount' => $discountPerItem,
+        'total_price' => ($unitPrice * $cartItem->quantity) - $discountPerItem,
+    ]);
+}
 
     /**
      * Calculate order totals including promotions (your existing method)

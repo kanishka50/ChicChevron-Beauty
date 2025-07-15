@@ -114,6 +114,7 @@ public function store(ProductRequest $request)
         
         // Set is_active
         $data['is_active'] = $request->has('is_active');
+        $data['has_variants'] = false; // Will be set to true when multiple variants are added
         
         $product = Product::create($data);
         
@@ -141,28 +142,20 @@ public function store(ProductRequest $request)
             }
         }
         
-        // Create default "Standard" variant
-        $variant = ProductVariant::create([
-            'product_id' => $product->id,
-            'variant_type' => 'size',
-            'variant_value' => 'Standard',
-            'sku_suffix' => 'STD',
+       // Create default variant with some default price (admin can update later)
+        $variant = $product->variants()->create([
+            'name' => 'Standard',
+            'sku' => $product->sku,
+            'price' => 0, // Admin must set price
+            'cost_price' => 0, // Admin must set cost
             'is_active' => true,
         ]);
         
-        // Create variant combination with zero price (to be set in variant management)
-        $combination = VariantCombination::create([
-            'product_id' => $product->id,
-            'size_variant_id' => $variant->id,
-            'combination_sku' => $product->sku . '-STD',
-            'combination_price' => 0,
-            'combination_cost_price' => 0,
-        ]);
         
         // Create inventory record
         Inventory::create([
             'product_id' => $product->id,
-            'variant_combination_id' => $combination->id,
+            'product_variant_id' => $variant->id,
             'current_stock' => 0,
             'low_stock_threshold' => 10
         ]);
