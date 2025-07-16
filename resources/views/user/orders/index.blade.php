@@ -126,18 +126,35 @@
                                     <div>
                                         <p class="text-sm font-medium text-gray-900">{{ Str::limit($item->product_name, 30) }}</p>
                                         <p class="text-xs text-gray-600">Qty: {{ $item->quantity }}</p>
-                                        @if($item->variantCombination)
-                                            @php $variantDetails = json_decode($item->variant_details, true); @endphp
+                                        @if($item->productVariant)
                                             <div class="flex space-x-1 mt-1">
-                                                @if(!empty($variantDetails['size']))
+                                                @if($item->productVariant->size)
                                                     <span class="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded">
-                                                        {{ $variantDetails['size'] }}
+                                                        {{ $item->productVariant->size }}
                                                     </span>
                                                 @endif
-                                                @if(!empty($variantDetails['color']))
+                                                @if($item->productVariant->color)
                                                     <span class="inline-block bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded">
-                                                        {{ $variantDetails['color'] }}
+                                                        {{ $item->productVariant->color }}
                                                     </span>
+                                                @endif
+                                                @if($item->productVariant->scent)
+                                                    <span class="inline-block bg-purple-100 text-purple-800 text-xs px-2 py-0.5 rounded">
+                                                        {{ $item->productVariant->scent }}
+                                                    </span>
+                                                @endif
+                                            </div>
+                                        @elseif($item->variant_details)
+                                            @php $variantDetails = json_decode($item->variant_details, true); @endphp
+                                            <div class="flex space-x-1 mt-1">
+                                                @if(is_array($variantDetails))
+                                                    @foreach($variantDetails as $key => $value)
+                                                        @if($value)
+                                                            <span class="inline-block bg-gray-100 text-gray-800 text-xs px-2 py-0.5 rounded">
+                                                                {{ ucfirst($key) }}: {{ $value }}
+                                                            </span>
+                                                        @endif
+                                                    @endforeach
                                                 @endif
                                             </div>
                                         @endif

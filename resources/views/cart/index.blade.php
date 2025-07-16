@@ -42,7 +42,7 @@
                                         <p class="text-sm text-gray-600 mt-1">{{ $item->variant_details_formatted }}</p>
                                     @endif
 
-                                    <p class="text-sm text-gray-500 mt-1">SKU: {{ $item->variantCombination?->combination_sku ?? $item->product->sku }}</p>
+                                    <p class="text-sm text-gray-500 mt-1">SKU: {{ $item->productVariant?->sku ?? $item->product->sku }}</p>
 
                                     <!-- Availability Status -->
                                     @if($item->is_available)
@@ -58,7 +58,7 @@
 
                                 <!-- Price and Quantity -->
                                 <div class="text-right">
-                                    @if($item->product->is_on_sale && !$item->variantCombination)
+                                    @if($item->product->is_on_sale && !$item->productVariant)
                                         <p class="text-sm text-gray-500 line-through">
                                             Rs. {{ number_format($item->product->selling_price, 2) }}
                                         </p>
@@ -66,6 +66,7 @@
                                     @else
                                         <p class="text-lg font-medium text-gray-900">{{ $item->unit_price_formatted }}</p>
                                     @endif
+
                                     
                                     <!-- Quantity Controls -->
                                     <div class="flex items-center mt-3 space-x-2">

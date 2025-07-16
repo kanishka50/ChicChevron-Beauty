@@ -143,23 +143,26 @@
             <div class="order-items">
                 <h3>Items Ordered</h3>
                 @foreach($items as $item)
-                    <div class="item">
-                        <div class="item-details">
-                            <h4>{{ $item->product_name }}</h4>
-                            @if($item->variant_details)
-                                @php $variants = json_decode($item->variant_details, true); @endphp
-                                <p>
-                                    @if(isset($variants['size'])) Size: {{ $variants['size'] }} @endif
-                                    @if(isset($variants['color'])) | Color: {{ $variants['color'] }} @endif
-                                    @if(isset($variants['scent'])) | Scent: {{ $variants['scent'] }} @endif
-                                </p>
+                    <tr>
+                        <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">
+                            <div style="font-weight: 600;">{{ $item->product_name }}</div>
+                            @if($item->productVariant)
+                                <div style="font-size: 14px; color: #6b7280; margin-top: 4px;">
+                                    {{ $item->productVariant->name }}
+                                </div>
                             @endif
-                            <p>Qty: {{ $item->quantity }} × LKR {{ number_format($item->unit_price, 2) }}</p>
-                        </div>
-                        <div class="item-price">
-                            <strong>LKR {{ number_format($item->total_price, 2) }}</strong>
-                        </div>
-                    </div>
+                            <div style="font-size: 12px; color: #9ca3af;">SKU: {{ $item->productVariant->sku ?? $item->product_sku }}</div>
+                        </td>
+                        <td style="padding: 12px; text-align: center; border-bottom: 1px solid #e5e7eb;">
+                            {{ $item->quantity }}
+                        </td>
+                        <td style="padding: 12px; text-align: right; border-bottom: 1px solid #e5e7eb;">
+                            Rs. {{ number_format($item->unit_price, 2) }}
+                        </td>
+                        <td style="padding: 12px; text-align: right; border-bottom: 1px solid #e5e7eb; font-weight: 600;">
+                            Rs. {{ number_format($item->total_price, 2) }}
+                        </td>
+                    </tr>
                 @endforeach
 
                 <!-- Order Totals -->

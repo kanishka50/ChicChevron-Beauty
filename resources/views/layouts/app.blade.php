@@ -456,6 +456,123 @@
             }
         }, 5000);
     };
+
+// Wishlist functions
+function addToWishlist(productId) {
+    @auth
+        fetch('/wishlist/add', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: JSON.stringify({
+                product_id: productId
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update the heart icon
+                updateWishlistButton(productId, true);
+                showToast(data.message, 'success'); // Changed from showNotification
+                // Update wishlist count in header
+                updateWishlistCounter(); // Changed to use existing function
+            } else {
+                showToast(data.message, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('Error adding to wishlist', 'error');
+        });
+    @else
+        // Redirect to login if not authenticated
+        window.location.href = '{{ route("login") }}?redirect=' + window.location.pathname;
+    @endauth
+}
+
+function removeFromWishlist(productId) {
+    @auth
+        fetch('/wishlist/remove', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: JSON.stringify({
+                product_id: productId
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update the heart icon
+                updateWishlistButton(productId, false);
+                showToast(data.message, 'success');
+                // Update wishlist count in header
+                updateWishlistCounter();
+            } else {
+                showToast(data.message, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('Error removing from wishlist', 'error');
+        });
+    @else
+        window.location.href = '{{ route("login") }}?redirect=' + window.location.pathname;
+    @endauth
+}
+
+function toggleWishlist(productId) {
+    const button = document.querySelector(`[data-product-id="${productId}"]`);
+    if (button && button.classList.contains('in-wishlist')) {
+        removeFromWishlist(productId);
+    } else {
+        addToWishlist(productId);
+    }
+}
+
+function updateWishlistButton(productId, isInWishlist) {
+    const buttons = document.querySelectorAll(`[data-product-id="${productId}"]`);
+    buttons.forEach(button => {
+        if (isInWishlist) {
+            button.classList.add('in-wishlist');
+            button.classList.add('text-red-500');
+            button.classList.remove('text-gray-400');
+            // Update icon - check if using FontAwesome or SVG
+            const icon = button.querySelector('i');
+            if (icon) {
+                icon.classList.remove('far');
+                icon.classList.add('fas');
+            } else {
+                // If using SVG, update the fill
+                button.innerHTML = `<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
+                </svg>`;
+            }
+        } else {
+            button.classList.remove('in-wishlist');
+            button.classList.remove('text-red-500');
+            button.classList.add('text-gray-400');
+            // Update icon
+            const icon = button.querySelector('i');
+            if (icon) {
+                icon.classList.remove('fas');
+                icon.classList.add('far');
+            } else {
+                // If using SVG, update to outline
+                button.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                </svg>`;
+            }
+        }
+    });
+}
+
+
+
 </script>
 </body>
 </html>

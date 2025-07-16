@@ -53,12 +53,13 @@ class OrderController extends Controller
      */
     public function show(Order $order)
     {
+        // UPDATED: Fixed eager loading for new variant system
         $order->load([
-    'user',
-    'items.product.brand',
-    'items.productVariant',
-    'statusHistory.changedBy'
-]);
+            'user',
+            'items.product.brand',
+            'items.productVariant', // Changed from variantCombination
+            'statusHistory.changedBy'
+        ]);
 
         // Calculate profit margins
         $totalCost = $order->items->sum(function ($item) {
@@ -83,72 +84,68 @@ class OrderController extends Controller
      * Update order status
      */
     public function updateStatus(Request $request, Order $order)
-{
-    $request->validate([
-        'status' => 'required|in:processing,shipping,completed,cancelled',
-        'comment' => 'nullable|string|max:500',
-        'notify_customer' => 'sometimes|boolean',
-        
-    ]);
+    {
+        $request->validate([
+            'status' => 'required|in:processing,shipping,completed,cancelled',
+            'comment' => 'nullable|string|max:500',
+            'notify_customer' => 'sometimes|boolean',
+        ]);
 
-    try {
+        try {
+            // Use the OrderService to update status
+            $result = $this->orderService->updateOrderStatus(
+                $order,
+                $request->status,
+                $request->comment,
+                Auth::guard('admin')->id()
+            );
 
-        // Use the OrderService to update status
-        $result = $this->orderService->updateOrderStatus(
-            $order,
-            $request->status,
-            $request->comment,
-            Auth::guard('admin')->id()
-        );
-
-        // Check if request wants JSON (from Accept header or ajax request)
-        if ($request->wantsJson() || $request->ajax() || $request->acceptsJson()) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Order status updated successfully!',
-                'new_status' => $order->fresh()->status,
-                'status_label' => ucfirst(str_replace('_', ' ', $order->fresh()->status)),
-                'order' => [
+            // Check if request wants JSON (from Accept header or ajax request)
+            if ($request->wantsJson() || $request->ajax() || $request->acceptsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Order status updated successfully!',
+                    'new_status' => $order->fresh()->status,
+                    'status_label' => ucfirst(str_replace('_', ' ', $order->fresh()->status)),
+                    'order' => [
                         'status' => $order->fresh()->status,
                         'status_label' => ucfirst(str_replace('_', ' ', $order->fresh()->status)),
                         'status_color' => $this->getStatusColor($order->fresh()->status),
                         'can_be_cancelled' => in_array($order->fresh()->status, ['payment_completed', 'processing']),
                         'can_be_completed' => $order->fresh()->status === 'shipping'
                     ]
+                ]);
+            }
+
+            // For non-AJAX requests
+            return redirect()->route('admin.orders.show', $order)
+                           ->with('success', 'Order status updated successfully! Customer has been notified.');
+
+        } catch (\Exception $e) {
+            Log::error('Order status update failed', [
+                'order_id' => $order->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
+            
+            // Return JSON error for AJAX requests
+            if ($request->wantsJson() || $request->ajax() || $request->acceptsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error updating order status: ' . $e->getMessage()
+                ], 500);
+            }
+
+            // For non-AJAX requests
+            return redirect()->back()
+                           ->with('error', 'Error updating order status: ' . $e->getMessage());
         }
-
-        // For non-AJAX requests
-        return redirect()->route('admin.orders.show', $order)
-                       ->with('success', 'Order status updated successfully! Customer has been notified.');
-
-    } catch (\Exception $e) {
-             Log::error('Order status update failed', [
-            'order_id' => $order->id,
-            'error' => $e->getMessage(),
-            'trace' => $e->getTraceAsString()
-        ]);
-        
-        // Return JSON error for AJAX requests
-        if ($request->wantsJson() || $request->ajax() || $request->acceptsJson()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Error updating order status: ' . $e->getMessage()
-            ], 500);
-        }
-
-        // For non-AJAX requests
-        return redirect()->back()
-                       ->with('error', 'Error updating order status: ' . $e->getMessage());
     }
-}
 
-
-
-/**
- * Helper method to get status color
- */
-  private function getStatusColor($status)
+    /**
+     * Helper method to get status color
+     */
+    private function getStatusColor($status)
     {
         $colors = [
             'payment_completed' => 'bg-blue-100 text-blue-800',
@@ -160,6 +157,7 @@ class OrderController extends Controller
 
         return $colors[$status] ?? 'bg-gray-100 text-gray-800';
     }
+
     /**
      * Generate and download invoice
      */

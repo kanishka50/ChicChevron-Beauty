@@ -20,11 +20,11 @@ trait ManagesInventory
     public function addStock($quantity, $costPerUnit, $reason = 'Stock received')
     {
         $productId = $this->product_id ?? $this->id;
-        $variantCombinationId = $this->variant_combination_id ?? null;
+        $productVariantId = $this->product_variant_id ?? $this->id; // UPDATED
         
         return $this->inventoryService()->addStock(
             $productId,
-            $variantCombinationId,
+            $productVariantId,
             $quantity,
             $costPerUnit,
             $reason
@@ -37,11 +37,11 @@ trait ManagesInventory
     public function removeStock($quantity, $reason = 'Stock sold', $referenceType = null, $referenceId = null)
     {
         $productId = $this->product_id ?? $this->id;
-        $variantCombinationId = $this->variant_combination_id ?? null;
+        $productVariantId = $this->product_variant_id ?? $this->id; // UPDATED
         
         return $this->inventoryService()->removeStock(
             $productId,
-            $variantCombinationId,
+            $productVariantId,
             $quantity,
             $reason,
             $referenceType,
@@ -55,11 +55,11 @@ trait ManagesInventory
     public function reserveStock($quantity, $referenceType = 'order', $referenceId = null)
     {
         $productId = $this->product_id ?? $this->id;
-        $variantCombinationId = $this->variant_combination_id ?? null;
+        $productVariantId = $this->product_variant_id ?? $this->id; // UPDATED
         
         return $this->inventoryService()->reserveStock(
             $productId,
-            $variantCombinationId,
+            $productVariantId,
             $quantity,
             $referenceType,
             $referenceId
@@ -72,11 +72,11 @@ trait ManagesInventory
     public function releaseReservedStock($quantity, $referenceType = 'order', $referenceId = null)
     {
         $productId = $this->product_id ?? $this->id;
-        $variantCombinationId = $this->variant_combination_id ?? null;
+        $productVariantId = $this->product_variant_id ?? $this->id; // UPDATED
         
         return $this->inventoryService()->releaseReservedStock(
             $productId,
-            $variantCombinationId,
+            $productVariantId,
             $quantity,
             $referenceType,
             $referenceId
@@ -89,11 +89,11 @@ trait ManagesInventory
     public function confirmReservedStock($quantity, $referenceType = 'order', $referenceId = null)
     {
         $productId = $this->product_id ?? $this->id;
-        $variantCombinationId = $this->variant_combination_id ?? null;
+        $productVariantId = $this->product_variant_id ?? $this->id; // UPDATED
         
         return $this->inventoryService()->confirmReservedStock(
             $productId,
-            $variantCombinationId,
+            $productVariantId,
             $quantity,
             $referenceType,
             $referenceId
@@ -106,11 +106,11 @@ trait ManagesInventory
     public function adjustStock($newQuantity, $reason = 'Manual adjustment')
     {
         $productId = $this->product_id ?? $this->id;
-        $variantCombinationId = $this->variant_combination_id ?? null;
+        $productVariantId = $this->product_variant_id ?? $this->id; // UPDATED
         
         return $this->inventoryService()->adjustStock(
             $productId,
-            $variantCombinationId,
+            $productVariantId,
             $newQuantity,
             $reason
         );
@@ -122,9 +122,9 @@ trait ManagesInventory
     public function getStockDetails()
     {
         $productId = $this->product_id ?? $this->id;
-        $variantCombinationId = $this->variant_combination_id ?? null;
+        $productVariantId = $this->product_variant_id ?? $this->id; // UPDATED
         
-        return $this->inventoryService()->getStockDetails($productId, $variantCombinationId);
+        return $this->inventoryService()->getStockDetails($productId, $productVariantId);
     }
     
     /**

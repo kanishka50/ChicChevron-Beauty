@@ -19,9 +19,7 @@ class InvoiceService
             $order->load([
                 'user',
                 'items.product.brand',
-                'items.variantCombination.sizeVariant',
-                'items.variantCombination.colorVariant',
-                'items.variantCombination.scentVariant'
+                'items.productVariant'
             ]);
 
             // Get or generate invoice number
@@ -158,41 +156,55 @@ class InvoiceService
      * Format order items for invoice display
      */
     protected function formatOrderItems($orderItems)
-    {
-        return $orderItems->map(function ($item) {
-            $description = $item->product_name;
+{
+    return $orderItems->map(function ($item) {
+        $description = $item->product_name;
+        
+        // Add variant information to description - supports both old and new system
+        if ($item->productVariant) {
+            // New variant system
+            $variantText = [];
             
-            // Add variant information to description
-            if ($item->variantCombination) {
-                $variantDetails = json_decode($item->variant_details, true);
+            if ($item->productVariant->size) {
+                $variantText[] = "Size: {$item->productVariant->size}";
+            }
+            if ($item->productVariant->color) {
+                $variantText[] = "Color: {$item->productVariant->color}";
+            }
+            if ($item->productVariant->scent) {
+                $variantText[] = "Scent: {$item->productVariant->scent}";
+            }
+            
+            if (!empty($variantText)) {
+                $description .= ' (' . implode(', ', $variantText) . ')';
+            }
+        } elseif ($item->variant_details) {
+            // Fallback for old orders with variant_details JSON
+            $variantDetails = json_decode($item->variant_details, true);
+            if (is_array($variantDetails)) {
                 $variantText = [];
-                
-                if (!empty($variantDetails['size'])) {
-                    $variantText[] = "Size: {$variantDetails['size']}";
+                foreach ($variantDetails as $key => $value) {
+                    if ($value) {
+                        $variantText[] = ucfirst($key) . ": " . $value;
+                    }
                 }
-                if (!empty($variantDetails['color'])) {
-                    $variantText[] = "Color: {$variantDetails['color']}";
-                }
-                if (!empty($variantDetails['scent'])) {
-                    $variantText[] = "Scent: {$variantDetails['scent']}";
-                }
-                
                 if (!empty($variantText)) {
                     $description .= ' (' . implode(', ', $variantText) . ')';
                 }
             }
+        }
 
-            return [
-                'sku' => $item->product_sku,
-                'description' => $description,
-                'quantity' => $item->quantity,
-                'unit_price' => $item->unit_price,
-                'discount' => $item->discount_amount,
-                'line_total' => $item->total_price,
-                'brand' => $item->product->brand->name ?? 'N/A'
-            ];
-        });
-    }
+        return [
+            'sku' => $item->productVariant->sku ?? $item->product_sku,
+            'description' => $description,
+            'quantity' => $item->quantity,
+            'unit_price' => $item->unit_price,
+            'discount' => $item->discount_amount,
+            'line_total' => $item->total_price,
+            'brand' => $item->product->brand->name ?? 'N/A'
+        ];
+    });
+}
 
     /**
      * Calculate invoice totals including taxes if applicable

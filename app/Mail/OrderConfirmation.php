@@ -43,7 +43,7 @@ class OrderConfirmation extends Mailable
             view: 'emails.order-confirmation',
             with: [
                 'order' => $this->order,
-                'items' => $this->order->items->load(['product.brand', 'variantCombination']),
+                'items' => $this->order->items->load(['product.brand', 'productVariant']), // UPDATED
                 'customer' => [
                     'name' => $this->order->shipping_name,
                     'email' => $this->order->user->email ?? 'N/A',
@@ -77,11 +77,11 @@ class OrderConfirmation extends Mailable
      * Build the message (Laravel 9 compatibility)
      */
     public function build()
-{
-    $content = $this->content();
-    
-    return $this->subject($this->envelope()->subject)
-                ->from(config('mail.from.address'))
-                ->view($content->view, $content->with);
-}
+    {
+        $content = $this->content();
+        
+        return $this->subject($this->envelope()->subject)
+                    ->from(config('mail.from.address'))
+                    ->view($content->view, $content->with);
+    }
 }
