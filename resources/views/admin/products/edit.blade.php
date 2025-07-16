@@ -7,15 +7,13 @@
         <div class="flex justify-between items-center mb-6">
             <h1 class="text-3xl font-semibold text-gray-800">Edit Product</h1>
             <div class="flex space-x-3">
-                @if($product->has_variants)
-                    <a href="{{ route('admin.products.variants', $product) }}" 
-                       class="bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded inline-flex items-center">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
-                        </svg>
-                        Manage Variants
-                    </a>
-                @endif
+                <a href="{{ route('admin.products.variants.index', $product) }}" 
+                   class="bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded inline-flex items-center">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
+                    </svg>
+                    Manage Variants
+                </a>
                 <a href="{{ route('admin.products.index') }}" 
                    class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded inline-flex items-center">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -164,73 +162,14 @@
                         @enderror
                     </div>
                 </div>
-            </div>
 
-            <!-- Pricing Information -->
-            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-                <h2 class="text-xl font-semibold text-gray-800 mb-4">Pricing Information</h2>
-                
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <!-- Cost Price -->
-                    <div>
-                        <label for="cost_price" class="block text-sm font-medium text-gray-700 mb-2">
-                            Cost Price (LKR) <span class="text-red-500">*</span>
-                        </label>
-                        <input type="number" 
-                               name="cost_price" 
-                               id="cost_price" 
-                               value="{{ old('cost_price', $product->cost_price) }}"
-                               step="0.01"
-                               min="0"
-                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @error('cost_price') border-red-500 @enderror"
-                               required>
-                        @error('cost_price')
-                            <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <!-- Selling Price -->
-                    <div>
-                        <label for="selling_price" class="block text-sm font-medium text-gray-700 mb-2">
-                            Selling Price (LKR) <span class="text-red-500">*</span>
-                        </label>
-                        <input type="number" 
-                               name="selling_price" 
-                               id="selling_price" 
-                               value="{{ old('selling_price', $product->selling_price) }}"
-                               step="0.01"
-                               min="0"
-                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @error('selling_price') border-red-500 @enderror"
-                               required>
-                        @error('selling_price')
-                            <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <!-- Discount Price -->
-                    <div>
-                        <label for="discount_price" class="block text-sm font-medium text-gray-700 mb-2">
-                            Discount Price (LKR)
-                        </label>
-                        <input type="number" 
-                               name="discount_price" 
-                               id="discount_price" 
-                               value="{{ old('discount_price', $product->discount_price) }}"
-                               step="0.01"
-                               min="0"
-                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @error('discount_price') border-red-500 @enderror">
-                        @error('discount_price')
-                            <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-                        @enderror
-                        <p class="mt-1 text-sm text-gray-500">Leave empty if no discount</p>
-                    </div>
-                </div>
-
-                <!-- Profit Margin Display -->
-                <div class="mt-4 p-4 bg-gray-50 rounded-lg">
-                    <p class="text-sm text-gray-700">
-                        <span class="font-medium">Profit Margin:</span>
-                        <span id="profit-margin" class="ml-2 font-bold {{ $product->profit_margin > 0 ? 'text-green-600' : 'text-red-600' }}">{{ $product->profit_margin }}%</span>
+                <!-- Pricing Note -->
+                <div class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <p class="text-blue-800">
+                        <strong>Note:</strong> Pricing is now managed at the variant level. 
+                        <a href="{{ route('admin.products.variants.index', $product) }}" class="underline font-medium">
+                            Click here to manage variant prices
+                        </a>
                     </p>
                 </div>
             </div>
@@ -271,9 +210,28 @@
 
                 <!-- Current Additional Images -->
                 @include('admin.products.partials.image-upload')
-                @include('admin.products.partials.ingredients-form')
-                @include('admin.products.partials.edit-attributes')
+            </div>
 
+            <!-- Product Attributes and Ingredients -->
+            @include('admin.products.partials.ingredients-form')
+            @include('admin.products.partials.edit-attributes')
+
+            <!-- Status -->
+            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">Product Status</h2>
+                
+                <div class="flex items-center">
+                    <input type="checkbox" 
+                           name="is_active" 
+                           id="is_active" 
+                           value="1"
+                           {{ $product->is_active ? 'checked' : '' }}
+                           class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                    <label for="is_active" class="ml-2 block text-sm text-gray-900">
+                        Product is active and visible to customers
+                    </label>
+                </div>
+            </div>
 
             <!-- Submit Buttons -->
             <div class="flex justify-end space-x-3">
@@ -292,28 +250,6 @@
 
 @push('scripts')
 <script>
-    // Calculate profit margin
-    function calculateProfitMargin() {
-        const costPrice = parseFloat(document.getElementById('cost_price').value) || 0;
-        const sellingPrice = parseFloat(document.getElementById('selling_price').value) || 0;
-        const discountPrice = parseFloat(document.getElementById('discount_price').value) || 0;
-        
-        const currentPrice = discountPrice > 0 ? discountPrice : sellingPrice;
-        
-        if (costPrice > 0 && currentPrice > 0) {
-            const margin = ((currentPrice - costPrice) / currentPrice) * 100;
-            document.getElementById('profit-margin').textContent = margin.toFixed(2) + '%';
-            document.getElementById('profit-margin').className = margin > 0 ? 'ml-2 font-bold text-green-600' : 'ml-2 font-bold text-red-600';
-        } else {
-            document.getElementById('profit-margin').textContent = '0%';
-        }
-    }
-
-    // Add event listeners
-    document.getElementById('cost_price').addEventListener('input', calculateProfitMargin);
-    document.getElementById('selling_price').addEventListener('input', calculateProfitMargin);
-    document.getElementById('discount_price').addEventListener('input', calculateProfitMargin);
-
     // Preview main image
     function previewMainImage(event) {
         const reader = new FileReader();

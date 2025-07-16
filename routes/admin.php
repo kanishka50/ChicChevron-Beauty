@@ -36,20 +36,20 @@ Route::middleware('admin')->group(function () {
         Route::post('/{product}/toggle-status', [ProductController::class, 'toggleStatus'])->name('toggle-status');
         Route::delete('/images/{image}', [ProductController::class, 'deleteImage'])->name('images.destroy');
 
-// Product Variants Management
-Route::prefix('products/{product}/variants')->name('products.variants.')->group(function () {
-    Route::get('/', [ProductVariantController::class, 'index'])->name('index');
-    Route::get('/create', [ProductVariantController::class, 'create'])->name('create');
-    Route::post('/', [ProductVariantController::class, 'store'])->name('store');
-});
-
-Route::prefix('variants')->name('variants.')->group(function () {
-    Route::get('/{variant}/edit', [ProductVariantController::class, 'edit'])->name('edit');
-    Route::put('/{variant}', [ProductVariantController::class, 'update'])->name('update');
-    Route::post('/{variant}/toggle-status', [ProductVariantController::class, 'toggleStatus'])->name('toggle-status');
-    Route::delete('/{variant}', [ProductVariantController::class, 'destroy'])->name('destroy');
-});
+        // Product Variants Management
+        Route::prefix('{product}/variants')->name('variants.')->group(function () {
+            Route::get('/', [ProductVariantController::class, 'index'])->name('index');
+            Route::get('/create', [ProductVariantController::class, 'create'])->name('create');
+            Route::post('/', [ProductVariantController::class, 'store'])->name('store');
+        });       
     });
+
+    Route::prefix('variants')->name('variants.')->group(function () {
+            Route::get('/{variant}/edit', [ProductVariantController::class, 'edit'])->name('edit');
+            Route::put('/{variant}', [ProductVariantController::class, 'update'])->name('update');
+            Route::post('/{variant}/toggle-status', [ProductVariantController::class, 'toggleStatus'])->name('toggle-status');
+            Route::delete('/{variant}', [ProductVariantController::class, 'destroy'])->name('destroy');
+        });
 
     // Inventory Management Routes
     Route::prefix('inventory')->name('inventory.')->group(function () {

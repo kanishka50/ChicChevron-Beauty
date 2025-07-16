@@ -30,41 +30,28 @@ class ProductVariant extends Model
         'is_active' => 'boolean',
     ];
 
-    /**
-     * Get the product that owns the variant.
-     */
+    // Relationships
     public function product()
     {
         return $this->belongsTo(Product::class);
     }
 
-    /**
-     * Get the inventory for this variant.
-     */
     public function inventory()
     {
         return $this->hasOne(Inventory::class);
     }
 
-    /**
-     * Get cart items for this variant.
-     */
     public function cartItems()
     {
         return $this->hasMany(CartItem::class);
     }
 
-    /**
-     * Get order items for this variant.
-     */
     public function orderItems()
     {
         return $this->hasMany(OrderItem::class);
     }
 
-    /**
-     * Get the effective price (considering discount).
-     */
+    // Accessors
     public function getEffectivePriceAttribute()
     {
         if ($this->discount_price && $this->discount_price < $this->price) {
@@ -73,9 +60,6 @@ class ProductVariant extends Model
         return $this->price;
     }
 
-    /**
-     * Get available stock.
-     */
     public function getAvailableStockAttribute()
     {
         $inventory = $this->inventory;
@@ -84,17 +68,6 @@ class ProductVariant extends Model
         return max(0, $inventory->current_stock - $inventory->reserved_stock);
     }
 
-    /**
-     * Scope for active variants.
-     */
-    public function scopeActive($query)
-    {
-        return $query->where('is_active', true);
-    }
-
-    /**
-     * Get profit margin percentage.
-     */
     public function getProfitMarginAttribute()
     {
         if ($this->cost_price <= 0) return 0;
@@ -102,25 +75,9 @@ class ProductVariant extends Model
         return round((($this->price - $this->cost_price) / $this->cost_price) * 100, 2);
     }
 
-    /**
-     * Check if variant has specific attribute
-     */
-    public function hasAttribute($type)
+    // Scopes
+    public function scopeActive($query)
     {
-        return !empty($this->$type);
-    }
-
-    /**
-     * Get variant attributes as array
-     */
-    public function getAttributesArray()
-    {
-        $attributes = [];
-        
-        if ($this->size) $attributes['size'] = $this->size;
-        if ($this->color) $attributes['color'] = $this->color;
-        if ($this->scent) $attributes['scent'] = $this->scent;
-        
-        return $attributes;
+        return $query->where('is_active', true);
     }
 }

@@ -75,8 +75,9 @@
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SKU</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Brand</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock Level</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Variants</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price Range</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Stock</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
@@ -93,11 +94,6 @@
                                 </div>
                                 <div class="ml-4">
                                     <div class="text-sm font-medium text-gray-900">{{ $product->name }}</div>
-                                    <div class="text-sm text-gray-500">
-                                        @if($product->has_variants)
-                                            <span class="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">Has Variants</span>
-                                        @endif
-                                    </div>
                                 </div>
                             </div>
                         </td>
@@ -111,17 +107,25 @@
                             {{ $product->brand->name }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            <div>LKR {{ number_format($product->selling_price, 2) }}</div>
-                            @if($product->discount_price)
-                                <div class="text-xs text-red-600">LKR {{ number_format($product->discount_price, 2) }}</div>
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ $product->variants_count > 1 ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800' }}">
+                                {{ $product->variants_count ?? 0 }} {{ Str::plural('variant', $product->variants_count ?? 0) }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            @if($product->price_range)
+                                {{ $product->price_range }}
+                            @else
+                                LKR {{ number_format($product->effective_price, 2) }}
                             @endif
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            @include('admin.products.partials.stock-indicators', [
-                                'product' => $product, 
-                                'detailed' => false, 
-                                'showActions' => false
-                            ])
+                            @php
+                                $totalStock = $product->total_stock ?? 0;
+                                $stockClass = $totalStock > 20 ? 'text-green-600' : ($totalStock > 0 ? 'text-yellow-600' : 'text-red-600');
+                            @endphp
+                            <span class="{{ $stockClass }} font-medium">
+                                {{ $totalStock }}
+                            </span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <button onclick="toggleStatus({{ $product->id }})"
@@ -152,15 +156,13 @@
                                     </svg>
                                 </a>
                                 
-                                @if($product->has_variants)
-                                    <a href="{{ route('admin.products.variants', $product) }}" 
-                                       class="text-purple-600 hover:text-purple-900"
-                                       title="Manage Variants">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
-                                        </svg>
-                                    </a>
-                                @endif
+                                <a href="{{ route('admin.products.variants.index', $product) }}" 
+                                   class="text-purple-600 hover:text-purple-900"
+                                   title="Manage Variants">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
+                                    </svg>
+                                </a>
                                 
                                 <form action="{{ route('admin.products.destroy', $product) }}" 
                                       method="POST" 
@@ -181,7 +183,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="8" class="px-6 py-4 text-center text-gray-500">
+                        <td colspan="9" class="px-6 py-4 text-center text-gray-500">
                             No products found. <a href="{{ route('admin.products.create') }}" class="text-blue-500 hover:underline">Create one</a>
                         </td>
                     </tr>

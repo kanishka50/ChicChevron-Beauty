@@ -104,9 +104,15 @@
                 <span class="mx-3">Colors</span>
             </a>
 
-        <a href="{{ route('admin.inventory.index') }}" class="nav-link">
-            📦 Inventory Management
+        <a class="flex items-center mt-4 py-2 px-6 {{ request()->routeIs('admin.inventory.*') ? 'bg-gray-700 bg-opacity-25 text-gray-100' : 'text-gray-500 hover:bg-gray-700 hover:bg-opacity-25 hover:text-gray-100' }}" 
+            href="{{ route('admin.inventory.index') }}">
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M3 7l9 5 9-5M3 7v10a2 2 0 001 1.73l8 4.27 8-4.27A2 2 0 0021 17V7M3 7l9 5 9-5" />
+                </svg>
+                <span class="mx-3">Inventory</span>
         </a>
+
 
     </nav>
 </div>

@@ -151,22 +151,67 @@
                             <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
                         @enderror
                     </div>
+                </div>
 
-                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                        <p class="text-blue-800">
-                            <strong>Note:</strong> Pricing is set at the variant level. After creating the product, you'll be redirected to add variants and set prices.
-                        </p>
-                    </div>
-                    
+                <!-- Pricing Note -->
+                <div class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <p class="text-blue-800">
+                        <strong>Note:</strong> After creating the product, you'll be redirected to add variants and set prices. Each variant will have its own price.
+                    </p>
                 </div>
             </div>
 
-            
-
             <!-- Product Images -->
-            @include('admin.products.partials.image-upload')
+            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">Product Images</h2>
+                
+                <!-- Main Image -->
+                <div class="mb-6">
+                    <label for="main_image" class="block text-sm font-medium text-gray-700 mb-2">
+                        Main Image <span class="text-red-500">*</span>
+                    </label>
+                    <input type="file" 
+                           name="main_image" 
+                           id="main_image"
+                           accept="image/jpeg,image/png,image/jpg,image/webp"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @error('main_image') border-red-500 @enderror"
+                           onchange="previewMainImage(event)"
+                           required>
+                    @error('main_image')
+                        <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                    @enderror
+                    <p class="mt-1 text-sm text-gray-500">Maximum file size: 2MB. Supported formats: JPG, PNG, WebP</p>
+                    
+                    <div id="main-image-preview" class="mt-4 hidden">
+                        <p class="text-sm text-gray-700 mb-2">Preview:</p>
+                        <img src="#" alt="Main image preview" class="h-32 w-32 object-cover rounded-lg border border-gray-300">
+                    </div>
+                </div>
+
+                <!-- Additional Images -->
+                @include('admin.products.partials.image-upload')
+            </div>
+
+            <!-- Product Attributes and Ingredients -->
             @include('admin.products.partials.ingredients-form')
             @include('admin.products.partials.create-attributes')
+
+            <!-- Status -->
+            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">Product Status</h2>
+                
+                <div class="flex items-center">
+                    <input type="checkbox" 
+                           name="is_active" 
+                           id="is_active" 
+                           value="1"
+                           checked
+                           class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                    <label for="is_active" class="ml-2 block text-sm text-gray-900">
+                        Product is active and visible to customers
+                    </label>
+                </div>
+            </div>
 
             <!-- Submit Buttons -->
             <div class="flex justify-end space-x-3">
@@ -176,7 +221,7 @@
                 </a>
                 <button type="submit" 
                         class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">
-                    Create Product
+                    Create Product & Add Variants
                 </button>
             </div>
         </form>
@@ -185,28 +230,6 @@
 
 @push('scripts')
 <script>
-    // Calculate profit margin
-    function calculateProfitMargin() {
-        const costPrice = parseFloat(document.getElementById('cost_price').value) || 0;
-        const sellingPrice = parseFloat(document.getElementById('selling_price').value) || 0;
-        const discountPrice = parseFloat(document.getElementById('discount_price').value) || 0;
-        
-        const currentPrice = discountPrice > 0 ? discountPrice : sellingPrice;
-        
-        if (costPrice > 0 && currentPrice > 0) {
-            const margin = ((currentPrice - costPrice) / currentPrice) * 100;
-            document.getElementById('profit-margin').textContent = margin.toFixed(2) + '%';
-            document.getElementById('profit-margin').className = margin > 0 ? 'ml-2 font-bold text-green-600' : 'ml-2 font-bold text-red-600';
-        } else {
-            document.getElementById('profit-margin').textContent = '0%';
-        }
-    }
-
-    // Add event listeners
-    document.getElementById('cost_price').addEventListener('input', calculateProfitMargin);
-    document.getElementById('selling_price').addEventListener('input', calculateProfitMargin);
-    document.getElementById('discount_price').addEventListener('input', calculateProfitMargin);
-
     // Preview main image
     function previewMainImage(event) {
         const reader = new FileReader();
