@@ -40,7 +40,7 @@
                         <option value="">All Types</option>
                         <option value="in" {{ request('type') == 'in' ? 'selected' : '' }}>Stock In</option>
                         <option value="out" {{ request('type') == 'out' ? 'selected' : '' }}>Stock Out</option>
-                        <option value="adjustment" {{ request('type') == 'adjustment' ? 'selected' : '' }}>Adjustments</option>
+                        <option value="adjustment" {{ request('type') == 'adjustment' ? 'selected' : '' }}>Adjustment</option>
                     </select>
                 </div>
                 
@@ -48,14 +48,16 @@
                     <input type="date" 
                            name="date_from" 
                            value="{{ request('date_from') }}"
-                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                           placeholder="From Date">
                 </div>
                 
                 <div class="w-40">
                     <input type="date" 
                            name="date_to" 
                            value="{{ request('date_to') }}"
-                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                           placeholder="To Date">
                 </div>
                 
                 <button type="submit" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded">
@@ -69,55 +71,42 @@
         </div>
     </div>
 
-    <!-- Movements Table -->
     <div class="bg-white rounded-lg shadow overflow-hidden">
-        <x-admin.table>
+        <table class="min-w-full">
             <thead class="bg-gray-50">
                 <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date & Time</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date/Time</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Batch Number</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Batch #</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cost/Unit</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Value</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unit Cost</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reason</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reference</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Balance</th>
                 </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
                 @forelse($movements as $movement)
-                    @php
-                        $totalValue = abs($movement->quantity) * ($movement->cost_per_unit ?? 0);
-                    @endphp
-                    
-                    <tr class="hover:bg-gray-50">
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            <div>{{ $movement->movement_date->format('M d, Y') }}</div>
-                            <div class="text-xs text-gray-500">{{ $movement->movement_date->format('H:i:s') }}</div>
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ $movement->movement_date->format('Y-m-d H:i') }}
                         </td>
                         
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="flex items-center">
-                                <div class="flex-shrink-0 h-8 w-8">
-                                    <img class="h-8 w-8 rounded-full object-cover" 
+                                <div class="flex-shrink-0 h-10 w-10">
+                                    <img class="h-10 w-10 rounded-full object-cover" 
                                          src="{{ Storage::url($movement->inventory->product->main_image) }}" 
                                          alt="{{ $movement->inventory->product->name }}">
                                 </div>
-                                <div class="ml-3">
-                                    <div class="text-sm font-medium text-gray-900">{{ $movement->inventory->product->name }}</div>
-                                    <div class="text-sm text-gray-500">{{ $movement->inventory->product->sku }}</div>
-                                    @if($movement->inventory->variantCombination)
-                                        <div class="text-xs text-gray-400">
-                                            @if($movement->inventory->variantCombination->sizeVariant)
-                                                {{ $movement->inventory->variantCombination->sizeVariant->variant_value }}
-                                            @endif
-                                            @if($movement->inventory->variantCombination->colorVariant)
-                                                • {{ $movement->inventory->variantCombination->colorVariant->variant_value }}
-                                            @endif
-                                            @if($movement->inventory->variantCombination->scentVariant)
-                                                • {{ $movement->inventory->variantCombination->scentVariant->variant_value }}
-                                            @endif
+                                <div class="ml-4">
+                                    <div class="text-sm font-medium text-gray-900">
+                                        {{ $movement->inventory->product->name }}
+                                    </div>
+                                    @if($movement->inventory->productVariant)
+                                        <div class="text-xs text-gray-500">
+                                            {{ $movement->inventory->productVariant->name }}
+                                            ({{ $movement->inventory->productVariant->sku }})
                                         </div>
                                     @endif
                                 </div>
@@ -161,45 +150,33 @@
                             </span>
                         </td>
                         
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             @if($movement->cost_per_unit)
                                 LKR {{ number_format($movement->cost_per_unit, 2) }}
                             @else
-                                <span class="text-gray-400">-</span>
+                                -
                             @endif
-                        </td>
-                        
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            @if($movement->cost_per_unit)
-                                <span class="font-medium">LKR {{ number_format($totalValue, 2) }}</span>
-                            @else
-                                <span class="text-gray-400">-</span>
-                            @endif
-                        </td>
-                        
-                        <td class="px-6 py-4">
-                            <span class="text-sm text-gray-900">{{ $movement->reason }}</span>
                         </td>
                         
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            @if($movement->reference_type && $movement->reference_id)
-                                <span class="text-xs bg-gray-100 px-2 py-1 rounded">
-                                    {{ ucfirst($movement->reference_type) }} #{{ $movement->reference_id }}
-                                </span>
-                            @else
-                                <span class="text-gray-400">-</span>
-                            @endif
+                            {{ $movement->reason }}
+                        </td>
+                        
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="text-sm font-medium text-gray-900">
+                                {{ $movement->stock_balance }}
+                            </span>
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="9" class="px-6 py-4 text-center text-gray-500">
+                        <td colspan="8" class="px-6 py-4 text-center text-gray-500">
                             No stock movements found.
                         </td>
                     </tr>
                 @endforelse
             </tbody>
-        </x-admin.table>
+        </table>
         
         @if($movements->hasPages())
             <div class="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
@@ -212,32 +189,8 @@
 @push('scripts')
 <script>
     function exportMovements() {
-        // Get current filters
-        const urlParams = new URLSearchParams(window.location.search);
-        const exportUrl = '{{ route("admin.inventory.export") }}?' + urlParams.toString();
-        
-        // For now, just show a notification
-        showNotification('Export functionality will be implemented soon', 'info');
-        
-        // In a real implementation, you would:
-        // window.open(exportUrl, '_blank');
-    }
-    
-    function showNotification(message, type = 'info') {
-        const notification = document.createElement('div');
-        notification.className = `fixed top-4 right-4 px-6 py-4 rounded-lg shadow-lg z-50 ${
-            type === 'success' ? 'bg-green-500 text-white' : 
-            type === 'error' ? 'bg-red-500 text-white' : 
-            'bg-blue-500 text-white'
-        }`;
-        notification.textContent = message;
-        document.body.appendChild(notification);
-        
-        setTimeout(() => {
-            if (notification.parentNode) {
-                notification.remove();
-            }
-        }, 3000);
+        const queryString = window.location.search;
+        window.location.href = "{{ route('admin.inventory.export') }}" + queryString;
     }
 </script>
 @endpush

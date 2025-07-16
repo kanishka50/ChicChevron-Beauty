@@ -49,6 +49,7 @@ Route::middleware('admin')->group(function () {
             Route::put('/{variant}', [ProductVariantController::class, 'update'])->name('update');
             Route::post('/{variant}/toggle-status', [ProductVariantController::class, 'toggleStatus'])->name('toggle-status');
             Route::delete('/{variant}', [ProductVariantController::class, 'destroy'])->name('destroy');
+            Route::get('/{variant}', [ProductVariantController::class, 'show'])->name('show');
         });
 
     // Inventory Management Routes
@@ -61,9 +62,9 @@ Route::middleware('admin')->group(function () {
         Route::get('/low-stock-alerts', [InventoryController::class, 'getLowStockAlerts'])->name('low-stock-alerts');
         Route::get('/export', [InventoryController::class, 'exportReport'])->name('export');
         
-        // Combination routes
-        Route::get('/combinations/{combination}', [InventoryController::class, 'getCombination'])->name('combinations.show');
-        Route::put('/combinations/{combination}', [InventoryController::class, 'updateCombination'])->name('combinations.update');
+        // Updated variant inventory routes (instead of combination routes)
+        Route::get('/variants/{variant}', [InventoryController::class, 'getVariant'])->name('variants.show');
+        Route::put('/variants/{variant}', [InventoryController::class, 'updateVariant'])->name('variants.update');
     });
 
     // =====================================================

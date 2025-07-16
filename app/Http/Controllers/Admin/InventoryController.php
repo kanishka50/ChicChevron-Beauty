@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Inventory;
 use App\Models\InventoryMovement;
 use App\Models\Product;
-use App\Models\VariantCombination;
+use App\Models\ProductVariant;
 use App\Services\InventoryService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -25,7 +25,7 @@ class InventoryController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Inventory::with(['product.brand', 'variantCombination.sizeVariant', 'variantCombination.colorVariant', 'variantCombination.scentVariant']);
+        $query = Inventory::with(['product.brand', 'productVariant']);
 
         // Filter by stock status
         if ($request->filled('status')) {
@@ -49,6 +49,9 @@ class InventoryController extends Controller
             $query->whereHas('product', function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                   ->orWhere('sku', 'like', "%{$search}%");
+            })->orWhereHas('productVariant', function ($q) use ($search) {
+                $q->where('sku', 'like', "%{$search}%")
+                  ->orWhere('name', 'like', "%{$search}%");
             });
         }
 
@@ -71,7 +74,7 @@ class InventoryController extends Controller
      */
     public function movements(Request $request)
     {
-        $query = InventoryMovement::with(['inventory.product', 'inventory.variantCombination'])
+        $query = InventoryMovement::with(['inventory.product', 'inventory.productVariant'])
                                  ->orderBy('movement_date', 'desc');
 
         // Filter by date range
@@ -93,6 +96,9 @@ class InventoryController extends Controller
             $query->whereHas('inventory.product', function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                   ->orWhere('sku', 'like', "%{$search}%");
+            })->orWhereHas('inventory.productVariant', function ($q) use ($search) {
+                $q->where('sku', 'like', "%{$search}%")
+                  ->orWhere('name', 'like', "%{$search}%");
             });
         }
 
@@ -108,7 +114,7 @@ class InventoryController extends Controller
     {
         $request->validate([
             'product_id' => 'required|exists:products,id',
-            'variant_combination_id' => 'nullable|exists:variant_combinations,id',
+            'product_variant_id' => 'required|exists:product_variants,id',
             'quantity' => 'required|integer|min:1',
             'cost_per_unit' => 'required|numeric|min:0',
             'reason' => 'required|string|max:255',
@@ -117,7 +123,7 @@ class InventoryController extends Controller
         try {
             $result = $this->inventoryService->addStock(
                 $request->product_id,
-                $request->variant_combination_id,
+                $request->product_variant_id,
                 $request->quantity,
                 $request->cost_per_unit,
                 $request->reason
@@ -145,7 +151,7 @@ class InventoryController extends Controller
     {
         $request->validate([
             'product_id' => 'required|exists:products,id',
-            'variant_combination_id' => 'nullable|exists:variant_combinations,id',
+            'product_variant_id' => 'required|exists:product_variants,id',
             'new_quantity' => 'required|integer|min:0',
             'reason' => 'required|string|max:255',
         ]);
@@ -153,7 +159,7 @@ class InventoryController extends Controller
         try {
             $result = $this->inventoryService->adjustStock(
                 $request->product_id,
-                $request->variant_combination_id,
+                $request->product_variant_id,
                 $request->new_quantity,
                 $request->reason
             );
@@ -175,12 +181,12 @@ class InventoryController extends Controller
     }
 
     /**
-     * Get combination inventory data (for variant management)
+     * Get variant inventory data
      */
-    public function getCombination(VariantCombination $combination)
+    public function getVariant(ProductVariant $variant)
     {
         try {
-            $inventory = $combination->inventory ?? new Inventory([
+            $inventory = $variant->inventory ?? new Inventory([
                 'current_stock' => 0,
                 'reserved_stock' => 0,
                 'low_stock_threshold' => 10
@@ -188,8 +194,8 @@ class InventoryController extends Controller
 
             // Get FIFO batch details
             $stockDetails = $this->inventoryService->getStockDetails(
-                $combination->product_id,
-                $combination->id
+                $variant->product_id,
+                $variant->id
             );
 
             return response()->json([
@@ -207,9 +213,9 @@ class InventoryController extends Controller
     }
 
     /**
-     * Update combination inventory
+     * Update variant inventory
      */
-    public function updateCombination(Request $request, VariantCombination $combination)
+    public function updateVariant(Request $request, ProductVariant $variant)
     {
         $request->validate([
             'current_stock' => 'required|integer|min:0',
@@ -217,35 +223,30 @@ class InventoryController extends Controller
         ]);
 
         try {
-            // Get current inventory
-            $inventory = $combination->inventory ?? new Inventory([
-                'product_id' => $combination->product_id,
-                'variant_combination_id' => $combination->id,
+            // Get or create inventory
+            $inventory = $variant->inventory ?? Inventory::create([
+                'product_id' => $variant->product_id,
+                'product_variant_id' => $variant->id,
                 'current_stock' => 0,
                 'reserved_stock' => 0,
                 'low_stock_threshold' => 10
             ]);
 
-            $oldStock = $inventory->current_stock ?? 0;
+            $oldStock = $inventory->current_stock;
             $newStock = $request->current_stock;
 
             // If stock changed, use adjustment method
             if ($oldStock != $newStock) {
                 $this->inventoryService->adjustStock(
-                    $combination->product_id,
-                    $combination->id,
+                    $variant->product_id,
+                    $variant->id,
                     $newStock,
                     'Manual stock update from variant management'
                 );
             }
 
             // Update threshold
-            if ($inventory->exists) {
-                $inventory->update(['low_stock_threshold' => $request->low_stock_threshold]);
-            } else {
-                $inventory->low_stock_threshold = $request->low_stock_threshold;
-                $inventory->save();
-            }
+            $inventory->update(['low_stock_threshold' => $request->low_stock_threshold]);
 
             return response()->json([
                 'success' => true,
@@ -268,13 +269,13 @@ class InventoryController extends Controller
     {
         $request->validate([
             'product_id' => 'required|exists:products,id',
-            'variant_combination_id' => 'nullable|exists:variant_combinations,id',
+            'product_variant_id' => 'required|exists:product_variants,id',
         ]);
 
         try {
             $details = $this->inventoryService->getStockDetails(
                 $request->product_id,
-                $request->variant_combination_id
+                $request->product_variant_id
             );
 
             return response()->json([
@@ -319,13 +320,46 @@ class InventoryController extends Controller
      */
     public function exportReport(Request $request)
     {
-        // This would generate CSV/PDF export
-        // Implementation depends on your preferred export method
-        
-        return response()->json([
-            'success' => true,
-            'message' => 'Export functionality to be implemented'
-        ]);
+        try {
+            $inventories = Inventory::with(['product', 'productVariant'])
+                ->get()
+                ->map(function ($inventory) {
+                    return [
+                        'Product' => $inventory->product->name,
+                        'Variant' => $inventory->productVariant->name,
+                        'SKU' => $inventory->productVariant->sku,
+                        'Current Stock' => $inventory->current_stock,
+                        'Reserved Stock' => $inventory->reserved_stock,
+                        'Available Stock' => $inventory->available_stock,
+                        'Low Stock Threshold' => $inventory->low_stock_threshold,
+                        'Status' => $inventory->stock_status,
+                        'Value' => $inventory->current_stock * $inventory->productVariant->cost_price,
+                    ];
+                });
+
+            $filename = 'inventory_report_' . date('Y-m-d') . '.csv';
+            
+            $headers = [
+                'Content-Type' => 'text/csv',
+                'Content-Disposition' => "attachment; filename=\"$filename\"",
+            ];
+
+            $callback = function() use ($inventories) {
+                $file = fopen('php://output', 'w');
+                fputcsv($file, array_keys($inventories->first()));
+                
+                foreach ($inventories as $row) {
+                    fputcsv($file, $row);
+                }
+                
+                fclose($file);
+            };
+
+            return response()->stream($callback, 200, $headers);
+
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error generating report: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -334,13 +368,8 @@ class InventoryController extends Controller
     private function calculateTotalInventoryValue()
     {
         return DB::table('inventory_movements')
-            ->select(DB::raw('SUM(
-                CASE 
-                    WHEN movement_type = "in" THEN quantity * cost_per_unit
-                    ELSE 0
-                END
-            ) as total_value'))
-            ->whereNotNull('cost_per_unit')
-            ->value('total_value') ?? 0;
+            ->where('movement_type', 'in')
+            ->where('quantity', '>', 0)
+            ->sum(DB::raw('quantity * cost_per_unit'));
     }
 }
