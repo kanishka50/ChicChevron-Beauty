@@ -78,25 +78,9 @@
                                         <h4 class="text-sm font-medium text-gray-900">{{ $item->product_name }}</h4>
                                         <p class="text-sm text-gray-500">SKU: {{ $item->product_sku }}</p>
                                         
-                                        @if($item->variantCombination)
-                                            <div class="mt-1 flex flex-wrap gap-2">
-                                                @php $variantDetails = json_decode($item->variant_details, true); @endphp
-                                                @if(!empty($variantDetails['size']))
-                                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
-                                                        Size: {{ $variantDetails['size'] }}
-                                                    </span>
-                                                @endif
-                                                @if(!empty($variantDetails['color']))
-                                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
-                                                        Color: {{ $variantDetails['color'] }}
-                                                    </span>
-                                                @endif
-                                                @if(!empty($variantDetails['scent']))
-                                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-purple-100 text-purple-800">
-                                                        Scent: {{ $variantDetails['scent'] }}
-                                                    </span>
-                                                @endif
-                                            </div>
+                                        @if($item->productVariant)
+                                            <small>{{ $item->productVariant->display_name }}</small>
+                                            <small class="text-gray-500">SKU: {{ $item->productVariant->sku }}</small>
                                         @endif
                                         
                                         <div class="mt-2 text-sm text-gray-600">

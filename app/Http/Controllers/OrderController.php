@@ -21,11 +21,11 @@ class OrderController extends BaseController
     protected $orderService;
 
     public function __construct(InvoiceService $invoiceService, OrderService $orderService)
-{
-    $this->middleware('auth');
-    $this->invoiceService = $invoiceService;
-    $this->orderService = $orderService;
-}
+    {
+        $this->middleware('auth');
+        $this->invoiceService = $invoiceService;
+        $this->orderService = $orderService;
+    }
 
     /**
      * Display customer's order history
@@ -35,7 +35,7 @@ class OrderController extends BaseController
         $user = Auth::user();
         
         $query = Order::where('user_id', $user->id)
-                     ->with(['items.product', 'items.variantCombination'])
+                     ->with(['items.product', 'items.productVariant']) // UPDATED
                      ->orderBy('created_at', 'desc');
 
         // Filter by status if provided
@@ -75,9 +75,7 @@ class OrderController extends BaseController
 
         $order->load([
             'items.product.brand',
-            'items.variantCombination.sizeVariant',
-            'items.variantCombination.colorVariant',
-            'items.variantCombination.scentVariant',
+            'items.productVariant', // UPDATED - simplified variant loading
             'statusHistory' => function ($query) {
                 $query->orderBy('created_at', 'desc');
             }
@@ -144,27 +142,25 @@ class OrderController extends BaseController
         }
 
         try {
-            
+            // For COD orders, mark payment as completed FIRST
+            if ($order->payment_method === 'cod' && $order->payment_status === 'pending') {
+                // Use a timestamp 1 second before current time
+                $paymentTimestamp = now()->subSecond();
+                
+                $order->payment_status = 'completed';
+                $order->payment_reference = 'COD-' . now()->timestamp;
+                $order->save();
+                
+                // Add payment status history with earlier timestamp
+                $order->addStatusHistory('payment_completed', 'Payment received via Cash on Delivery', null, $paymentTimestamp);
+            }
 
-         // For COD orders, mark payment as completed FIRST
-        if ($order->payment_method === 'cod' && $order->payment_status === 'pending') {
-            // Use a timestamp 1 second before current time
-            $paymentTimestamp = now()->subSecond();
-            
-            $order->payment_status = 'completed';
-            $order->payment_reference = 'COD-' . now()->timestamp;
-            $order->save();
-            
-            // Add payment status history with earlier timestamp
-            $order->addStatusHistory('payment_completed', 'Payment received via Cash on Delivery', null, $paymentTimestamp);
-        }
-
-        $this->orderService->updateOrderStatus(
-            $order,
-            'completed',
-            'Order marked as completed by customer. Thank you for confirming delivery!',
-            null // No admin ID since this is customer action
-        );
+            $this->orderService->updateOrderStatus(
+                $order,
+                'completed',
+                'Order marked as completed by customer. Thank you for confirming delivery!',
+                null // No admin ID since this is customer action
+            );
 
             // Send completion notification email (optional)
             // Mail::to($order->user)->send(new OrderStatusUpdate($order, 'completed', 'Thank you for confirming delivery!'));
@@ -250,31 +246,34 @@ class OrderController extends BaseController
             foreach ($order->items as $item) {
                 // Check if product is still available
                 $product = $item->product;
-                $variantCombination = $item->variantCombination;
+                $productVariant = $item->productVariant; // UPDATED
 
                 if (!$product || !$product->is_active) {
                     $unavailableItems[] = $item->product_name;
                     continue;
                 }
 
-                // Check stock availability
-                $inventory = $product->inventory()
-                    ->where('variant_combination_id', $variantCombination?->id)
-                    ->first();
+                // Check if variant is still active
+                if ($productVariant && !$productVariant->is_active) {
+                    $unavailableItems[] = $item->product_name . ' (' . $productVariant->display_name . ')';
+                    continue;
+                }
 
-                if (!$inventory || $inventory->available_stock < $item->quantity) {
+                // Check stock availability - UPDATED
+                if ($productVariant) {
+                    $availableStock = $productVariant->available_stock;
+                } else {
+                    // For products without variants (shouldn't happen in new system)
+                    $availableStock = 0;
+                }
+
+                if ($availableStock < $item->quantity) {
                     $unavailableItems[] = $item->product_name;
                     continue;
                 }
 
-                // Add to cart (you'll need to implement this based on your cart system)
-                // CartItem::updateOrCreate([
-                //     'user_id' => Auth::id(),
-                //     'product_id' => $product->id,
-                //     'variant_combination_id' => $variantCombination?->id,
-                // ], [
-                //     'quantity' => $item->quantity
-                // ]);
+                // Add to cart using CartService (you'll need to inject CartService)
+                // $this->cartService->addToCart($product, $productVariant, $item->quantity);
 
                 $addedItems++;
             }

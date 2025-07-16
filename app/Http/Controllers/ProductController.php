@@ -21,7 +21,7 @@ class ProductController extends Controller
     public function index(Request $request)
     {
         $query = Product::active()
-            ->with(['brand', 'category', 'images', 'inventory', 'colors', 'texture']);
+            ->with(['brand', 'category', 'images', 'variants.inventory', 'colors', 'texture']);
 
         // Apply filters
         $this->applyFilters($query, $request);
@@ -61,7 +61,7 @@ class ProductController extends Controller
      */
     public function show(Product $product)
     {
-        // Load necessary relationships - FIXED: Removed 'ingredients.ingredient'
+        // Load necessary relationships
         $product->load([
             'brand',
             'category',
@@ -70,13 +70,10 @@ class ProductController extends Controller
             'images' => function ($query) {
                 $query->orderBy('sort_order');
             },
-            'ingredients', // Just load ingredients, not ingredients.ingredient
+            'ingredients',
             'colors',
             'variants' => function ($query) {
-                $query->where('is_active', true)->orderBy('variant_type')->orderBy('variant_value');
-            },
-            'variantCombinations' => function ($query) {
-                $query->with(['sizeVariant', 'colorVariant', 'scentVariant', 'inventory']);
+                $query->where('is_active', true)->with('inventory');
             },
             'reviews' => function ($query) {
                 $query->where('is_approved', true)->latest();
@@ -84,39 +81,17 @@ class ProductController extends Controller
             'reviews.user'
         ]);
 
-        // Get available variants grouped by type
-        $availableVariants = null;
-        if ($product->has_variants) {
-            $availableVariants = [
-                'sizes' => $product->variants()->ofType('size')->active()->get(),
-                'colors' => $product->variants()->ofType('color')->active()->get(),
-                'scents' => $product->variants()->ofType('scent')->active()->get(),
-            ];
-        }
-
-        // Calculate price range for products with variants
-        $priceRange = null;
-        if ($product->has_variants && $product->variantCombinations->isNotEmpty()) {
-            $prices = $product->variantCombinations->pluck('combination_price');
-            $priceRange = [
-                'min' => $prices->min(),
-                'max' => $prices->max()
-            ];
-        }
-
         // Get related products (same category, excluding current product)
         $relatedProducts = Product::where('category_id', $product->category_id)
             ->where('id', '!=', $product->id)
             ->where('is_active', true)
-            ->with(['brand', 'images'])
+            ->with(['brand', 'images', 'variants'])
             ->inRandomOrder()
             ->limit(4)
             ->get();
 
         return view('products.show', compact(
             'product',
-            'availableVariants',
-            'priceRange',
             'relatedProducts'
         ));
     }
@@ -134,7 +109,7 @@ class ProductController extends Controller
         }
 
         $productQuery = Product::active()
-            ->with(['brand', 'category', 'images', 'inventory']);
+            ->with(['brand', 'category', 'images', 'variants.inventory']);
 
         // Search in product name, description, and brand
         $productQuery->where(function ($q) use ($query) {
@@ -193,54 +168,41 @@ class ProductController extends Controller
     }
 
     /**
-     * Get variant details for AJAX requests
+     * Get variant details for AJAX requests - UPDATED FOR NEW SYSTEM
      */
     public function getVariantDetails(Request $request, Product $product)
     {
-        $sizeId = $request->get('size_id');
-        $colorId = $request->get('color_id');
-        $scentId = $request->get('scent_id');
+        $variantId = $request->get('variant_id');
 
-        // Handle null values properly
-        if ($sizeId === 'null') $sizeId = null;
-        if ($colorId === 'null') $colorId = null;
-        if ($scentId === 'null') $scentId = null;
-
-        // Find the specific variant combination
-        $combination = $product->variantCombinations()
-            ->where(function ($query) use ($sizeId, $colorId, $scentId) {
-                if ($sizeId) $query->where('size_variant_id', $sizeId);
-                else $query->whereNull('size_variant_id');
-                
-                if ($colorId) $query->where('color_variant_id', $colorId);
-                else $query->whereNull('color_variant_id');
-                
-                if ($scentId) $query->where('scent_variant_id', $scentId);
-                else $query->whereNull('scent_variant_id');
-            })
-            ->with(['inventory', 'sizeVariant', 'colorVariant', 'scentVariant'])
-            ->first();
-
-        if (!$combination) {
+        if (!$variantId) {
             return response()->json([
                 'success' => false,
-                'message' => 'Variant combination not found'
-            ], 404);
+                'message' => 'Variant ID is required'
+            ], 400);
         }
 
-        $stockLevel = $combination->inventory 
-            ? $combination->inventory->current_stock - $combination->inventory->reserved_stock 
-            : 0;
+        $variant = $product->variants()
+            ->where('id', $variantId)
+            ->where('is_active', true)
+            ->with('inventory')
+            ->first();
+
+        if (!$variant) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Variant not found'
+            ], 404);
+        }
 
         return response()->json([
             'success' => true,
             'data' => [
-                'combination_id' => $combination->id,
-                'sku' => $combination->combination_sku,
-                'price' => number_format($combination->combination_price, 2),
-                'stock_level' => $stockLevel,
-                'in_stock' => $stockLevel > 0,
-                'variant_details' => $combination->variant_details ?? 'No variant details',
+                'variant_id' => $variant->id,
+                'sku' => $variant->sku,
+                'price' => number_format($variant->price, 2),
+                'stock_level' => $variant->available_stock,
+                'in_stock' => $variant->available_stock > 0,
+                'variant_details' => $variant->display_name,
             ]
         ]);
     }
@@ -261,12 +223,16 @@ class ProductController extends Controller
             $query->whereIn('brand_id', $brands);
         }
 
-        // Price range filter
-        if ($request->filled('min_price')) {
-            $query->where('selling_price', '>=', $request->min_price);
-        }
-        if ($request->filled('max_price')) {
-            $query->where('selling_price', '<=', $request->max_price);
+        // Price range filter - updated to check variant prices
+        if ($request->filled('min_price') || $request->filled('max_price')) {
+            $query->whereHas('variants', function ($variantQuery) use ($request) {
+                if ($request->filled('min_price')) {
+                    $variantQuery->where('price', '>=', $request->min_price);
+                }
+                if ($request->filled('max_price')) {
+                    $variantQuery->where('price', '<=', $request->max_price);
+                }
+            });
         }
 
         // Color filter
@@ -292,16 +258,22 @@ class ProductController extends Controller
         // Rating filter
         if ($request->filled('min_rating')) {
             $query->whereHas('reviews', function ($reviewQuery) use ($request) {
-                $reviewQuery->havingRaw('AVG(rating) >= ?', [$request->min_rating]);
+                $reviewQuery->where('is_approved', true)
+                    ->groupBy('product_id')
+                    ->havingRaw('AVG(rating) >= ?', [$request->min_rating]);
             });
         }
 
-        // Stock status filter
+        // Stock status filter - updated for variants
         if ($request->filled('stock_status')) {
             if ($request->stock_status === 'in_stock') {
-                $query->inStock();
+                $query->whereHas('variants.inventory', function ($q) {
+                    $q->whereRaw('(current_stock - reserved_stock) > 0');
+                });
             } elseif ($request->stock_status === 'out_of_stock') {
-                $query->outOfStock();
+                $query->whereDoesntHave('variants.inventory', function ($q) {
+                    $q->whereRaw('(current_stock - reserved_stock) > 0');
+                });
             }
         }
     }
@@ -315,10 +287,20 @@ class ProductController extends Controller
 
         switch ($sortBy) {
             case 'price_low':
-                $query->orderBy('selling_price', 'asc');
+                // Sort by minimum variant price
+                $query->leftJoin('product_variants', 'products.id', '=', 'product_variants.product_id')
+                    ->select('products.*')
+                    ->selectRaw('MIN(product_variants.price) as min_price')
+                    ->groupBy('products.id')
+                    ->orderBy('min_price', 'asc');
                 break;
             case 'price_high':
-                $query->orderBy('selling_price', 'desc');
+                // Sort by maximum variant price
+                $query->leftJoin('product_variants', 'products.id', '=', 'product_variants.product_id')
+                    ->select('products.*')
+                    ->selectRaw('MAX(product_variants.price) as max_price')
+                    ->groupBy('products.id')
+                    ->orderBy('max_price', 'desc');
                 break;
             case 'name_asc':
                 $query->orderBy('name', 'asc');
@@ -327,7 +309,7 @@ class ProductController extends Controller
                 $query->orderBy('name', 'desc');
                 break;
             case 'rating':
-                $query->orderBy('reviews_avg_rating', 'desc');
+                $query->orderBy('average_rating', 'desc');
                 break;
             case 'popular':
                 $query->orderBy('views_count', 'desc');
@@ -339,6 +321,9 @@ class ProductController extends Controller
         }
     }
 
+    /**
+     * Get filter data for the sidebar
+     */
     private function getFilterData(Request $request)
     {
         return Cache::remember('product_filters_' . md5(serialize($request->except(['page']))), 300, function () {
@@ -346,13 +331,11 @@ class ProductController extends Controller
                 'categories' => Category::active()
                     ->ordered()
                     ->whereHas('products', function ($query) {
-                        $query->active()->inStock();
+                        $query->active();
                     })
                     ->get()
                     ->map(function ($category) {
-                        // Count products manually to avoid GROUP BY issues
                         $category->products_count = Product::active()
-                            ->inStock()
                             ->where('category_id', $category->id)
                             ->count();
                         return $category;
@@ -360,92 +343,56 @@ class ProductController extends Controller
 
                 'brands' => Brand::active()
                     ->whereHas('products', function ($query) {
-                        $query->active()->inStock();
+                        $query->active();
                     })
                     ->orderBy('name')
                     ->get()
                     ->map(function ($brand) {
-                        // Count products manually to avoid GROUP BY issues
                         $brand->products_count = Product::active()
-                            ->inStock()
                             ->where('brand_id', $brand->id)
                             ->count();
                         return $brand;
                     }),
 
                 'colors' => Color::whereHas('products', function ($query) {
-                        $query->active()->inStock();
+                        $query->active();
                     })
                     ->orderBy('name')
                     ->get(),
 
                 'textures' => Texture::whereHas('products', function ($query) {
-                        $query->active()->inStock();
+                        $query->active();
                     })
                     ->orderBy('name')
                     ->get(),
 
                 'productTypes' => ProductType::whereHas('products', function ($query) {
-                        $query->active()->inStock();
+                        $query->active();
                     })
                     ->orderBy('name')
                     ->get(),
 
                 'priceRange' => [
-                    'min' => Product::active()->inStock()->min('selling_price') ?? 0,
-                    'max' => Product::active()->inStock()->max('selling_price') ?? 1000,
+                    'min' => DB::table('product_variants')
+                        ->join('products', 'product_variants.product_id', '=', 'products.id')
+                        ->where('products.is_active', true)
+                        ->where('product_variants.is_active', true)
+                        ->min('product_variants.price') ?? 0,
+                    'max' => DB::table('product_variants')
+                        ->join('products', 'product_variants.product_id', '=', 'products.id')
+                        ->where('products.is_active', true)
+                        ->where('product_variants.is_active', true)
+                        ->max('product_variants.price') ?? 10000,
                 ],
 
                 'ingredients' => DB::table('product_ingredients')
                     ->join('products', 'product_ingredients.product_id', '=', 'products.id')
                     ->where('products.is_active', true)
-                    ->whereExists(function ($query) {
-                        $query->select(DB::raw(1))
-                            ->from('inventory')
-                            ->whereRaw('inventory.product_id = products.id')
-                            ->whereRaw('(inventory.current_stock - inventory.reserved_stock) > 0');
-                    })
                     ->distinct()
                     ->pluck('ingredient_name')
                     ->sort()
                     ->values(),
             ];
         });
-    }
-
-    /**
-     * Get available variants for a product
-     */
-    private function getAvailableVariants(Product $product)
-    {
-        if (!$product->has_variants) {
-            return [];
-        }
-
-        return [
-            'sizes' => $product->variants()->where('variant_type', 'size')->get(),
-            'colors' => $product->variants()->where('variant_type', 'color')->get(),
-            'scents' => $product->variants()->where('variant_type', 'scent')->get(),
-        ];
-    }
-
-    /**
-     * Get price range for a product considering variants
-     */
-    private function getPriceRange(Product $product)
-    {
-        if (!$product->has_variants || $product->variantCombinations->isEmpty()) {
-            return [
-                'min' => $product->display_price,
-                'max' => $product->display_price,
-            ];
-        }
-
-        $prices = $product->variantCombinations->pluck('combination_price');
-
-        return [
-            'min' => $prices->min(),
-            'max' => $prices->max(),
-        ];
     }
 }
