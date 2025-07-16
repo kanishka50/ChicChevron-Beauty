@@ -22,7 +22,7 @@ class HomeController extends Controller
             
             // Get featured products without withAvg
             $featuredProducts = Product::active()
-                ->with(['brand', 'category', 'images', 'inventory'])
+                ->with(['brand', 'category', 'images', 'variants.inventory'])
                 ->featured()
                 ->inStock()
                 ->limit(8)

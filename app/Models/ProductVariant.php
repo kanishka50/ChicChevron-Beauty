@@ -80,4 +80,77 @@ class ProductVariant extends Model
     {
         return $query->where('is_active', true);
     }
+
+
+    /**
+ * Get display name for variant (formatted attributes)
+ */
+public function getDisplayNameAttribute()
+{
+    if ($this->name) {
+        return $this->name;
+    }
+    
+    $parts = array_filter([
+        $this->size,
+        $this->color,
+        $this->scent
+    ]);
+    
+    return !empty($parts) ? implode(' - ', $parts) : 'Standard';
+}
+
+/**
+ * Get stock level percentage for visual indicators
+ */
+public function getStockLevelPercentageAttribute()
+{
+    if (!$this->inventory) return 0;
+    
+    $availableStock = $this->available_stock;
+    $threshold = $this->inventory->low_stock_threshold;
+    $referenceStock = $threshold * 3; // Consider "full" as 3x threshold
+    
+    if ($referenceStock == 0) return 0;
+    
+    return min(100, round(($availableStock / $referenceStock) * 100));
+}
+
+/**
+ * Get stock status class for styling
+ */
+public function getStockStatusClassAttribute()
+{
+    if (!$this->inventory) return 'bg-gray-200';
+    
+    $percentage = $this->stock_level_percentage;
+    
+    if ($percentage == 0) {
+        return 'bg-red-500';
+    } elseif ($percentage <= 20) {
+        return 'bg-orange-500';
+    } elseif ($percentage <= 50) {
+        return 'bg-yellow-500';
+    } else {
+        return 'bg-green-500';
+    }
+}
+
+/**
+ * Check if variant is in stock
+ */
+public function getInStockAttribute()
+{
+    return $this->available_stock > 0;
+}
+
+/**
+ * Scope to get variants in stock
+ */
+public function scopeInStock($query)
+{
+    return $query->whereHas('inventory', function ($q) {
+        $q->whereRaw('(current_stock - reserved_stock) > 0');
+    });
+}
 }

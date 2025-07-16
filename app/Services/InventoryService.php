@@ -431,4 +431,42 @@ class InventoryService
             throw $e;
         }
     }
+
+
+    /**
+ * Get inventory report data
+ */
+public function getInventoryReport($filters = [])
+{
+    $query = Inventory::with(['product', 'productVariant']);
+    
+    if (isset($filters['status'])) {
+        switch ($filters['status']) {
+            case 'low':
+                $query->lowStock();
+                break;
+            case 'out':
+                $query->outOfStock();
+                break;
+            case 'good':
+                $query->inStock()
+                      ->whereRaw('(current_stock - reserved_stock) > low_stock_threshold');
+                break;
+        }
+    }
+    
+    if (isset($filters['category_id'])) {
+        $query->whereHas('product', function ($q) use ($filters) {
+            $q->where('category_id', $filters['category_id']);
+        });
+    }
+    
+    if (isset($filters['brand_id'])) {
+        $query->whereHas('product', function ($q) use ($filters) {
+            $q->where('brand_id', $filters['brand_id']);
+        });
+    }
+    
+    return $query->get();
+}
 }

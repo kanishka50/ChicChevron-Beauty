@@ -27,6 +27,10 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
 Route::get('/products/{product:slug}', [ProductController::class, 'show'])->name('products.show');
 Route::get('/products/{product}/variant-details', [ProductController::class, 'getVariantDetails'])->name('products.variant-details');
+// Variant-specific API endpoints for AJAX
+Route::get('/api/products/{product}/variants', [ProductController::class, 'getVariants'])->name('api.products.variants');
+Route::get('/api/variants/{variant}', [ProductController::class, 'getVariantDetails'])->name('api.variants.details');
+
 
 // Search functionality
 Route::get('/search', [SearchController::class, 'index'])->name('search');

@@ -150,6 +150,18 @@ class ProductVariantController extends Controller
         }
     }
 
+    public function show(ProductVariant $variant)
+{
+    $variant->load(['product', 'inventory', 'orderItems']);
+    
+    // Get stock movement history
+    $movements = $variant->inventory
+        ? $variant->inventory->movements()->latest()->paginate(20)
+        : collect();
+    
+    return view('admin.products.variants.show', compact('variant', 'movements'));
+}
+
     public function toggleStatus(ProductVariant $variant)
     {
         $variant->update(['is_active' => !$variant->is_active]);
@@ -193,20 +205,26 @@ class ProductVariantController extends Controller
         }
     }
 
-    private function generateSku(Product $product, Request $request)
-    {
-        $skuParts = [$product->sku];
-        
-        if ($request->size) {
-            $skuParts[] = strtoupper(substr(Str::slug($request->size), 0, 3));
-        }
-        if ($request->color) {
-            $skuParts[] = strtoupper(substr(Str::slug($request->color), 0, 3));
-        }
-        if ($request->scent) {
-            $skuParts[] = strtoupper(substr(Str::slug($request->scent), 0, 3));
-        }
-        
-        return implode('-', $skuParts);
+    /**
+ * Generate SKU for variant
+ */
+private function generateSku(Product $product, Request $request)
+{
+    $parts = [$product->sku];
+    
+    if ($request->size) {
+        $parts[] = Str::slug($request->size);
     }
+    if ($request->color) {
+        $parts[] = Str::slug($request->color);
+    }
+    if ($request->scent) {
+        $parts[] = Str::slug($request->scent);
+    }
+    
+    return implode('-', $parts);
+}
+
+
+    
 }

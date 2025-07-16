@@ -495,6 +495,43 @@ class Product extends Model
         return $data;
     }
 
+
+    /**
+ * Get stock status for display
+ */
+public function getStockStatusAttribute()
+{
+    $stockLevel = $this->getStockLevel();
+    $totalCapacity = $this->variants->sum(function($variant) {
+        return $variant->inventory ? $variant->inventory->low_stock_threshold * 3 : 30;
+    });
+    
+    if ($stockLevel == 0) {
+        return 'out-of-stock';
+    } elseif ($stockLevel <= 10) {
+        return 'critical';
+    } elseif ($stockLevel <= 30) {
+        return 'low';
+    } else {
+        return 'good';
+    }
+}
+
+/**
+ * Get stock level percentage for visual indicators
+ */
+public function getStockLevelPercentageAttribute()
+{
+    $stockLevel = $this->getStockLevel();
+    $totalCapacity = $this->variants->sum(function($variant) {
+        return $variant->inventory ? $variant->inventory->low_stock_threshold * 3 : 30;
+    });
+    
+    if ($totalCapacity == 0) return 0;
+    
+    return min(100, round(($stockLevel / $totalCapacity) * 100));
+}
+
     // =====================================================
     // HELPER METHODS
     // =====================================================
@@ -687,6 +724,14 @@ class Product extends Model
                 'message' => 'Selected variant is not available.'
             ];
         }
+
+        // Check if variant has valid price
+if ($variant->price <= 0) {
+    return [
+        'can_add' => false,
+        'message' => 'Price not set for this variant.'
+    ];
+}
 
         // Check stock availability
         $availableStock = $this->getAvailableStock($productVariantId);

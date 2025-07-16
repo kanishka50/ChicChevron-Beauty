@@ -29,9 +29,8 @@ class ProductController extends Controller
         $query = Product::with(['brand', 'category', 'variants'])
             ->withCount(['reviews', 'variants'])
             ->addSelect([
-                'stock_level' => ProductVariant::selectRaw('SUM(inventory.current_stock - inventory.reserved_stock)')
-                    ->join('inventory', 'product_variants.id', '=', 'inventory.product_variant_id')
-                    ->whereColumn('product_variants.product_id', 'products.id')
+            'stock_level' => Inventory::selectRaw('SUM(current_stock - reserved_stock)')
+                ->whereColumn('product_id', 'products.id')
             ]);
 
         // Search functionality
