@@ -164,30 +164,6 @@
             <!-- Product Images -->
             <div class="bg-white rounded-lg shadow-md p-6 mb-6">
                 <h2 class="text-xl font-semibold text-gray-800 mb-4">Product Images</h2>
-                
-                <!-- Main Image -->
-                <div class="mb-6">
-                    <label for="main_image" class="block text-sm font-medium text-gray-700 mb-2">
-                        Main Image <span class="text-red-500">*</span>
-                    </label>
-                    <input type="file" 
-                           name="main_image" 
-                           id="main_image"
-                           accept="image/jpeg,image/png,image/jpg,image/webp"
-                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @error('main_image') border-red-500 @enderror"
-                           onchange="previewMainImage(event)"
-                           required>
-                    @error('main_image')
-                        <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-                    @enderror
-                    <p class="mt-1 text-sm text-gray-500">Maximum file size: 2MB. Supported formats: JPG, PNG, WebP</p>
-                    
-                    <div id="main-image-preview" class="mt-4 hidden">
-                        <p class="text-sm text-gray-700 mb-2">Preview:</p>
-                        <img src="#" alt="Main image preview" class="h-32 w-32 object-cover rounded-lg border border-gray-300">
-                    </div>
-                </div>
-
                 <!-- Additional Images -->
                 @include('admin.products.partials.image-upload')
             </div>
@@ -228,47 +204,3 @@
     </div>
 @endsection
 
-@push('scripts')
-<script>
-    // Preview main image
-    function previewMainImage(event) {
-        const reader = new FileReader();
-        reader.onload = function() {
-            const preview = document.getElementById('main-image-preview');
-            preview.querySelector('img').src = reader.result;
-            preview.classList.remove('hidden');
-        }
-        reader.readAsDataURL(event.target.files[0]);
-    }
-
-    // Preview additional images
-    function previewAdditionalImages(event) {
-        const files = event.target.files;
-        const previewContainer = document.getElementById('additional-images-preview');
-        previewContainer.innerHTML = '';
-        
-        if (files.length > 4) {
-            alert('You can only upload a maximum of 4 additional images');
-            event.target.value = '';
-            return;
-        }
-        
-        if (files.length > 0) {
-            previewContainer.classList.remove('hidden');
-        }
-        
-        for (let i = 0; i < files.length; i++) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const div = document.createElement('div');
-                div.className = 'relative';
-                div.innerHTML = `
-                    <img src="${e.target.result}" alt="Additional image ${i+1}" class="h-32 w-32 object-cover rounded-lg border border-gray-300">
-                `;
-                previewContainer.appendChild(div);
-            }
-            reader.readAsDataURL(files[i]);
-        }
-    }
-</script>
-@endpush

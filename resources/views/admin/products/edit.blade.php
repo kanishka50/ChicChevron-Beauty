@@ -177,37 +177,6 @@
             <!-- Product Images -->
             <div class="bg-white rounded-lg shadow-md p-6 mb-6">
                 <h2 class="text-xl font-semibold text-gray-800 mb-4">Product Images</h2>
-                
-                <!-- Current Main Image -->
-                <div class="mb-6">
-                    <p class="block text-sm font-medium text-gray-700 mb-2">Current Main Image</p>
-                    <img src="{{ Storage::url($product->main_image) }}" 
-                         alt="{{ $product->name }}" 
-                         class="h-32 w-32 object-cover rounded-lg border border-gray-300">
-                </div>
-
-                <!-- Update Main Image -->
-                <div class="mb-6">
-                    <label for="main_image" class="block text-sm font-medium text-gray-700 mb-2">
-                        Update Main Image
-                    </label>
-                    <input type="file" 
-                           name="main_image" 
-                           id="main_image"
-                           accept="image/jpeg,image/png,image/jpg,image/webp"
-                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @error('main_image') border-red-500 @enderror"
-                           onchange="previewMainImage(event)">
-                    @error('main_image')
-                        <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-                    @enderror
-                    <p class="mt-1 text-sm text-gray-500">Leave empty to keep current image. Maximum file size: 2MB</p>
-                    
-                    <div id="main-image-preview" class="mt-4 hidden">
-                        <p class="text-sm text-gray-700 mb-2">New Image Preview:</p>
-                        <img src="#" alt="Main image preview" class="h-32 w-32 object-cover rounded-lg border border-gray-300">
-                    </div>
-                </div>
-
                 <!-- Current Additional Images -->
                 @include('admin.products.partials.image-upload')
             </div>
@@ -216,22 +185,6 @@
             @include('admin.products.partials.ingredients-form')
             @include('admin.products.partials.edit-attributes')
 
-            <!-- Status -->
-            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-                <h2 class="text-xl font-semibold text-gray-800 mb-4">Product Status</h2>
-                
-                <div class="flex items-center">
-                    <input type="checkbox" 
-                           name="is_active" 
-                           id="is_active" 
-                           value="1"
-                           {{ $product->is_active ? 'checked' : '' }}
-                           class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
-                    <label for="is_active" class="ml-2 block text-sm text-gray-900">
-                        Product is active and visible to customers
-                    </label>
-                </div>
-            </div>
 
             <!-- Submit Buttons -->
             <div class="flex justify-end space-x-3">
@@ -247,76 +200,3 @@
         </form>
     </div>
 @endsection
-
-@push('scripts')
-<script>
-    // Preview main image
-    function previewMainImage(event) {
-        const reader = new FileReader();
-        reader.onload = function() {
-            const preview = document.getElementById('main-image-preview');
-            preview.querySelector('img').src = reader.result;
-            preview.classList.remove('hidden');
-        }
-        reader.readAsDataURL(event.target.files[0]);
-    }
-
-    // Preview additional images
-    function previewAdditionalImages(event) {
-        const files = event.target.files;
-        const previewContainer = document.getElementById('additional-images-preview');
-        const existingImages = {{ $product->images->count() }};
-        const maxImages = 4 - existingImages;
-        
-        previewContainer.innerHTML = '';
-        
-        if (files.length > maxImages) {
-            alert(`You can only upload a maximum of ${maxImages} additional images`);
-            event.target.value = '';
-            return;
-        }
-        
-        if (files.length > 0) {
-            previewContainer.classList.remove('hidden');
-        }
-        
-        for (let i = 0; i < files.length; i++) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const div = document.createElement('div');
-                div.className = 'relative';
-                div.innerHTML = `
-                    <img src="${e.target.result}" alt="Additional image ${i+1}" class="h-32 w-32 object-cover rounded-lg border border-gray-300">
-                `;
-                previewContainer.appendChild(div);
-            }
-            reader.readAsDataURL(files[i]);
-        }
-    }
-
-    // Delete image
-    function deleteImage(imageId) {
-        if (confirm('Are you sure you want to delete this image?')) {
-            fetch(`/admin/products/images/${imageId}`, {
-                method: 'DELETE',
-                headers: {
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                    'Accept': 'application/json'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    location.reload();
-                } else {
-                    alert('Error deleting image');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Error deleting image');
-            });
-        }
-    }
-</script>
-@endpush

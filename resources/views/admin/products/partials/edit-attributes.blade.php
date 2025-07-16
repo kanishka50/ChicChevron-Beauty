@@ -72,47 +72,7 @@
     </div>
 </div>
 
-<!-- Ingredients -->
-<div class="bg-white rounded-lg shadow-md p-6 mb-6">
-    <h2 class="text-xl font-semibold text-gray-800 mb-4">Ingredients</h2>
-    
-    <div id="ingredients-container">
-        @forelse($product->ingredients as $index => $ingredient)
-            <div class="ingredient-row mb-3">
-                <div class="flex gap-2">
-                    <input type="text" 
-                           name="ingredients[]" 
-                           value="{{ old('ingredients.' . $index, $ingredient->ingredient_name) }}"
-                           placeholder="Enter ingredient name"
-                           class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <button type="button" onclick="removeIngredient(this)" class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded {{ $loop->first ? 'hidden' : '' }}">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-                    </button>
-                </div>
-            </div>
-        @empty
-            <div class="ingredient-row mb-3">
-                <div class="flex gap-2">
-                    <input type="text" 
-                           name="ingredients[]" 
-                           placeholder="Enter ingredient name"
-                           class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <button type="button" onclick="removeIngredient(this)" class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded hidden">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-                    </button>
-                </div>
-            </div>
-        @endforelse
-    </div>
-    
-    <button type="button" onclick="addIngredient()" class="mt-3 bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded text-sm">
-        + Add Ingredient
-    </button>
-</div>
+
 
 <!-- Colors -->
 <div class="bg-white rounded-lg shadow-md p-6 mb-6">
@@ -178,50 +138,3 @@
     </div>
 </div>
 
-@push('scripts')
-<script>
-    // Ingredients management
-    function addIngredient() {
-        const container = document.getElementById('ingredients-container');
-        const newRow = document.createElement('div');
-        newRow.className = 'ingredient-row mb-3';
-        newRow.innerHTML = `
-            <div class="flex gap-2">
-                <input type="text" 
-                       name="ingredients[]" 
-                       placeholder="Enter ingredient name"
-                       class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <button type="button" onclick="removeIngredient(this)" class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
-            </div>
-        `;
-        container.appendChild(newRow);
-        updateIngredientButtons();
-    }
-
-    function removeIngredient(button) {
-        button.closest('.ingredient-row').remove();
-        updateIngredientButtons();
-    }
-
-    function updateIngredientButtons() {
-        const rows = document.querySelectorAll('.ingredient-row');
-        rows.forEach((row, index) => {
-            const removeBtn = row.querySelector('button');
-            if (rows.length === 1) {
-                removeBtn.classList.add('hidden');
-            } else {
-                removeBtn.classList.remove('hidden');
-            }
-        });
-    }
-
-    // Initialize on load
-    document.addEventListener('DOMContentLoaded', function() {
-        updateIngredientButtons();
-    });
-</script>
-@endpush
