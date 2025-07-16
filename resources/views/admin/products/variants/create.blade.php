@@ -31,7 +31,7 @@
                                name="size" 
                                value="{{ old('size') }}"
                                placeholder="e.g., 50ml, Large, 100g"
-                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @error('field_name') border-red-500 @enderror">
                     </div>
                     
                     <div>
@@ -40,7 +40,7 @@
                                name="color" 
                                value="{{ old('color') }}"
                                placeholder="e.g., Red, Natural"
-                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @error('field_name') border-red-500 @enderror">
                     </div>
                     
                     <div>
@@ -49,7 +49,7 @@
                                name="scent" 
                                value="{{ old('scent') }}"
                                placeholder="e.g., Rose, Vanilla"
-                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @error('field_name') border-red-500 @enderror"">
                     </div>
                 </div>
             </div>
@@ -64,7 +64,7 @@
                                name="sku" 
                                value="{{ old('sku') }}"
                                placeholder="Auto-generated if left empty"
-                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @error('field_name') border-red-500 @enderror">
                     </div>
                     
                     <div>
@@ -74,7 +74,7 @@
                                value="{{ old('cost_price') }}"
                                step="0.01"
                                required
-                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @error('field_name') border-red-500 @enderror">
                     </div>
                     
                     <div>
@@ -84,7 +84,7 @@
                                value="{{ old('price') }}"
                                step="0.01"
                                required
-                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @error('field_name') border-red-500 @enderror">
                     </div>
                     
                     <div>
@@ -94,7 +94,7 @@
                                value="{{ old('discount_price') }}"
                                step="0.01"
                                placeholder="Optional"
-                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @error('field_name') border-red-500 @enderror">
                     </div>
                 </div>
             </div>
