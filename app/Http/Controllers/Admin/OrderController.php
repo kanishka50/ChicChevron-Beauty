@@ -54,13 +54,11 @@ class OrderController extends Controller
     public function show(Order $order)
     {
         $order->load([
-            'user',
-            'items.product.brand',
-            'items.variantCombination.sizeVariant',
-            'items.variantCombination.colorVariant', 
-            'items.variantCombination.scentVariant',
-            'statusHistory.changedBy'
-        ]);
+    'user',
+    'items.product.brand',
+    'items.productVariant',
+    'statusHistory.changedBy'
+]);
 
         // Calculate profit margins
         $totalCost = $order->items->sum(function ($item) {
