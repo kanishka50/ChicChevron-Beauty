@@ -10,6 +10,7 @@ use App\Models\ProductVariant;
 use App\Services\InventoryService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Http\Requests\Admin\InventoryRequest;
 
 class InventoryController extends Controller
 {
@@ -108,62 +109,56 @@ class InventoryController extends Controller
     }
 
     /**
-     * Add stock to inventory
-     */
-    public function addStock(Request $request)
-    {
-        $request->validate([
-            'product_id' => 'required|exists:products,id',
-            'product_variant_id' => 'required|exists:product_variants,id',
-            'quantity' => 'required|integer|min:1',
-            'cost_per_unit' => 'required|numeric|min:0',
-            'reason' => 'required|string|max:255',
-        ]);
+ * Add stock to inventory
+ */
+public function addStock(InventoryRequest $request)
+{
+    try {
+        $result = $this->inventoryService->addStock(
+            $request->product_id,
+            $request->product_variant_id,
+            $request->quantity,
+            $request->cost_per_unit,
+            $request->reason
+        );
 
-        try {
-            $result = $this->inventoryService->addStock(
-                $request->product_id,
-                $request->product_variant_id,
-                $request->quantity,
-                $request->cost_per_unit,
-                $request->reason
-            );
-
+        if ($request->ajax()) {
             return response()->json([
                 'success' => true,
                 'message' => 'Stock added successfully!',
                 'batch_number' => $result['batch_number'],
                 'new_stock_level' => $result['new_stock_level']
             ]);
+        }
 
-        } catch (\Exception $e) {
+        return redirect()->back()->with('success', 'Stock added successfully!');
+
+    } catch (\Exception $e) {
+        if ($request->ajax()) {
             return response()->json([
                 'success' => false,
                 'message' => 'Error adding stock: ' . $e->getMessage()
             ], 500);
         }
+
+        return redirect()->back()->with('error', 'Error adding stock: ' . $e->getMessage());
     }
+}
 
     /**
-     * Adjust stock manually
-     */
-    public function adjustStock(Request $request)
-    {
-        $request->validate([
-            'product_id' => 'required|exists:products,id',
-            'product_variant_id' => 'required|exists:product_variants,id',
-            'new_quantity' => 'required|integer|min:0',
-            'reason' => 'required|string|max:255',
-        ]);
+ * Adjust stock manually
+ */
+public function adjustStock(InventoryRequest $request)
+{
+    try {
+        $result = $this->inventoryService->adjustStock(
+            $request->product_id,
+            $request->product_variant_id,
+            $request->new_quantity,
+            $request->reason
+        );
 
-        try {
-            $result = $this->inventoryService->adjustStock(
-                $request->product_id,
-                $request->product_variant_id,
-                $request->new_quantity,
-                $request->reason
-            );
-
+        if ($request->ajax()) {
             return response()->json([
                 'success' => true,
                 'message' => 'Stock adjusted successfully!',
@@ -171,14 +166,21 @@ class InventoryController extends Controller
                 'old_stock' => $result['old_stock'],
                 'new_stock' => $result['new_stock']
             ]);
+        }
 
-        } catch (\Exception $e) {
+        return redirect()->back()->with('success', 'Stock adjusted successfully!');
+
+    } catch (\Exception $e) {
+        if ($request->ajax()) {
             return response()->json([
                 'success' => false,
                 'message' => 'Error adjusting stock: ' . $e->getMessage()
             ], 500);
         }
+
+        return redirect()->back()->with('error', 'Error adjusting stock: ' . $e->getMessage());
     }
+}
 
     /**
      * Get variant inventory data
@@ -213,55 +215,57 @@ class InventoryController extends Controller
     }
 
     /**
-     * Update variant inventory
-     */
-    public function updateVariant(Request $request, ProductVariant $variant)
-    {
-        $request->validate([
-            'current_stock' => 'required|integer|min:0',
-            'low_stock_threshold' => 'required|integer|min:0'
+ * Update variant inventory
+ */
+public function updateVariant(InventoryRequest $request, ProductVariant $variant)
+{
+    try {
+        // Get or create inventory
+        $inventory = $variant->inventory ?? Inventory::create([
+            'product_id' => $variant->product_id,
+            'product_variant_id' => $variant->id,
+            'current_stock' => 0,
+            'reserved_stock' => 0,
+            'low_stock_threshold' => 10
         ]);
 
-        try {
-            // Get or create inventory
-            $inventory = $variant->inventory ?? Inventory::create([
-                'product_id' => $variant->product_id,
-                'product_variant_id' => $variant->id,
-                'current_stock' => 0,
-                'reserved_stock' => 0,
-                'low_stock_threshold' => 10
-            ]);
+        $oldStock = $inventory->current_stock;
+        $newStock = $request->current_stock;
 
-            $oldStock = $inventory->current_stock;
-            $newStock = $request->current_stock;
+        // If stock changed, use adjustment method
+        if ($oldStock != $newStock) {
+            $this->inventoryService->adjustStock(
+                $variant->product_id,
+                $variant->id,
+                $newStock,
+                'Manual stock update from variant management'
+            );
+        }
 
-            // If stock changed, use adjustment method
-            if ($oldStock != $newStock) {
-                $this->inventoryService->adjustStock(
-                    $variant->product_id,
-                    $variant->id,
-                    $newStock,
-                    'Manual stock update from variant management'
-                );
-            }
+        // Update threshold
+        $inventory->update(['low_stock_threshold' => $request->low_stock_threshold]);
 
-            // Update threshold
-            $inventory->update(['low_stock_threshold' => $request->low_stock_threshold]);
-
+        if ($request->ajax()) {
             return response()->json([
                 'success' => true,
                 'message' => 'Stock updated successfully!',
                 'inventory' => $inventory->fresh()
             ]);
+        }
 
-        } catch (\Exception $e) {
+        return redirect()->back()->with('success', 'Stock updated successfully!');
+
+    } catch (\Exception $e) {
+        if ($request->ajax()) {
             return response()->json([
                 'success' => false,
                 'message' => 'Error updating stock: ' . $e->getMessage()
             ], 500);
         }
-    }
 
+        return redirect()->back()->with('error', 'Error updating stock: ' . $e->getMessage());
+    }
+}
     /**
      * Get stock details for a specific product/variant
      */

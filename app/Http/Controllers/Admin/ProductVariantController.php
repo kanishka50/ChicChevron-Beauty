@@ -9,6 +9,7 @@ use App\Models\Inventory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use App\Http\Requests\Admin\ProductVariantRequest;
 
 class ProductVariantController extends Controller
 {
@@ -27,7 +28,7 @@ class ProductVariantController extends Controller
         return view('admin.products.variants.create', compact('product'));
     }
 
-    public function store(Request $request, Product $product)
+    public function store(ProductVariantRequest $request, Product $product)
     {
         $request->validate([
             'size' => 'nullable|string|max:50',
@@ -103,7 +104,7 @@ class ProductVariantController extends Controller
         return view('admin.products.variants.edit', compact('variant'));
     }
 
-    public function update(Request $request, ProductVariant $variant)
+    public function update(ProductVariantRequest $request, ProductVariant $variant)
     {
         $request->validate([
             'size' => 'nullable|string|max:50',

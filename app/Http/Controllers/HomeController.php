@@ -37,7 +37,7 @@ class HomeController extends Controller
             
             // Get new arrivals without withAvg
             $newArrivals = Product::active()
-                ->with(['brand', 'category', 'images', 'inventory'])
+                ->with(['brand', 'category', 'images', 'variants.inventory'])
                 ->latest('created_at')
                 ->inStock()
                 ->limit(8)
@@ -52,7 +52,7 @@ class HomeController extends Controller
             
             // Get best sellers without withAvg and withCount
             $bestSellers = Product::active()
-                ->with(['brand', 'category', 'images', 'inventory'])
+                ->with(['brand', 'category', 'images', 'variants.inventory'])
                 ->inStock()
                 ->limit(8)
                 ->get();

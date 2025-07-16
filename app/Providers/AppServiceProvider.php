@@ -15,6 +15,15 @@ class AppServiceProvider extends ServiceProvider
     {
     // Register CartService
     $this->app->singleton(CartService::class);
+
+
+
+    $this->app->singleton(\App\Services\ProductVariantService::class, function ($app) {
+        return new \App\Services\ProductVariantService(
+            $app->make(\App\Services\InventoryService::class)
+        );
+    });
+    
     }
 
     /**
