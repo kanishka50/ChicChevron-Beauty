@@ -1,3 +1,4 @@
+{{-- resources/views/admin/products/partials/stock-indicators.blade.php --}}
 {{-- Stock Level Visual Indicators --}}
 @php
     // Calculate stock percentage
@@ -9,17 +10,20 @@
 
     if (isset($product)) {
         if ($product->has_variants) {
-            // For products with variants, calculate total stock from combinations
-            $totalStock = $product->variantCombinations->sum(function($combination) {
-                return $combination->inventory ? $combination->inventory->current_stock : 0;
+            // For products with variants, calculate total stock from variants
+            $totalStock = $product->variants->sum(function($variant) {
+                return $variant->inventory ? $variant->inventory->current_stock : 0;
             });
-            $lowStockThreshold = $product->variantCombinations->max(function($combination) {
-                return $combination->inventory ? $combination->inventory->low_stock_threshold : 10;
+            $lowStockThreshold = $product->variants->max(function($variant) {
+                return $variant->inventory ? $variant->inventory->low_stock_threshold : 10;
             });
         } else {
-            // For simple products, get stock from main inventory
-            $totalStock = $product->inventory ? $product->inventory->current_stock : 0;
-            $lowStockThreshold = $product->inventory ? $product->inventory->low_stock_threshold : 10;
+            // For simple products, get stock from default variant
+            $defaultVariant = $product->defaultVariant();
+            if ($defaultVariant && $defaultVariant->inventory) {
+                $totalStock = $defaultVariant->inventory->current_stock;
+                $lowStockThreshold = $defaultVariant->inventory->low_stock_threshold;
+            }
         }
 
         if ($lowStockThreshold > 0) {
@@ -107,101 +111,52 @@
         
         @if(isset($product) && $product->has_variants)
             <div class="space-y-2">
-                @foreach($product->variantCombinations as $combination)
+                @foreach($product->variants as $variant)
                     @php
-                        $variantStock = $combination->inventory ? $combination->inventory->current_stock : 0;
-                        $variantThreshold = $combination->inventory ? $combination->inventory->low_stock_threshold : 10;
+                        $variantStock = $variant->inventory ? $variant->inventory->current_stock : 0;
+                        $variantThreshold = $variant->inventory ? $variant->inventory->low_stock_threshold : 10;
                         $variantStatus = $variantStock <= 0 ? 'out' : ($variantStock <= $variantThreshold ? 'low' : 'good');
                     @endphp
                     
-                    <div class="flex justify-between items-center text-sm">
-                        <div class="flex items-center space-x-2">
-                            @if($combination->sizeVariant)
-                                <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs">{{ $combination->sizeVariant->variant_value }}</span>
-                            @endif
-                            @if($combination->colorVariant)
-                                <span class="px-2 py-1 bg-pink-100 text-pink-800 rounded text-xs">{{ $combination->colorVariant->variant_value }}</span>
-                            @endif
-                            @if($combination->scentVariant)
-                                <span class="px-2 py-1 bg-green-100 text-green-800 rounded text-xs">{{ $combination->scentVariant->variant_value }}</span>
-                            @endif
+                    <div class="flex justify-between items-center p-2 bg-white rounded border
+                        @if($variantStatus === 'out') border-red-200
+                        @elseif($variantStatus === 'low') border-yellow-200
+                        @else border-green-200
+                        @endif">
+                        
+                        <div class="flex-1">
+                            <span class="text-sm font-medium text-gray-900">{{ $variant->name }}</span>
+                            <span class="text-xs text-gray-500 ml-2">({{ $variant->sku }})</span>
                         </div>
                         
-                        <div class="flex items-center space-x-2">
-                            <span class="font-medium {{ $variantStatus === 'out' ? 'text-red-600' : ($variantStatus === 'low' ? 'text-yellow-600' : 'text-green-600') }}">
+                        <div class="flex items-center space-x-3">
+                            <span class="text-sm font-medium
+                                @if($variantStatus === 'out') text-red-600
+                                @elseif($variantStatus === 'low') text-yellow-600
+                                @else text-green-600
+                                @endif">
                                 {{ $variantStock }} units
                             </span>
                             
-                            {{-- Mini progress bar for variant --}}
-                            <div class="w-12 bg-gray-200 rounded-full h-1">
-                                <div class="h-1 rounded-full 
-                                    {{ $variantStatus === 'out' ? 'bg-red-500' : ($variantStatus === 'low' ? 'bg-yellow-500' : 'bg-green-500') }}"
-                                    style="width: {{ $variantThreshold > 0 ? min(100, ($variantStock / ($variantThreshold * 2)) * 100) : 0 }}%">
-                                </div>
-                            </div>
+                            @if(isset($showActions) && $showActions)
+                                <a href="{{ route('admin.inventory.index') }}?search={{ $variant->sku }}" 
+                                   class="text-xs text-blue-600 hover:text-blue-800">
+                                    Manage Stock
+                                </a>
+                            @endif
                         </div>
                     </div>
                 @endforeach
             </div>
         @else
             <div class="text-sm text-gray-600">
-                <div class="flex justify-between">
-                    <span>Current Stock:</span>
-                    <span class="font-medium">{{ $totalStock }} units</span>
-                </div>
-                <div class="flex justify-between">
-                    <span>Low Stock Alert:</span>
-                    <span class="font-medium">{{ $lowStockThreshold }} units</span>
-                </div>
-                @if($product && $product->inventory)
-                    <div class="flex justify-between">
-                        <span>Last Updated:</span>
-                        <span class="font-medium">{{ $product->inventory->updated_at->diffForHumans() }}</span>
-                    </div>
-                @endif
+                @php
+                    $defaultVariant = $product->defaultVariant();
+                    $stock = $defaultVariant && $defaultVariant->inventory ? $defaultVariant->inventory->current_stock : 0;
+                @endphp
+                <p>Single variant product</p>
+                <p class="font-medium">Current stock: {{ $stock }} units</p>
             </div>
         @endif
     </div>
 @endif
-
-{{-- Quick Actions for Stock Management --}}
-@if(isset($showActions) && $showActions && isset($product))
-    <div class="mt-3 flex space-x-2">
-        @if($product->has_variants)
-            <a href="{{ route('admin.products.variants', $product) }}" 
-               class="text-xs bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded">
-                Manage Variants
-            </a>
-        @else
-            <button onclick="updateSingleProductStock({{ $product->id }})" 
-                    class="text-xs bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded">
-                Update Stock
-            </button>
-        @endif
-        
-        @if($stockStatus === 'low' || $stockStatus === 'critical')
-            <button onclick="createStockAlert({{ $product->id }})" 
-                    class="text-xs bg-orange-500 hover:bg-orange-600 text-white px-2 py-1 rounded">
-                Create Alert
-            </button>
-        @endif
-    </div>
-@endif
-
-@push('scripts')
-<script>
-    // Function to update single product stock
-    function updateSingleProductStock(productId) {
-        // This would open a modal or redirect to inventory management
-        console.log('Update stock for product:', productId);
-        // Implementation depends on your inventory management setup
-    }
-
-    // Function to create stock alert
-    function createStockAlert(productId) {
-        // This would create a low stock alert/notification
-        console.log('Create stock alert for product:', productId);
-        // Implementation depends on your notification system
-    }
-</script>
-@endpush

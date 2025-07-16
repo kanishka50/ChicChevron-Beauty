@@ -139,7 +139,7 @@
                                 </div>
                                 <div class="ml-4">
                                     <div class="text-sm font-medium text-gray-900">{{ $inventory->product->name }}</div>
-                                    <div class="text-sm text-gray-500">{{ $inventory->product->brand->name }}</div>
+                                    <div class="text-sm text-gray-500">{{ $inventory->product->brand->name ?? 'N/A' }}</div>
                                 </div>
                             </div>
                         </td>
@@ -158,7 +158,7 @@
                             @endif
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {{ $inventory->productVariant->sku }}
+                            {{ $inventory->productVariant->sku ?? $inventory->product->sku ?? 'N/A' }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="flex items-center">
@@ -184,7 +184,7 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <div class="flex space-x-2">
-                                <button onclick="openAddStockModal({{ $inventory->product_id }}, {{ $inventory->product_variant_id }})" 
+                                <button onclick="openAddStockModal({{ $inventory->product_id }}, {{ $inventory->product_variant_id ?? 'null' }})" 
                                         class="text-green-600 hover:text-green-900"
                                         title="Add Stock">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -192,7 +192,7 @@
                                     </svg>
                                 </button>
                                 
-                                <button onclick="openAdjustStockModal({{ $inventory->product_id }}, {{ $inventory->product_variant_id }}, {{ $inventory->current_stock }})" 
+                                <button onclick="openAdjustStockModal({{ $inventory->product_id }}, {{ $inventory->product_variant_id ?? 'null' }}, {{ $inventory->current_stock }})" 
                                         class="text-blue-600 hover:text-blue-900"
                                         title="Adjust Stock">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -200,7 +200,7 @@
                                     </svg>
                                 </button>
                                 
-                                <button onclick="viewStockDetails({{ $inventory->product_id }}, {{ $inventory->product_variant_id }})" 
+                                <button onclick="viewStockDetails({{ $inventory->product_id }}, {{ $inventory->product_variant_id ?? 'null' }})" 
                                         class="text-gray-600 hover:text-gray-900"
                                         title="View Details">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
