@@ -158,16 +158,17 @@ class ProductController extends Controller
                 $product->colors()->sync($request->colors);
             }
             
-            // Create default variant
+            // Only create default variant if product doesn't have variants
+        if (!$product->has_variants) {
             $variant = $product->variants()->create([
                 'name' => 'Standard',
                 'sku' => $product->sku,
-                'price' => 0, // Admin must set price
-                'cost_price' => 0, // Admin must set cost
+                'price' => 0,
+                'cost_price' => 0,
                 'is_active' => true,
             ]);
             
-            // Create inventory record for default variant
+            // Create inventory record
             Inventory::create([
                 'product_id' => $product->id,
                 'product_variant_id' => $variant->id,
@@ -175,6 +176,7 @@ class ProductController extends Controller
                 'reserved_stock' => 0,
                 'low_stock_threshold' => 10
             ]);
+        }
             
             DB::commit();
             

@@ -36,53 +36,61 @@ class CartService
                       ->first();
     }
 
+
     /**
-     * Add product to cart
-     */
-    public function addToCart(Product $product, ProductVariant $productVariant = null, $quantity = 1)
-    {
-        $identifier = $this->getCartIdentifier();
+ * Add product to cart
+ */
+public function addToCart(Product $product, ProductVariant $productVariant = null, $quantity = 1)
+{
+    $identifier = $this->getCartIdentifier();
 
-        // For products with variants, variant is required
-        if ($product->has_variants && !$productVariant) {
-            throw new \Exception('Please select product options.');
-        }
-        
-        // For products without variants, get the default variant
-        if (!$product->has_variants && !$productVariant) {
-            $productVariant = $product->defaultVariant();
-            if (!$productVariant) {
-                throw new \Exception('Product variant not found.');
-            }
-        }
-        
-        // Check if item already exists in cart
-        $existingItem = CartItem::where($identifier)
-                               ->where('product_id', $product->id)
-                               ->where('product_variant_id', $productVariant->id)
-                               ->first();
-
-        if ($existingItem) {
-            // Update quantity of existing item
-            $newQuantity = $existingItem->quantity + $quantity;
-            return $this->updateQuantity($existingItem->id, $newQuantity);
-        }
-
-        // Calculate price from variant
-        $unitPrice = $productVariant->effective_price;
-
-        // Create new cart item
-        $cartItem = CartItem::create([
-            'user_id' => Auth::id(),
-            'session_id' => Auth::guest() ? Session::getId() : null,
-            'product_id' => $product->id,
-            'product_variant_id' => $productVariant->id,
-            'quantity' => $quantity,
-            'unit_price' => $unitPrice,
-        ]);
-
-        return $cartItem->load(['product', 'productVariant']);
+    // For products with variants, variant is required
+    if ($product->has_variants && !$productVariant) {
+        throw new \Exception('Please select product options.');
     }
+    
+    // For products without variants
+    if (!$product->has_variants && !$productVariant) {
+        // Check if product has any variants at all
+        if ($product->variants()->count() === 0) {
+            // Handle products with no variants (shouldn't happen in normal flow)
+            throw new \Exception('Product configuration error. Please contact support.');
+        }
+        
+        // Get the default (standard) variant
+        $productVariant = $product->defaultVariant();
+        if (!$productVariant) {
+            throw new \Exception('Product variant not found.');
+        }
+    }
+    
+    // Check if item already exists in cart
+    $existingItem = CartItem::where($identifier)
+                           ->where('product_id', $product->id)
+                           ->where('product_variant_id', $productVariant->id)
+                           ->first();
+
+    if ($existingItem) {
+        // Update quantity of existing item
+        $newQuantity = $existingItem->quantity + $quantity;
+        return $this->updateQuantity($existingItem->id, $newQuantity);
+    }
+
+    // Calculate price from variant
+    $unitPrice = $productVariant->effective_price;
+
+    // Create new cart item
+    $cartItem = CartItem::create([
+        'user_id' => Auth::id(),
+        'session_id' => Auth::guest() ? Session::getId() : null,
+        'product_id' => $product->id,
+        'product_variant_id' => $productVariant->id,
+        'quantity' => $quantity,
+        'unit_price' => $unitPrice,
+    ]);
+
+    return $cartItem->load(['product', 'productVariant']);
+}
 
     /**
      * Update cart item quantity

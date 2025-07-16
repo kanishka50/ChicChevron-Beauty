@@ -81,8 +81,8 @@ class ProductVariantController extends Controller
                 'low_stock_threshold' => 10,
             ]);
 
-            // Update product has_variants flag
-            if ($product->variants()->count() > 1) {
+            // Update product has_variants flag only if it was initially false
+            if (!$product->has_variants && $product->variants()->count() > 1) {
                 $product->update(['has_variants' => true]);
             }
 
@@ -190,10 +190,11 @@ class ProductVariantController extends Controller
             $product = $variant->product;
             $variant->delete();
             
+            // Check if we should update has_variants flag
             if ($product->variants()->count() === 1) {
+                // Only one variant left (should be the standard one)
                 $product->update(['has_variants' => false]);
             }
-            
             DB::commit();
 
             return redirect()->route('admin.products.variants.index', $product)
