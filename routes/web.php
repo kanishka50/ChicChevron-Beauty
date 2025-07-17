@@ -56,6 +56,8 @@ Route::get('/categories/{category:slug}', function (\App\Models\Category $catego
     return redirect()->route('products.index', ['category' => $category->id]);
 })->name('categories.show');
 
+Route::get('/category/{category:slug}', [ProductController::class, 'categoryProducts'])->name('category.products');
+
 // Brand browsing
 Route::get('/brands', function () {
     $brands = \App\Models\Brand::active()

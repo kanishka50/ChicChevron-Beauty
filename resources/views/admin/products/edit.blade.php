@@ -86,7 +86,7 @@
                         @enderror
                     </div>
 
-                    <!-- Category -->
+                    <!-- Category (UPDATED) -->
                     <div>
                         <label for="category_id" class="block text-sm font-medium text-gray-700 mb-2">
                             Category <span class="text-red-500">*</span>
@@ -96,10 +96,19 @@
                                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @error('category_id') border-red-500 @enderror"
                                 required>
                             <option value="">Select Category</option>
-                            @foreach($categories as $category)
-                                <option value="{{ $category->id }}" {{ old('category_id', $product->category_id) == $category->id ? 'selected' : '' }}>
-                                    {{ $category->path }}
-                                </option>
+                            @php
+                                $categoriesByMain = $categories->groupBy('main_category_id');
+                            @endphp
+                            @foreach($categoriesByMain as $mainCategoryId => $categoryGroup)
+                                @if($categoryGroup->first()->mainCategory)
+                                    <optgroup label="{{ $categoryGroup->first()->mainCategory->name }}">
+                                        @foreach($categoryGroup as $category)
+                                            <option value="{{ $category->id }}" {{ old('category_id', $product->category_id) == $category->id ? 'selected' : '' }}>
+                                                {{ $category->name }}
+                                            </option>
+                                        @endforeach
+                                    </optgroup>
+                                @endif
                             @endforeach
                         </select>
                         @error('category_id')
@@ -107,26 +116,7 @@
                         @enderror
                     </div>
 
-                    <!-- Product Type -->
-                    <div>
-                        <label for="product_type_id" class="block text-sm font-medium text-gray-700 mb-2">
-                            Product Type <span class="text-red-500">*</span>
-                        </label>
-                        <select name="product_type_id" 
-                                id="product_type_id" 
-                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @error('product_type_id') border-red-500 @enderror"
-                                required>
-                            <option value="">Select Product Type</option>
-                            @foreach($productTypes as $type)
-                                <option value="{{ $type->id }}" {{ old('product_type_id', $product->product_type_id) == $type->id ? 'selected' : '' }}>
-                                    {{ $type->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                        @error('product_type_id')
-                            <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-                        @enderror
-                    </div>
+                    <!-- REMOVED Product Type Section -->
 
                     <!-- Texture -->
                     <div>
@@ -184,7 +174,6 @@
             <!-- Product Attributes and Ingredients -->
             @include('admin.products.partials.ingredients-form')
             @include('admin.products.partials.edit-attributes')
-
 
             <!-- Submit Buttons -->
             <div class="flex justify-end space-x-3">

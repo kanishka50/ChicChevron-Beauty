@@ -13,7 +13,7 @@ class Category extends Model
     protected $fillable = [
         'name',
         'slug',
-        'parent_id',
+        'main_category_id',  // Changed from parent_id
         'image',
         'is_active',
         'sort_order',
@@ -33,27 +33,11 @@ class Category extends Model
     }
 
     /**
-     * Get the parent category.
+     * Get the main category.
      */
-    public function parent()
+    public function mainCategory()
     {
-        return $this->belongsTo(Category::class, 'parent_id');
-    }
-
-    /**
-     * Get the child categories.
-     */
-    public function children()
-    {
-        return $this->hasMany(Category::class, 'parent_id')->orderBy('sort_order');
-    }
-
-    /**
-     * Get all descendants (recursive).
-     */
-    public function descendants()
-    {
-        return $this->children()->with('descendants');
+        return $this->belongsTo(MainCategory::class);
     }
 
     /**
@@ -65,52 +49,11 @@ class Category extends Model
     }
 
     /**
-     * Get all products including from child categories.
-     */
-    public function allProducts()
-    {
-        $categoryIds = $this->descendants->pluck('id')->push($this->id);
-        return Product::whereIn('category_id', $categoryIds);
-    }
-
-    /**
-     * Check if category has children.
-     */
-    public function getHasChildrenAttribute()
-    {
-        return $this->children()->exists();
-    }
-
-    /**
-     * Get the full path of category names.
-     */
-    public function getPathAttribute()
-    {
-        $path = collect([$this->name]);
-        $parent = $this->parent;
-
-        while ($parent) {
-            $path->prepend($parent->name);
-            $parent = $parent->parent;
-        }
-
-        return $path->implode(' > ');
-    }
-
-    /**
      * Scope for active categories.
      */
     public function scopeActive($query)
     {
         return $query->where('is_active', true);
-    }
-
-    /**
-     * Scope for parent categories only.
-     */
-    public function scopeParents($query)
-    {
-        return $query->whereNull('parent_id');
     }
 
     /**
@@ -120,6 +63,4 @@ class Category extends Model
     {
         return $query->orderBy('sort_order')->orderBy('name');
     }
-
-    
 }

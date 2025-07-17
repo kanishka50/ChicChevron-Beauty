@@ -37,22 +37,23 @@
                         <p class="mt-1 text-sm text-gray-500">The slug will be automatically generated from the name.</p>
                     </div>
 
-                    <!-- Parent Category -->
+                    <!-- Main Category -->
                     <div>
-                        <label for="parent_id" class="block text-sm font-medium text-gray-700 mb-2">
-                            Parent Category
+                        <label for="main_category_id" class="block text-sm font-medium text-gray-700 mb-2">
+                            Main Category <span class="text-red-500">*</span>
                         </label>
-                        <select name="parent_id" 
-                                id="parent_id" 
-                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @error('parent_id') border-red-500 @enderror">
-                            <option value="">None (Top Level Category)</option>
-                            @foreach($parentCategories as $parent)
-                                <option value="{{ $parent->id }}" {{ old('parent_id') == $parent->id ? 'selected' : '' }}>
-                                    {{ $parent->name }}
+                        <select name="main_category_id" 
+                                id="main_category_id" 
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 @error('main_category_id') border-red-500 @enderror"
+                                required>
+                            <option value="">Select Main Category</option>
+                            @foreach($mainCategories as $mainCategory)
+                                <option value="{{ $mainCategory->id }}" {{ old('main_category_id') == $mainCategory->id ? 'selected' : '' }}>
+                                    {{ $mainCategory->name }}
                                 </option>
                             @endforeach
                         </select>
-                        @error('parent_id')
+                        @error('main_category_id')
                             <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
                         @enderror
                     </div>

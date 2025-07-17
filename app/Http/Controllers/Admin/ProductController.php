@@ -7,13 +7,11 @@ use App\Http\Requests\Admin\ProductRequest;
 use App\Models\Product;
 use App\Models\Brand;
 use App\Models\Category;
-use App\Models\ProductType;
 use App\Models\Texture;
 use App\Models\Color;
 use App\Models\ProductImage;
 use App\Models\ProductIngredient;
 use App\Models\Inventory;
-use App\Models\ProductVariant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -89,14 +87,12 @@ class ProductController extends Controller
     {
         $brands = Brand::active()->orderBy('name')->get();
         $categories = Category::active()->ordered()->get();
-        $productTypes = ProductType::orderBy('name')->get();
         $textures = Texture::orderBy('name')->get();
         $colors = Color::all();
         
         return view('admin.products.create', compact(
             'brands', 
             'categories', 
-            'productTypes', 
             'textures',
             'colors'
         ));
@@ -199,8 +195,7 @@ class ProductController extends Controller
     {
         $product->load([
             'brand',
-            'category',
-            'productType',
+            'category.mainCategory',
             'texture',
             'images',
             'ingredients',
@@ -224,7 +219,6 @@ class ProductController extends Controller
     {
         $brands = Brand::active()->orderBy('name')->get();
         $categories = Category::active()->ordered()->get();
-        $productTypes = ProductType::orderBy('name')->get();
         $textures = Texture::orderBy('name')->get();
         $colors = Color::all();
         
@@ -234,7 +228,6 @@ class ProductController extends Controller
             'product',
             'brands', 
             'categories', 
-            'productTypes', 
             'textures',
             'colors'
         ));

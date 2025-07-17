@@ -88,12 +88,11 @@
                         </div>
                         <div>
                             <p class="text-sm text-gray-600">Category</p>
-                            <p class="font-medium">{{ $product->category->path }}</p>
+                            <p class="font-medium">
+                                {{ $product->category->mainCategory->name }} > {{ $product->category->name }}
+                            </p>
                         </div>
-                        <div>
-                            <p class="text-sm text-gray-600">Product Type</p>
-                            <p class="font-medium">{{ $product->productType->name }}</p>
-                        </div>
+                        <!-- REMOVED Product Type -->
                         <div>
                             <p class="text-sm text-gray-600">Texture</p>
                             <p class="font-medium">{{ $product->texture->name ?? 'N/A' }}</p>

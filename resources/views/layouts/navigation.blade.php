@@ -106,29 +106,36 @@
             <a href="{{ route('about') }}" class="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300">About</a>
         </div>
 
-        <!-- Mobile user menu -->
-        <div class="pt-4 pb-1 border-t border-gray-200">
-            @auth
-                <div class="px-4">
-                    <div class="font-medium text-base text-gray-800">{{ Auth::user()->name }}</div>
-                    <div class="font-medium text-sm text-gray-500">{{ Auth::user()->email }}</div>
-                </div>
-                <div class="mt-3 space-y-1">
-                    <a href="{{ route('account.index') }}" class="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300">My Account</a>
-                    <a href="{{ route('orders.index') }}" class="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300">My Orders</a>
-                    <form method="POST" action="{{ route('logout') }}">
-                        @csrf
-                        <button type="submit" class="block w-full text-left pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300">
-                            Logout
-                        </button>
-                    </form>
-                </div>
-            @else
-                <div class="mt-3 space-y-1">
-                    <a href="{{ route('login') }}" class="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300">Login</a>
-                    <a href="{{ route('register') }}" class="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300">Register</a>
-                </div>
-            @endauth
+        <!-- Mobile menu -->
+        <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
+            <div class="pt-2 pb-3 space-y-1">
+                <a href="{{ route('home') }}" class="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300">Home</a>
+                
+                @foreach($mainCategories as $mainCategory)
+                    @if($mainCategory->categories->count() > 0)
+                        <div x-data="{ mobileOpen: false }">
+                            <button @click="mobileOpen = !mobileOpen" 
+                                    class="w-full flex items-center justify-between pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300">
+                                {{ $mainCategory->name }}
+                                <svg class="h-4 w-4" :class="{'rotate-180': mobileOpen}" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                </svg>
+                            </button>
+                            <div x-show="mobileOpen" class="pl-6">
+                                @foreach($mainCategory->categories as $category)
+                                    <a href="{{ route('category.products', $category->slug) }}" 
+                                    class="block py-2 text-sm text-gray-600 hover:text-gray-800">
+                                        {{ $category->name }}
+                                    </a>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+                @endforeach
+                
+                <a href="{{ route('about') }}" class="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300">About</a>
+            </div>
+            <!-- Rest of mobile menu remains the same -->
         </div>
     </div>
 

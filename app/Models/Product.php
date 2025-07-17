@@ -68,13 +68,7 @@ class Product extends Model
         return $this->belongsTo(Category::class);
     }
 
-    /**
-     * Get the product type.
-     */
-    public function productType()
-    {
-        return $this->belongsTo(ProductType::class);
-    }
+
 
     /**
      * Get the texture.

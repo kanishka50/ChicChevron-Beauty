@@ -31,9 +31,9 @@ class CategoryRequest extends FormRequest
                 'max:255',
                 Rule::unique('categories')->ignore($category)
             ],
-            'parent_id' => 'nullable|exists:categories,id',
+            'main_category_id' => 'required|exists:main_categories,id',
             'image' => [
-                $category ? 'nullable' : 'required',
+                $category ? 'nullable' : 'nullable',  // Made nullable for both create and update
                 'image',
                 'mimes:jpeg,png,jpg,webp',
                 'max:2048'
@@ -50,11 +50,11 @@ class CategoryRequest extends FormRequest
         return [
             'name.required' => 'The category name is required.',
             'name.unique' => 'This category name already exists.',
-            'image.required' => 'The category image is required for new categories.',
+            'main_category_id.required' => 'Please select a main category.',
+            'main_category_id.exists' => 'The selected main category is invalid.',
             'image.image' => 'The file must be an image.',
             'image.mimes' => 'The image must be a file of type: jpeg, png, jpg, webp.',
             'image.max' => 'The image may not be greater than 2MB.',
-            'parent_id.exists' => 'The selected parent category is invalid.',
         ];
     }
 }

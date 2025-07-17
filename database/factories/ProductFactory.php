@@ -4,7 +4,6 @@ namespace Database\Factories;
 
 use App\Models\Brand;
 use App\Models\Category;
-use App\Models\ProductType;
 use App\Models\Texture;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
@@ -24,7 +23,6 @@ class ProductFactory extends Factory
             'sku' => strtoupper($this->faker->bothify('??##??##')),
             'brand_id' => Brand::factory(),
             'category_id' => Category::factory(),
-            'product_type_id' => ProductType::factory(),
             'texture_id' => Texture::factory(),
             'cost_price' => $costPrice,
             'selling_price' => $sellingPrice,

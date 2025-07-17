@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\CategoryRequest;
 use App\Models\Category;
+use App\Models\MainCategory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -15,7 +16,7 @@ class CategoryController extends Controller
      */
     public function index()
     {
-        $categories = Category::with('parent')
+        $categories = Category::with('mainCategory')
             ->withCount('products')
             ->ordered()
             ->paginate(10);
@@ -28,12 +29,9 @@ class CategoryController extends Controller
      */
     public function create()
     {
-        $parentCategories = Category::parents()
-            ->active()
-            ->ordered()
-            ->get();
+        $mainCategories = MainCategory::orderBy('name')->get();
             
-        return view('admin.categories.create', compact('parentCategories'));
+        return view('admin.categories.create', compact('mainCategories'));
     }
 
     /**
@@ -51,8 +49,8 @@ class CategoryController extends Controller
         // Set status
         $data['is_active'] = $request->has('is_active');
         
-        // Set sort order (get max + 1)
-        $data['sort_order'] = Category::max('sort_order') + 1;
+        // Set sort order
+        $data['sort_order'] = $request->input('sort_order', 0);
         
         Category::create($data);
         
@@ -65,7 +63,7 @@ class CategoryController extends Controller
      */
     public function show(Category $category)
     {
-        $category->load(['parent', 'children', 'products']);
+        $category->load(['mainCategory', 'products']);
         
         return view('admin.categories.show', compact('category'));
     }
@@ -75,13 +73,9 @@ class CategoryController extends Controller
      */
     public function edit(Category $category)
     {
-        $parentCategories = Category::parents()
-            ->where('id', '!=', $category->id)
-            ->active()
-            ->ordered()
-            ->get();
+        $mainCategories = MainCategory::orderBy('name')->get();
             
-        return view('admin.categories.edit', compact('category', 'parentCategories'));
+        return view('admin.categories.edit', compact('category', 'mainCategories'));
     }
 
     /**
@@ -123,12 +117,6 @@ class CategoryController extends Controller
         if ($category->products()->exists()) {
             return redirect()->route('admin.categories.index')
                 ->with('error', 'Cannot delete category with products.');
-        }
-        
-        // Check if category has sub-categories
-        if ($category->has_children) {
-            return redirect()->route('admin.categories.index')
-                ->with('error', 'Cannot delete category with sub-categories.');
         }
         
         // Delete image if exists
