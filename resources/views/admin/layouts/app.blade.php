@@ -49,5 +49,9 @@
     </div>
 
     @stack('scripts')
+
+    @if(request()->routeIs('admin.reports.*'))
+    @vite(['resources/js/admin/reports.js'])
+@endif
 </body>
 </html>

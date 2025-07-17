@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\Admin\ComplaintController;
 use App\Http\Controllers\Admin\BannerController;
+use App\Http\Controllers\Admin\ReportController;
 
 // All routes in this file are prefixed with 'admin' and use 'admin.' name prefix
 // Only admin users can access these routes
@@ -134,43 +135,25 @@ Route::middleware('admin')->group(function () {
         Route::delete('/{color}', [ColorController::class, 'destroy'])->name('destroy');
     });
     
-    // Promotions management
-    Route::prefix('promotions')->name('promotions.')->group(function () {
-        Route::get('/', function () { 
-            return 'Promotions Management'; 
-        })->name('index');
-        Route::get('/create', function () { 
-            return 'Create Promotion'; 
-        })->name('create');
-        Route::post('/', function () { 
-            return 'Store Promotion'; 
-        })->name('store');
-        Route::get('/{promotion}/edit', function ($promotion) { 
-            return 'Edit Promotion'; 
-        })->name('edit');
-        Route::put('/{promotion}', function ($promotion) { 
-            return 'Update Promotion'; 
-        })->name('update');
-        Route::delete('/{promotion}', function ($promotion) { 
-            return 'Delete Promotion'; 
-        })->name('destroy');
-    });
     
-    // Reports
-    Route::prefix('reports')->name('reports.')->group(function () {
-        Route::get('/', function () { 
-            return 'Reports Dashboard'; 
-        })->name('index');
-        Route::get('/sales', function () { 
-            return 'Sales Report'; 
-        })->name('sales');
-        Route::get('/inventory', function () { 
-            return 'Inventory Report'; 
-        })->name('inventory');
-        Route::get('/customers', function () { 
-            return 'Customers Report'; 
-        })->name('customers');
-    });
+    
+
+
+// Reports
+Route::prefix('reports')->name('reports.')->group(function () {
+    Route::get('/', [ReportController::class, 'index'])->name('index');
+    Route::get('/sales', [ReportController::class, 'sales'])->name('sales');
+    Route::get('/inventory', [ReportController::class, 'inventory'])->name('inventory');
+    Route::get('/customers', [ReportController::class, 'customers'])->name('customers');
+    
+    // Export routes
+    Route::get('/sales/export', [ReportController::class, 'exportSales'])->name('sales.export');
+    Route::get('/inventory/export', [ReportController::class, 'exportInventory'])->name('inventory.export');
+    Route::get('/customers/export', [ReportController::class, 'exportCustomers'])->name('customers.export');
+    
+    // AJAX endpoints for dynamic chart updates
+    Route::get('/sales/data', [ReportController::class, 'getSalesData'])->name('sales.data');
+});
     
     // Banner Management
 Route::resource('banners', BannerController::class);
@@ -185,13 +168,5 @@ Route::prefix('complaints')->name('complaints.')->group(function () {
     Route::patch('/{complaint}/status', [ComplaintController::class, 'updateStatus'])->name('update-status');
 });
     
-    // Content management
-    Route::prefix('content')->name('content.')->group(function () {
-        Route::get('/pages', function () { 
-            return 'Content Pages Management'; 
-        })->name('pages');
-        Route::get('/faqs', function () { 
-            return 'FAQs Management'; 
-        })->name('faqs');
-    });
+    
 });
