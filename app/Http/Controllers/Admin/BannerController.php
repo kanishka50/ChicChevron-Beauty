@@ -27,7 +27,12 @@ class BannerController extends Controller
     public function create()
     {
         $maxOrder = Banner::max('sort_order') ?? 0;
-        return view('admin.banners.create', compact('maxOrder'));
+        
+        // Get products and categories for dropdowns
+        $products = \App\Models\Product::where('is_active', true)->orderBy('name')->get();
+        $categories = \App\Models\Category::where('is_active', true)->orderBy('name')->get();
+        
+        return view('admin.banners.create', compact('maxOrder', 'products', 'categories'));
     }
 
     /**
@@ -40,15 +45,23 @@ class BannerController extends Controller
         try {
             $data = $request->validated();
             
-            // Handle image upload
-            if ($request->hasFile('image')) {
-                $data['image_path'] = $request->file('image')->store('banners', 'public');
+            // Handle desktop image upload
+            if ($request->hasFile('image_desktop')) {
+                $data['image_desktop'] = $request->file('image_desktop')->store('banners', 'public');
+            }
+            
+            // Handle mobile image upload
+            if ($request->hasFile('image_mobile')) {
+                $data['image_mobile'] = $request->file('image_mobile')->store('banners', 'public');
             }
             
             // Set sort order if not provided
             if (!isset($data['sort_order'])) {
                 $data['sort_order'] = Banner::max('sort_order') + 1 ?? 1;
             }
+            
+            // Set is_active default
+            $data['is_active'] = $request->has('is_active') ? 1 : 0;
             
             Banner::create($data);
             
@@ -60,16 +73,19 @@ class BannerController extends Controller
         } catch (\Exception $e) {
             DB::rollback();
             
-            // Delete uploaded image if exists
-            if (isset($data['image_path'])) {
-                Storage::disk('public')->delete($data['image_path']);
+            // Delete uploaded images if exists
+            if (isset($data['image_desktop'])) {
+                Storage::disk('public')->delete($data['image_desktop']);
+            }
+            if (isset($data['image_mobile'])) {
+                Storage::disk('public')->delete($data['image_mobile']);
             }
             
             Log::error('Banner creation failed: ' . $e->getMessage());
             
             return redirect()->back()
                 ->withInput()
-                ->with('error', 'Failed to create banner. Please try again.');
+                ->with('error', 'Failed to create banner. Error: ' . $e->getMessage());
         }
     }
 
@@ -78,7 +94,11 @@ class BannerController extends Controller
      */
     public function edit(Banner $banner)
     {
-        return view('admin.banners.edit', compact('banner'));
+        // Get products and categories for dropdowns
+        $products = \App\Models\Product::where('is_active', true)->orderBy('name')->get();
+        $categories = \App\Models\Category::where('is_active', true)->orderBy('name')->get();
+        
+        return view('admin.banners.edit', compact('banner', 'products', 'categories'));
     }
 
     /**
@@ -91,15 +111,26 @@ class BannerController extends Controller
         try {
             $data = $request->validated();
             
-            // Handle image upload
-            if ($request->hasFile('image')) {
+            // Handle desktop image upload
+            if ($request->hasFile('image_desktop')) {
                 // Delete old image
-                if ($banner->image_path) {
-                    Storage::disk('public')->delete($banner->image_path);
+                if ($banner->image_desktop) {
+                    Storage::disk('public')->delete($banner->image_desktop);
                 }
-                
-                $data['image_path'] = $request->file('image')->store('banners', 'public');
+                $data['image_desktop'] = $request->file('image_desktop')->store('banners', 'public');
             }
+            
+            // Handle mobile image upload
+            if ($request->hasFile('image_mobile')) {
+                // Delete old image
+                if ($banner->image_mobile) {
+                    Storage::disk('public')->delete($banner->image_mobile);
+                }
+                $data['image_mobile'] = $request->file('image_mobile')->store('banners', 'public');
+            }
+            
+            // Set is_active
+            $data['is_active'] = $request->has('is_active') ? 1 : 0;
             
             $banner->update($data);
             
@@ -111,16 +142,19 @@ class BannerController extends Controller
         } catch (\Exception $e) {
             DB::rollback();
             
-            // Delete newly uploaded image if exists
-            if (isset($data['image_path']) && $data['image_path'] !== $banner->image_path) {
-                Storage::disk('public')->delete($data['image_path']);
+            // Delete newly uploaded images if exists
+            if (isset($data['image_desktop']) && $data['image_desktop'] !== $banner->image_desktop) {
+                Storage::disk('public')->delete($data['image_desktop']);
+            }
+            if (isset($data['image_mobile']) && $data['image_mobile'] !== $banner->image_mobile) {
+                Storage::disk('public')->delete($data['image_mobile']);
             }
             
             Log::error('Banner update failed: ' . $e->getMessage());
             
             return redirect()->back()
                 ->withInput()
-                ->with('error', 'Failed to update banner. Please try again.');
+                ->with('error', 'Failed to update banner. Error: ' . $e->getMessage());
         }
     }
 
@@ -130,9 +164,12 @@ class BannerController extends Controller
     public function destroy(Banner $banner)
     {
         try {
-            // Delete image file
-            if ($banner->image_path) {
-                Storage::disk('public')->delete($banner->image_path);
+            // Delete image files
+            if ($banner->image_desktop) {
+                Storage::disk('public')->delete($banner->image_desktop);
+            }
+            if ($banner->image_mobile) {
+                Storage::disk('public')->delete($banner->image_mobile);
             }
             
             $banner->delete();

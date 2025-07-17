@@ -45,18 +45,18 @@
                             {{ $banner->sort_order }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <img src="{{ $banner->image_url }}" 
-                                 alt="{{ $banner->title }}" 
-                                 class="h-16 w-28 object-cover rounded">
+                            <img src="{{ $banner->desktop_image_url }}" 
+                                alt="{{ $banner->title }}" 
+                                class="h-16 w-28 object-cover rounded">
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                             {{ $banner->title }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            @if($banner->link_url)
-                                <a href="{{ $banner->link_url }}" target="_blank" class="text-purple-600 hover:text-purple-900">
-                                    {{ $banner->link_text ?: 'View Link' }}
-                                </a>
+                            @if($banner->link_type !== 'none' && $banner->link_value)
+                                <span class="text-purple-600">
+                                    {{ ucfirst($banner->link_type) }}: {{ $banner->link_value }}
+                                </span>
                             @else
                                 <span class="text-gray-400">No link</span>
                             @endif

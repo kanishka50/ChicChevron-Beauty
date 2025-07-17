@@ -15,16 +15,24 @@
             @method('PUT')
             
             <div class="bg-white rounded-lg shadow p-6 space-y-6">
-                <!-- Current Image -->
+                <!-- Current Desktop Image -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Current Banner</label>
-                    <img src="{{ $banner->image_url }}" alt="{{ $banner->title }}" class="max-w-full h-48 object-cover rounded-lg">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Current Desktop Banner</label>
+                    <img src="{{ $banner->desktop_image_url }}" alt="{{ $banner->title }}" class="max-w-full h-48 object-cover rounded-lg">
                 </div>
+
+                <!-- Current Mobile Image (if exists) -->
+                @if($banner->image_mobile)
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Current Mobile Banner</label>
+                    <img src="{{ $banner->mobile_image_url }}" alt="{{ $banner->title }}" class="max-w-full h-48 object-cover rounded-lg">
+                </div>
+                @endif
 
                 <!-- Title -->
                 <div>
                     <label for="title" class="block text-sm font-medium text-gray-700 mb-2">
-                        Banner Title <span class="text-red-500">*</span>
+                        Banner Title <span class="text-gray-500">(Optional)</span>
                     </label>
                     <input type="text" 
                            name="title" 
@@ -37,10 +45,10 @@
                     @enderror
                 </div>
 
-                <!-- Image Upload (Optional for edit) -->
+                <!-- Desktop Image Upload (Optional for edit) -->
                 <div>
-                    <label for="image" class="block text-sm font-medium text-gray-700 mb-2">
-                        Change Banner Image <span class="text-gray-500">(Optional)</span>
+                    <label for="image_desktop" class="block text-sm font-medium text-gray-700 mb-2">
+                        Change Desktop Banner Image <span class="text-gray-500">(Optional)</span>
                     </label>
                     <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
                         <div class="space-y-1 text-center">
@@ -48,53 +56,122 @@
                                 <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                             </svg>
                             <div class="flex text-sm text-gray-600">
-                                <label for="image" class="relative cursor-pointer bg-white rounded-md font-medium text-purple-600 hover:text-purple-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-purple-500">
-                                    <span>Upload a new file</span>
-                                    <input id="image" name="image" type="file" class="sr-only" accept="image/*" onchange="previewImage(this)">
+                                <label for="image_desktop" class="relative cursor-pointer bg-white rounded-md font-medium text-purple-600 hover:text-purple-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-purple-500">
+                                    <span>Upload new desktop image</span>
+                                    <input id="image_desktop" name="image_desktop" type="file" class="sr-only" accept="image/*" onchange="previewImage(this, 'desktop')">
                                 </label>
                                 <p class="pl-1">or drag and drop</p>
                             </div>
                             <p class="text-xs text-gray-500">PNG, JPG, WEBP up to 2MB (min. 1200x400px)</p>
                         </div>
                     </div>
-                    <div id="image-preview" class="mt-4 hidden">
-                        <p class="text-sm text-gray-700 mb-2">New Image Preview:</p>
-                        <img src="" alt="Preview" class="max-w-full h-48 object-cover rounded-lg">
+                    <div id="desktop-preview" class="mt-4 hidden">
+                        <p class="text-sm text-gray-700 mb-2">New Desktop Image Preview:</p>
+                        <img src="" alt="Desktop Preview" class="max-w-full h-48 object-cover rounded-lg">
                     </div>
-                    @error('image')
+                    @error('image_desktop')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
                 </div>
 
-                <!-- Link URL -->
+                <!-- Mobile Image Upload (Optional) -->
                 <div>
-                    <label for="link_url" class="block text-sm font-medium text-gray-700 mb-2">
-                        Link URL <span class="text-gray-500">(Optional)</span>
+                    <label for="image_mobile" class="block text-sm font-medium text-gray-700 mb-2">
+                        {{ $banner->image_mobile ? 'Change' : 'Add' }} Mobile Banner Image <span class="text-gray-500">(Optional)</span>
                     </label>
-                    <input type="url" 
-                           name="link_url" 
-                           id="link_url" 
-                           value="{{ old('link_url', $banner->link_url) }}"
-                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500 @error('link_url') border-red-500 @enderror"
-                           placeholder="https://example.com/products/summer-collection">
-                    <p class="mt-1 text-xs text-gray-500">Where should users go when they click this banner?</p>
-                    @error('link_url')
+                    <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                        <div class="space-y-1 text-center">
+                            <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                                <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                            <div class="flex text-sm text-gray-600">
+                                <label for="image_mobile" class="relative cursor-pointer bg-white rounded-md font-medium text-purple-600 hover:text-purple-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-purple-500">
+                                    <span>Upload {{ $banner->image_mobile ? 'new' : '' }} mobile image</span>
+                                    <input id="image_mobile" name="image_mobile" type="file" class="sr-only" accept="image/*" onchange="previewImage(this, 'mobile')">
+                                </label>
+                                <p class="pl-1">or drag and drop</p>
+                            </div>
+                            <p class="text-xs text-gray-500">For better mobile experience (optional)</p>
+                        </div>
+                    </div>
+                    <div id="mobile-preview" class="mt-4 hidden">
+                        <p class="text-sm text-gray-700 mb-2">New Mobile Image Preview:</p>
+                        <img src="" alt="Mobile Preview" class="max-w-full h-48 object-cover rounded-lg">
+                    </div>
+                    @error('image_mobile')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
                 </div>
 
-                <!-- Link Text -->
+                <!-- Link Type -->
                 <div>
-                    <label for="link_text" class="block text-sm font-medium text-gray-700 mb-2">
-                        Button Text <span class="text-gray-500">(Optional)</span>
+                    <label for="link_type" class="block text-sm font-medium text-gray-700 mb-2">
+                        Link Type <span class="text-red-500">*</span>
                     </label>
-                    <input type="text" 
-                           name="link_text" 
-                           id="link_text" 
-                           value="{{ old('link_text', $banner->link_text) }}"
-                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500 @error('link_text') border-red-500 @enderror"
-                           placeholder="e.g., Shop Now">
-                    @error('link_text')
+                    <select name="link_type" 
+                            id="link_type" 
+                            onchange="toggleLinkValue(this.value)"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500 @error('link_type') border-red-500 @enderror">
+                        <option value="none" {{ old('link_type', $banner->link_type) == 'none' ? 'selected' : '' }}>No Link</option>
+                        <option value="product" {{ old('link_type', $banner->link_type) == 'product' ? 'selected' : '' }}>Link to Product</option>
+                        <option value="category" {{ old('link_type', $banner->link_type) == 'category' ? 'selected' : '' }}>Link to Category</option>
+                        <option value="url" {{ old('link_type', $banner->link_type) == 'url' ? 'selected' : '' }}>Custom URL</option>
+                    </select>
+                    @error('link_type')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <!-- Link Value (Dynamic based on type) -->
+                <div id="link-value-container" class="{{ old('link_type', $banner->link_type) == 'none' ? 'hidden' : '' }}">
+                    <!-- Product Dropdown -->
+                    <div id="product-select" class="{{ old('link_type', $banner->link_type) == 'product' ? '' : 'hidden' }}">
+                        <label for="product_link" class="block text-sm font-medium text-gray-700 mb-2">
+                            Select Product
+                        </label>
+                        <select name="link_value" 
+                                id="product_link"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500">
+                            <option value="">Choose a product...</option>
+                            @foreach($products as $product)
+                                <option value="{{ $product->slug }}" {{ old('link_value', $banner->link_value) == $product->slug ? 'selected' : '' }}>
+                                    {{ $product->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <!-- Category Dropdown -->
+                    <div id="category-select" class="{{ old('link_type', $banner->link_type) == 'category' ? '' : 'hidden' }}">
+                        <label for="category_link" class="block text-sm font-medium text-gray-700 mb-2">
+                            Select Category
+                        </label>
+                        <select name="link_value" 
+                                id="category_link"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500">
+                            <option value="">Choose a category...</option>
+                            @foreach($categories as $category)
+                                <option value="{{ $category->slug }}" {{ old('link_value', $banner->link_value) == $category->slug ? 'selected' : '' }}>
+                                    {{ $category->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <!-- Custom URL Input -->
+                    <div id="url-input" class="{{ old('link_type', $banner->link_type) == 'url' ? '' : 'hidden' }}">
+                        <label for="url_link" class="block text-sm font-medium text-gray-700 mb-2">
+                            Custom URL
+                        </label>
+                        <input type="url" 
+                               name="link_value" 
+                               id="url_link"
+                               value="{{ old('link_value', $banner->link_value) }}"
+                               placeholder="https://example.com"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500">
+                    </div>
+
+                    @error('link_value')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
                 </div>
@@ -146,8 +223,8 @@
 
 @push('scripts')
 <script>
-function previewImage(input) {
-    const preview = document.getElementById('image-preview');
+function previewImage(input, type) {
+    const preview = document.getElementById(type + '-preview');
     const previewImg = preview.querySelector('img');
     
     if (input.files && input.files[0]) {
@@ -161,6 +238,50 @@ function previewImage(input) {
         reader.readAsDataURL(input.files[0]);
     }
 }
+
+function toggleLinkValue(linkType) {
+    const container = document.getElementById('link-value-container');
+    const productSelect = document.getElementById('product-select');
+    const categorySelect = document.getElementById('category-select');
+    const urlInput = document.getElementById('url-input');
+    
+    // Hide all inputs first
+    productSelect.classList.add('hidden');
+    categorySelect.classList.add('hidden');
+    urlInput.classList.add('hidden');
+    
+    // Disable all inputs
+    document.getElementById('product_link').disabled = true;
+    document.getElementById('category_link').disabled = true;
+    document.getElementById('url_link').disabled = true;
+    
+    if (linkType === 'none') {
+        container.classList.add('hidden');
+    } else {
+        container.classList.remove('hidden');
+        
+        switch(linkType) {
+            case 'product':
+                productSelect.classList.remove('hidden');
+                document.getElementById('product_link').disabled = false;
+                break;
+            case 'category':
+                categorySelect.classList.remove('hidden');
+                document.getElementById('category_link').disabled = false;
+                break;
+            case 'url':
+                urlInput.classList.remove('hidden');
+                document.getElementById('url_link').disabled = false;
+                break;
+        }
+    }
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const linkType = document.getElementById('link_type').value;
+    toggleLinkValue(linkType);
+});
 </script>
 @endpush
 @endsection

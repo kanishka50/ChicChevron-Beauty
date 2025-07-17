@@ -11,11 +11,12 @@ class Banner extends Model
 
     protected $fillable = [
         'title',
-        'image_path',
-        'link_url',
-        'link_text',
-        'is_active',
-        'sort_order'
+        'image_desktop',
+        'image_mobile',
+        'link_type',
+        'link_value',
+        'sort_order',
+        'is_active'
     ];
 
     protected $casts = [
@@ -40,10 +41,35 @@ class Banner extends Model
     }
 
     /**
-     * Get image URL
+     * Get desktop image URL
      */
-    public function getImageUrlAttribute()
+    public function getDesktopImageUrlAttribute()
     {
-        return asset('storage/' . $this->image_path);
+        return asset('storage/' . $this->image_desktop);
+    }
+
+    /**
+     * Get mobile image URL
+     */
+    public function getMobileImageUrlAttribute()
+    {
+        return $this->image_mobile ? asset('storage/' . $this->image_mobile) : null;
+    }
+
+    /**
+     * Get the full URL based on link type
+     */
+    public function getFullUrlAttribute()
+    {
+        switch ($this->link_type) {
+            case 'product':
+                return route('products.show', $this->link_value);
+            case 'category':
+                return route('products.index', ['category' => $this->link_value]);
+            case 'url':
+                return $this->link_value;
+            default:
+                return null;
+        }
     }
 }

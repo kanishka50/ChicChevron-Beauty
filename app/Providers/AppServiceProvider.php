@@ -35,6 +35,13 @@ class AppServiceProvider extends ServiceProvider
         if (app()->environment('local') && strpos(config('app.url'), 'ngrok') !== false) {
             URL::forceScheme('https');
         }
+
+        // Helper function for banner URLs
+    if (!function_exists('getBannerUrl')) {
+        function getBannerUrl($banner) {
+            return $banner->full_url;
+        }
+    }
         
     }
 }

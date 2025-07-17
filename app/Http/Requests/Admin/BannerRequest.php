@@ -20,18 +20,22 @@ class BannerRequest extends FormRequest
     public function rules(): array
     {
         $rules = [
-            'title' => 'required|string|max:255',
-            'link_url' => 'nullable|url|max:255',
-            'link_text' => 'nullable|string|max:100',
+            'title' => 'nullable|string|max:255',
+            'link_type' => 'required|in:product,category,url,none',
+            'link_value' => 'nullable|required_unless:link_type,none|string|max:255',
             'is_active' => 'boolean',
             'sort_order' => 'nullable|integer|min:0'
         ];
         
-        // Image is required only for create
+        // Image validation
         if ($this->isMethod('post')) {
-            $rules['image'] = 'required|image|mimes:jpg,jpeg,png,webp|max:2048|dimensions:min_width=1200,min_height=400';
+            // For create, desktop image is required
+            $rules['image_desktop'] = 'required|image|mimes:jpg,jpeg,png,webp|max:2048|dimensions:min_width=1200,min_height=400';
+            $rules['image_mobile'] = 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048';
         } else {
-            $rules['image'] = 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048|dimensions:min_width=1200,min_height=400';
+            // For update, both are optional
+            $rules['image_desktop'] = 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048|dimensions:min_width=1200,min_height=400';
+            $rules['image_mobile'] = 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048';
         }
         
         return $rules;
@@ -43,11 +47,10 @@ class BannerRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'image.required' => 'Please upload a banner image.',
-            'image.dimensions' => 'Banner image must be at least 1200x400 pixels.',
-            'image.max' => 'Banner image must not exceed 2MB.',
-            'title.required' => 'Banner title is required.',
-            'link_url.url' => 'Please enter a valid URL.',
+            'image_desktop.required' => 'Please upload a desktop banner image.',
+            'image_desktop.dimensions' => 'Desktop banner image must be at least 1200x400 pixels.',
+            'image_desktop.max' => 'Banner image must not exceed 2MB.',
+            'link_value.required_unless' => 'Please provide a link value when link type is not "none".',
         ];
     }
 }
