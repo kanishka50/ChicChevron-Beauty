@@ -89,17 +89,28 @@ class InventoryReportExport implements FromCollection, WithHeadings, WithMapping
             $status = 'In Stock';
         }
 
+        // Handle null productVariant
+        $variantName = '-';
+        $variantSku = '-';
+        $costPrice = 0;
+        
+        if ($inventory->productVariant) {
+            $variantName = $inventory->productVariant->name;
+            $variantSku = $inventory->productVariant->sku;
+            $costPrice = $inventory->productVariant->cost_price;
+        }
+
         return [
-            $inventory->product->name,
-            $inventory->product->brand->name ?? '-',
-            $inventory->product->category->name ?? '-',
-            $inventory->productVariant->name,
-            $inventory->productVariant->sku,
+            $inventory->product ? $inventory->product->name : 'Unknown Product',
+            $inventory->product && $inventory->product->brand ? $inventory->product->brand->name : '-',
+            $inventory->product && $inventory->product->category ? $inventory->product->category->name : '-',
+            $variantName,
+            $variantSku,
             $inventory->current_stock,
             $inventory->reserved_stock,
             $inventory->available_stock,
             $inventory->low_stock_threshold,
-            number_format($inventory->productVariant->cost_price, 2),
+            number_format($costPrice, 2),
             number_format($inventory->stock_value, 2),
             $status,
             $inventory->updated_at->format('Y-m-d H:i:s')
@@ -159,7 +170,7 @@ class InventoryReportExport implements FromCollection, WithHeadings, WithMapping
                 
                 // Add filter information
                 $filterText = 'Filters: ';
-                if ($this->filters['status'] !== 'all') {
+                if (isset($this->filters['status']) && $this->filters['status'] !== 'all') {
                     $filterText .= 'Status=' . ucfirst($this->filters['status']) . ' ';
                 }
                 if (!empty($this->filters['category_id'])) {

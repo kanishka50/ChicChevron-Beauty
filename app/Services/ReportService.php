@@ -268,7 +268,7 @@ class ReportService
     /**
      * Get inventory report
      */
-    public function getInventoryReport($filters)
+public function getInventoryReport($filters)
 {
     $query = Inventory::with(['product.brand', 'product.category', 'productVariant']);
 
@@ -302,12 +302,13 @@ class ReportService
 
     // Get items
     $items = $query->get()->map(function ($inventory) {
-        // Check if productVariant exists before accessing its properties
+        // Since all inventory should have a productVariant in your system
+        // we calculate based on variant cost_price
         if ($inventory->productVariant) {
             $inventory->stock_value = $inventory->current_stock * $inventory->productVariant->cost_price;
         } else {
-            // Use product's base price if variant doesn't exist or set to 0
-            $inventory->stock_value = $inventory->current_stock * ($inventory->product->price ?? 0);
+            // Fallback to 0 if no variant exists
+            $inventory->stock_value = 0;
         }
         
         $inventory->available_stock = $inventory->current_stock - $inventory->reserved_stock;
@@ -384,7 +385,7 @@ public function getInventoryValueByCategoryChart()
             'categories.name as category_name',
             DB::raw('SUM(
                 inventory.current_stock * 
-                COALESCE(product_variants.cost_price, products.price, 0)
+                COALESCE(product_variants.cost_price, 0)
             ) as total_value')
         )
         ->having('total_value', '>', 0)
@@ -415,10 +416,8 @@ public function getStockMovementChart($days = 30)
 {
     $startDate = Carbon::now()->subDays($days);
     
-    // Check if the table name is inventory_movements or inventory_movement
-    $movementTable = DB::getSchemaBuilder()->hasTable('inventory_movements') ? 'inventory_movements' : 'inventory_movement';
-    
-    $movements = DB::table($movementTable)
+    // Using inventory_movements as confirmed from your database structure
+    $movements = DB::table('inventory_movements')
         ->where('movement_date', '>=', $startDate)
         ->groupBy(DB::raw('DATE(movement_date)'), 'movement_type')
         ->select(

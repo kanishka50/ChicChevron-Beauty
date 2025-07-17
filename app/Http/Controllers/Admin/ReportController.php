@@ -197,52 +197,56 @@ class ReportController extends Controller
         );
     }
 
-    /**
-     * Export inventory report
-     */
-    public function exportInventory(Request $request)
-    {
-        $filters = [
-            'status' => $request->input('status'),
-            'category_id' => $request->input('category_id'),
-            'brand_id' => $request->input('brand_id'),
-            'format' => $request->input('format', 'excel'),
-        ];
+   /**
+ * Export inventory report
+ */
+public function exportInventory(Request $request)
+{
+    $filters = [
+        'status' => $request->input('status', 'all'),
+        'category_id' => $request->input('category_id'),
+        'brand_id' => $request->input('brand_id'),
+        'sort_by' => $request->input('sort_by', 'stock_level'), // ADD THIS LINE
+        'format' => $request->input('format', 'excel'),
+    ];
 
-        if ($filters['format'] === 'pdf') {
-            $data = $this->reportService->getInventoryReport($filters);
-            $pdf = Pdf::loadView('admin.reports.exports.inventory-pdf', compact('data', 'filters'));
-            return $pdf->download('inventory-report-' . date('Y-m-d') . '.pdf');
-        }
-
-        // return Excel::download(
-        //     new \App\Exports\InventoryReportExport($filters), 
-        //     'inventory-report-' . date('Y-m-d') . '.xlsx'
-        // );
+    if ($filters['format'] === 'pdf') {
+        $data = $this->reportService->getInventoryReport($filters);
+        $pdf = Pdf::loadView('admin.reports.exports.inventory-pdf', compact('data', 'filters'));
+        return $pdf->download('inventory-report-' . date('Y-m-d') . '.pdf');
     }
 
-    /**
-     * Export customer report
-     */
-    public function exportCustomers(Request $request)
-    {
-        $filters = [
-            'start_date' => $request->input('start_date'),
-            'end_date' => $request->input('end_date'),
-            'format' => $request->input('format', 'excel'),
-        ];
+    // Excel export
+    return Excel::download(
+        new \App\Exports\InventoryReportExport($filters), 
+        'inventory-report-' . date('Y-m-d') . '.xlsx'
+    );
+}
 
-        if ($filters['format'] === 'pdf') {
-            $data = $this->reportService->getCustomerReport($filters);
-            $pdf = Pdf::loadView('admin.reports.exports.customers-pdf', compact('data', 'filters'));
-            return $pdf->download('customer-report-' . date('Y-m-d') . '.pdf');
-        }
+/**
+ * Export customer report
+ */
+public function exportCustomers(Request $request)
+{
+    $filters = [
+        'start_date' => $request->input('start_date', Carbon::now()->subMonths(3)->format('Y-m-d')),
+        'end_date' => $request->input('end_date', Carbon::now()->format('Y-m-d')),
+        'sort_by' => $request->input('sort_by', 'total_spent'), // ADD THIS LINE
+        'format' => $request->input('format', 'excel'),
+    ];
 
-        // return Excel::download(
-        //     new \App\Exports\CustomerReportExport($filters), 
-        //     'customer-report-' . date('Y-m-d') . '.xlsx'
-        // );
+    if ($filters['format'] === 'pdf') {
+        $data = $this->reportService->getCustomerReport($filters);
+        $pdf = Pdf::loadView('admin.reports.exports.customers-pdf', compact('data', 'filters'));
+        return $pdf->download('customer-report-' . date('Y-m-d') . '.pdf');
     }
+
+    // Excel export
+    return Excel::download(
+        new \App\Exports\CustomerReportExport($filters), 
+        'customer-report-' . date('Y-m-d') . '.xlsx'
+    );
+}
 
     /**
      * Get sales data via AJAX (for dynamic chart updates)
