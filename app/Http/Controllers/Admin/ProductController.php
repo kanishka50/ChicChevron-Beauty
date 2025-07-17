@@ -125,7 +125,7 @@ class ProductController extends Controller
             
             // Set is_active
             $data['is_active'] = $request->has('is_active');
-            $data['has_variants'] = false; // Will be updated when variants are added
+            $data['has_variants'] = $request->has('has_variants'); // Get from checkbox
             
             $product = Product::create($data);
             

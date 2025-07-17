@@ -471,6 +471,43 @@
         }
     }
 
+
+    // Tab functionality
+    function showTab(tabName) {
+        // Hide all tab contents
+        const tabContents = document.querySelectorAll('.tab-content');
+        tabContents.forEach(tab => {
+            tab.classList.add('hidden');
+        });
+        
+        // Remove active class from all tab buttons
+        const tabButtons = document.querySelectorAll('.tab-button');
+        tabButtons.forEach(button => {
+            button.classList.remove('active', 'border-pink-600', 'text-pink-600');
+            button.classList.add('border-transparent', 'text-gray-500');
+        });
+        
+        // Show selected tab content
+        const selectedTab = document.getElementById(tabName + '-tab');
+        if (selectedTab) {
+            selectedTab.classList.remove('hidden');
+        }
+        
+        // Add active class to clicked button
+        const activeButton = event.target;
+        activeButton.classList.remove('border-transparent', 'text-gray-500');
+        activeButton.classList.add('active', 'border-pink-600', 'text-pink-600');
+    }
+
+    // Initialize first tab as active on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        // Ensure description tab is visible by default
+        const descriptionTab = document.getElementById('description-tab');
+        if (descriptionTab) {
+            descriptionTab.classList.remove('hidden');
+        }
+    });
+
     // Auto-select first variant on load
     document.addEventListener('DOMContentLoaded', function() {
         const firstVariant = document.querySelector('.variant-option');
