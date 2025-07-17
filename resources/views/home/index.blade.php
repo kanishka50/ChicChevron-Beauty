@@ -1,3 +1,5 @@
+
+@include('components.home.banner-slider')
 @extends('layouts.app')
 
 @section('title', 'ChicChevron Beauty - Premium Beauty Products Sri Lanka')

@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\InventoryController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\Admin\ComplaintController;
+use App\Http\Controllers\Admin\BannerController;
 
 // All routes in this file are prefixed with 'admin' and use 'admin.' name prefix
 // Only admin users can access these routes
@@ -171,27 +172,10 @@ Route::middleware('admin')->group(function () {
         })->name('customers');
     });
     
-    // Banners
-    Route::prefix('banners')->name('banners.')->group(function () {
-        Route::get('/', function () { 
-            return 'Banners Management'; 
-        })->name('index');
-        Route::get('/create', function () { 
-            return 'Create Banner'; 
-        })->name('create');
-        Route::post('/', function () { 
-            return 'Store Banner'; 
-        })->name('store');
-        Route::get('/{banner}/edit', function ($banner) { 
-            return 'Edit Banner'; 
-        })->name('edit');
-        Route::put('/{banner}', function ($banner) { 
-            return 'Update Banner'; 
-        })->name('update');
-        Route::delete('/{banner}', function ($banner) { 
-            return 'Delete Banner'; 
-        })->name('destroy');
-    });
+    // Banner Management
+Route::resource('banners', BannerController::class);
+Route::post('banners/{banner}/toggle-status', [BannerController::class, 'toggleStatus'])->name('banners.toggle-status');
+Route::post('banners/update-order', [BannerController::class, 'updateOrder'])->name('banners.update-order');
     
     // Complaints management
 Route::prefix('complaints')->name('complaints.')->group(function () {
