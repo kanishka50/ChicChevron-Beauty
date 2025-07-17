@@ -15,8 +15,8 @@ class Banner extends Model
         'image_mobile',
         'link_type',
         'link_value',
-        'sort_order',
-        'is_active'
+        'is_active',
+        'sort_order'
     ];
 
     protected $casts = [
@@ -63,13 +63,37 @@ class Banner extends Model
     {
         switch ($this->link_type) {
             case 'product':
-                return route('products.show', $this->link_value);
+                $product = \App\Models\Product::where('slug', $this->link_value)->first();
+                return $product ? route('products.show', $product->slug) : '#';
             case 'category':
                 return route('products.index', ['category' => $this->link_value]);
             case 'url':
                 return $this->link_value;
             default:
-                return null;
+                return '#';
         }
+    }
+
+    /**
+     * Backward compatibility for old attribute names
+     */
+    public function getImageUrlAttribute()
+    {
+        return $this->desktop_image_url;
+    }
+
+    public function getImagePathAttribute()
+    {
+        return $this->image_desktop;
+    }
+
+    public function getLinkUrlAttribute()
+    {
+        return $this->full_url;
+    }
+
+    public function getLinkTextAttribute()
+    {
+        return $this->link_type !== 'none' ? 'Shop Now' : null;
     }
 }
