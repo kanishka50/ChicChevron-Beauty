@@ -112,10 +112,18 @@ Route::middleware('guest')->group(function () {
     Route::post('reset-password', [ResetPasswordController::class, 'store'])->name('password.update');
 });
 
+// Email verification routes
+// For development with ngrok, temporarily remove 'signed' middleware
 Route::get('verify-email/{id}/{hash}', [VerificationController::class, 'verify'])
-        ->middleware(['signed', 'throttle:6,1'])
-        ->name('verification.verify');
+    ->middleware(['throttle:6,1'])  // Removed 'signed' middleware for development
+    ->name('verification.verify');
 
+// For production, use this instead:
+/*
+Route::get('verify-email/{id}/{hash}', [VerificationController::class, 'verify'])
+    ->middleware(['signed', 'throttle:6,1'])
+    ->name('verification.verify');
+*/
 // Authenticated routes
 Route::middleware('auth:web')->group(function () {
     Route::post('logout', [LoginController::class, 'destroy'])->name('logout');
