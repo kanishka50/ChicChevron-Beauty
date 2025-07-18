@@ -1,4 +1,3 @@
-
 @extends('layouts.app')
 
 @section('title', 'ChicChevron Beauty - Premium Beauty Products Sri Lanka')
@@ -11,32 +10,37 @@
 
     <!-- Featured Categories -->
     @if($categories->isNotEmpty())
-        <section class="py-16 bg-white">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="text-center mb-12">
-                    <h2 class="text-3xl font-bold text-gray-900 mb-4">Shop by Category</h2>
-                    <p class="text-gray-600 max-w-2xl mx-auto">Discover our curated selection of beauty products across different categories</p>
+        <section class="py-12 md:py-20 bg-gradient-to-b from-white to-gray-50">
+            <div class="container-responsive">
+                <div class="text-center mb-8 md:mb-12">
+                    <h2 class="text-2xl md:text-4xl font-bold bg-gradient-to-r from-primary-600 to-primary-700 bg-clip-text text-transparent mb-3">
+                        Shop by Category
+                    </h2>
+                    <p class="text-gray-600 max-w-2xl mx-auto text-sm md:text-base">
+                        Discover our curated selection of beauty products across different categories
+                    </p>
                 </div>
 
-                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+                <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4 md:gap-6">
                     @foreach($categories as $category)
                         <a href="{{ route('products.index', ['category' => $category->id]) }}" 
-                           class="group text-center">
-                            <div class="relative overflow-hidden rounded-full w-24 h-24 mx-auto mb-4 bg-gradient-to-br from-pink-100 to-purple-100 group-hover:shadow-lg transition-shadow">
+                           class="group text-center transform hover:scale-105 transition-all duration-300">
+                            <div class="relative overflow-hidden rounded-2xl w-20 h-20 md:w-24 md:h-24 mx-auto mb-3 bg-gradient-to-br from-primary-100 to-primary-200 group-hover:shadow-xl transition-all duration-300">
                                 @if($category->image)
                                     <img src="{{ asset('storage/' . $category->image) }}" 
                                          alt="{{ $category->name }}" 
-                                         class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300">
+                                         class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
                                 @else
-                                    <div class="w-full h-full flex items-center justify-center text-2xl text-gray-600">
+                                    <div class="w-full h-full flex items-center justify-center text-xl md:text-2xl font-bold bg-gradient-to-br from-primary-400 to-primary-600 text-white">
                                         {{ substr($category->name, 0, 1) }}
                                     </div>
                                 @endif
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                             </div>
-                            <h3 class="font-medium text-gray-900 group-hover:text-pink-600 transition-colors">
+                            <h3 class="font-medium text-gray-900 group-hover:text-primary-600 transition-colors text-sm md:text-base">
                                 {{ $category->name }}
                             </h3>
-                            <p class="text-sm text-gray-500">{{ $category->products_count }} products</p>
+                            <p class="text-xs text-gray-500 mt-1">{{ $category->products_count }} items</p>
                         </a>
                     @endforeach
                 </div>
@@ -46,20 +50,23 @@
 
     <!-- Featured Products -->
     @if($featuredProducts->isNotEmpty())
-        <section class="py-16 bg-gray-50">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex justify-between items-center mb-12">
-                    <div>
-                        <h2 class="text-3xl font-bold text-gray-900 mb-4">Featured Products</h2>
-                        <p class="text-gray-600">Handpicked favorites that our customers love</p>
+        <section class="py-12 md:py-20 bg-white">
+            <div class="container-responsive">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 md:mb-12">
+                    <div class="mb-4 md:mb-0">
+                        <h2 class="text-2xl md:text-4xl font-bold text-gray-900 mb-2">Featured Products</h2>
+                        <p class="text-gray-600 text-sm md:text-base">Handpicked favorites that our customers love</p>
                     </div>
                     <a href="{{ route('products.index', ['featured' => 1]) }}" 
-                       class="text-pink-600 hover:text-pink-700 font-medium">
-                        View All →
+                       class="inline-flex items-center gap-2 text-primary-600 hover:text-primary-700 font-medium group">
+                        <span>View All</span>
+                        <svg class="w-5 h-5 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+                        </svg>
                     </a>
                 </div>
 
-                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-6">
                     @foreach($featuredProducts as $product)
                         @include('components.shop.product-card', ['product' => $product])
                     @endforeach
@@ -68,25 +75,53 @@
         </section>
     @endif
 
+    <!-- Special Offer Banner -->
+    <section class="py-8 md:py-12 bg-gradient-to-r from-primary-600 via-primary-700 to-primary-800">
+        <div class="container-responsive">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+                <div class="text-center md:text-left">
+                    <h3 class="text-xl md:text-2xl font-bold text-white mb-2">Limited Time Offer!</h3>
+                    <p class="text-primary-100 text-sm md:text-base">Get 20% off on selected beauty products</p>
+                </div>
+                <a href="{{ route('products.index', ['sale' => 1]) }}" 
+                   class="inline-flex items-center gap-2 bg-white text-primary-700 px-6 py-3 rounded-full font-semibold hover:bg-primary-50 transition-all duration-300 hover:shadow-xl group">
+                    <span>Shop Sale</span>
+                    <svg class="w-5 h-5 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+                    </svg>
+                </a>
+            </div>
+        </div>
+    </section>
+
     <!-- New Arrivals -->
     @if($newArrivals->isNotEmpty())
-        <section class="py-16 bg-white">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex justify-between items-center mb-12">
-                    <div>
-                        <h2 class="text-3xl font-bold text-gray-900 mb-4">New Arrivals</h2>
-                        <p class="text-gray-600">Fresh picks just for you</p>
+        <section class="py-12 md:py-20 bg-gray-50">
+            <div class="container-responsive">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 md:mb-12">
+                    <div class="mb-4 md:mb-0">
+                        <h2 class="text-2xl md:text-4xl font-bold text-gray-900 mb-2">New Arrivals</h2>
+                        <p class="text-gray-600 text-sm md:text-base">Fresh picks just for you</p>
                     </div>
                     <a href="{{ route('products.index', ['sort' => 'newest']) }}" 
-                       class="text-pink-600 hover:text-pink-700 font-medium">
-                        View All →
+                       class="inline-flex items-center gap-2 text-primary-600 hover:text-primary-700 font-medium group">
+                        <span>View All</span>
+                        <svg class="w-5 h-5 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+                        </svg>
                     </a>
                 </div>
 
-                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                    @foreach($newArrivals as $product)
-                        @include('components.shop.product-card', ['product' => $product])
-                    @endforeach
+                <div class="relative">
+                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-6">
+                        @foreach($newArrivals as $product)
+                            @include('components.shop.product-card', ['product' => $product])
+                        @endforeach
+                    </div>
+                    <!-- New Badge -->
+                    <div class="absolute -top-4 -right-4 bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-4 py-2 rounded-full text-xs font-bold shadow-lg transform rotate-12 hidden md:block">
+                        NEW
+                    </div>
                 </div>
             </div>
         </section>
@@ -94,20 +129,23 @@
 
     <!-- Best Sellers -->
     @if($bestSellers->isNotEmpty())
-        <section class="py-16 bg-gray-50">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex justify-between items-center mb-12">
-                    <div>
-                        <h2 class="text-3xl font-bold text-gray-900 mb-4">Best Sellers</h2>
-                        <p class="text-gray-600">Top-rated products loved by our customers</p>
+        <section class="py-12 md:py-20 bg-white">
+            <div class="container-responsive">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 md:mb-12">
+                    <div class="mb-4 md:mb-0">
+                        <h2 class="text-2xl md:text-4xl font-bold text-gray-900 mb-2">Best Sellers</h2>
+                        <p class="text-gray-600 text-sm md:text-base">Top-rated products loved by our customers</p>
                     </div>
                     <a href="{{ route('products.index', ['sort' => 'popular']) }}" 
-                       class="text-pink-600 hover:text-pink-700 font-medium">
-                        View All →
+                       class="inline-flex items-center gap-2 text-primary-600 hover:text-primary-700 font-medium group">
+                        <span>View All</span>
+                        <svg class="w-5 h-5 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+                        </svg>
                     </a>
                 </div>
 
-                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-6">
                     @foreach($bestSellers as $product)
                         @include('components.shop.product-card', ['product' => $product])
                     @endforeach
@@ -118,58 +156,71 @@
 
     <!-- Brand Showcase -->
     @if($brands->isNotEmpty())
-        <section class="py-16 bg-white">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="text-center mb-12">
-                    <h2 class="text-3xl font-bold text-gray-900 mb-4">Shop by Brand</h2>
-                    <p class="text-gray-600">Discover products from your favorite beauty brands</p>
+        <section class="py-12 md:py-20 bg-gradient-to-b from-gray-50 to-white overflow-hidden">
+            <div class="container-responsive">
+                <div class="text-center mb-8 md:mb-12">
+                    <h2 class="text-2xl md:text-4xl font-bold text-gray-900 mb-3">Shop by Brand</h2>
+                    <p class="text-gray-600 text-sm md:text-base">Discover products from your favorite beauty brands</p>
                 </div>
 
-                <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-6">
-                    @foreach($brands as $brand)
-                        <a href="{{ route('products.index', ['brands' => [$brand->id]]) }}" 
-                           class="group">
-                            <div class="bg-white p-6 rounded-lg border border-gray-200 hover:shadow-lg transition-shadow text-center">
-                                @if($brand->logo)
-                                    <img src="{{ asset('storage/' . $brand->logo) }}" 
-                                         alt="{{ $brand->name }}" 
-                                         class="w-16 h-16 mx-auto mb-3 object-contain group-hover:scale-110 transition-transform">
-                                @else
-                                    <div class="w-16 h-16 mx-auto mb-3 bg-gradient-to-br from-pink-100 to-purple-100 rounded-lg flex items-center justify-center text-lg font-bold text-gray-700">
-                                        {{ substr($brand->name, 0, 2) }}
-                                    </div>
-                                @endif
-                                <h3 class="font-medium text-gray-900 group-hover:text-pink-600 transition-colors">
-                                    {{ $brand->name }}
-                                </h3>
-                                <p class="text-xs text-gray-500 mt-1">{{ $brand->products_count }} products</p>
-                            </div>
-                        </a>
-                    @endforeach
+                <div class="relative">
+                    <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3 md:gap-4">
+                        @foreach($brands as $brand)
+                            <a href="{{ route('products.index', ['brands' => [$brand->id]]) }}" 
+                               class="group transform hover:scale-105 transition-all duration-300">
+                                <div class="bg-white p-4 md:p-6 rounded-2xl border-2 border-gray-100 hover:border-primary-200 hover:shadow-xl transition-all duration-300 text-center">
+                                    @if($brand->logo)
+                                        <img src="{{ asset('storage/' . $brand->logo) }}" 
+                                             alt="{{ $brand->name }}" 
+                                             class="w-12 h-12 md:w-16 md:h-16 mx-auto mb-2 object-contain group-hover:scale-110 transition-transform">
+                                    @else
+                                        <div class="w-12 h-12 md:w-16 md:h-16 mx-auto mb-2 bg-gradient-to-br from-primary-100 to-primary-200 rounded-xl flex items-center justify-center text-sm md:text-lg font-bold text-primary-700 group-hover:from-primary-200 group-hover:to-primary-300 transition-all duration-300">
+                                            {{ substr($brand->name, 0, 2) }}
+                                        </div>
+                                    @endif
+                                    <h3 class="font-medium text-gray-900 group-hover:text-primary-600 transition-colors text-xs md:text-sm truncate">
+                                        {{ $brand->name }}
+                                    </h3>
+                                    <p class="text-xs text-gray-500 mt-1">{{ $brand->products_count }} items</p>
+                                </div>
+                            </a>
+                        @endforeach
+                    </div>
                 </div>
             </div>
         </section>
     @endif
 
     <!-- Newsletter Signup -->
-    <section class="py-16 bg-gradient-to-r from-pink-600 to-purple-600">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <div class="max-w-2xl mx-auto">
-                <h2 class="text-3xl font-bold text-white mb-4">Stay in the Loop</h2>
-                <p class="text-pink-100 mb-8">Subscribe to our newsletter for exclusive offers, beauty tips, and new product launches</p>
+    <section class="py-12 md:py-20 bg-gradient-to-br from-primary-600 via-primary-700 to-primary-800 relative overflow-hidden">
+        <!-- Background Pattern -->
+        <div class="absolute inset-0 opacity-10">
+            <div class="absolute -top-24 -right-24 w-96 h-96 bg-white rounded-full"></div>
+            <div class="absolute -bottom-24 -left-24 w-96 h-96 bg-white rounded-full"></div>
+        </div>
+        
+        <div class="container-responsive relative z-10">
+            <div class="max-w-2xl mx-auto text-center">
+                <div class="inline-flex items-center justify-center w-16 h-16 bg-white/20 rounded-full mb-6">
+                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                    </svg>
+                </div>
+                <h2 class="text-2xl md:text-4xl font-bold text-white mb-4">Stay in the Loop</h2>
+                <p class="text-primary-100 mb-8 text-sm md:text-base">Subscribe to our newsletter for exclusive offers, beauty tips, and new product launches</p>
                 
-                <form id="newsletter-form" class="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
+                <form id="newsletter-form" class="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
                     @csrf
                     <input 
                         type="email" 
                         name="email"
                         placeholder="Enter your email address" 
-                        class="flex-1 px-4 py-3 rounded-lg border-0 focus:outline-none focus:ring-2 focus:ring-white"
+                        class="flex-1 px-5 py-3 rounded-full border-0 focus:outline-none focus:ring-4 focus:ring-white/30 text-gray-900 text-sm md:text-base"
                         required
                     >
                     <button 
                         type="submit" 
-                        class="px-8 py-3 bg-white text-pink-600 font-semibold rounded-lg hover:bg-gray-100 transition-colors"
+                        class="px-8 py-3 bg-white text-primary-700 font-semibold rounded-full hover:bg-primary-50 transition-all duration-300 hover:shadow-xl transform hover:scale-105"
                     >
                         Subscribe
                     </button>
@@ -179,47 +230,47 @@
     </section>
 
     <!-- Trust Badges -->
-    <section class="py-12 bg-white border-t border-gray-200">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-                <div class="flex flex-col items-center">
-                    <div class="w-12 h-12 bg-pink-100 rounded-full flex items-center justify-center mb-3">
-                        <svg class="w-6 h-6 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <section class="py-12 md:py-16 bg-white border-t border-gray-100">
+        <div class="container-responsive">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
+                <div class="group text-center">
+                    <div class="w-14 h-14 md:w-16 md:h-16 bg-gradient-to-br from-primary-100 to-primary-200 rounded-2xl flex items-center justify-center mb-3 mx-auto group-hover:scale-110 transition-transform duration-300">
+                        <svg class="w-7 h-7 md:w-8 md:h-8 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
                         </svg>
                     </div>
-                    <h3 class="font-semibold text-gray-900 mb-1">Fast Delivery</h3>
-                    <p class="text-sm text-gray-600">Free shipping over Rs. 5,000</p>
+                    <h3 class="font-semibold text-gray-900 mb-1 text-sm md:text-base">Fast Delivery</h3>
+                    <p class="text-xs md:text-sm text-gray-600">Free shipping over Rs. 5,000</p>
                 </div>
                 
-                <div class="flex flex-col items-center">
-                    <div class="w-12 h-12 bg-pink-100 rounded-full flex items-center justify-center mb-3">
-                        <svg class="w-6 h-6 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="group text-center">
+                    <div class="w-14 h-14 md:w-16 md:h-16 bg-gradient-to-br from-green-100 to-green-200 rounded-2xl flex items-center justify-center mb-3 mx-auto group-hover:scale-110 transition-transform duration-300">
+                        <svg class="w-7 h-7 md:w-8 md:h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
                     </div>
-                    <h3 class="font-semibold text-gray-900 mb-1">Authentic Products</h3>
-                    <p class="text-sm text-gray-600">100% genuine beauty products</p>
+                    <h3 class="font-semibold text-gray-900 mb-1 text-sm md:text-base">Authentic Products</h3>
+                    <p class="text-xs md:text-sm text-gray-600">100% genuine beauty products</p>
                 </div>
                 
-                <div class="flex flex-col items-center">
-                    <div class="w-12 h-12 bg-pink-100 rounded-full flex items-center justify-center mb-3">
-                        <svg class="w-6 h-6 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="group text-center">
+                    <div class="w-14 h-14 md:w-16 md:h-16 bg-gradient-to-br from-blue-100 to-blue-200 rounded-2xl flex items-center justify-center mb-3 mx-auto group-hover:scale-110 transition-transform duration-300">
+                        <svg class="w-7 h-7 md:w-8 md:h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
                         </svg>
                     </div>
-                    <h3 class="font-semibold text-gray-900 mb-1">Secure Payment</h3>
-                    <p class="text-sm text-gray-600">Safe & secure transactions</p>
+                    <h3 class="font-semibold text-gray-900 mb-1 text-sm md:text-base">Secure Payment</h3>
+                    <p class="text-xs md:text-sm text-gray-600">Safe & secure transactions</p>
                 </div>
                 
-                <div class="flex flex-col items-center">
-                    <div class="w-12 h-12 bg-pink-100 rounded-full flex items-center justify-center mb-3">
-                        <svg class="w-6 h-6 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="group text-center">
+                    <div class="w-14 h-14 md:w-16 md:h-16 bg-gradient-to-br from-purple-100 to-purple-200 rounded-2xl flex items-center justify-center mb-3 mx-auto group-hover:scale-110 transition-transform duration-300">
+                        <svg class="w-7 h-7 md:w-8 md:h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
                         </svg>
                     </div>
-                    <h3 class="font-semibold text-gray-900 mb-1">24/7 Support</h3>
-                    <p class="text-sm text-gray-600">Expert beauty advice</p>
+                    <h3 class="font-semibold text-gray-900 mb-1 text-sm md:text-base">24/7 Support</h3>
+                    <p class="text-xs md:text-sm text-gray-600">Expert beauty advice</p>
                 </div>
             </div>
         </div>
@@ -228,10 +279,10 @@
     <!-- Recently Viewed Products (if user has viewed products) -->
     @auth
         @if(session('recently_viewed_products'))
-            <section class="py-16 bg-gray-50">
-                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <h2 class="text-2xl font-bold text-gray-900 mb-8">Recently Viewed</h2>
-                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            <section class="py-12 md:py-20 bg-gray-50">
+                <div class="container-responsive">
+                    <h2 class="text-xl md:text-2xl font-bold text-gray-900 mb-6 md:mb-8">Recently Viewed</h2>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-6">
                         @foreach(session('recently_viewed_products') as $productId)
                             @php
                                 $recentProduct = \App\Models\Product::with(['brand', 'images', 'reviews'])->find($productId);
@@ -245,6 +296,7 @@
             </section>
         @endif
     @endauth
+
 @endsection
 
 @push('styles')
@@ -308,19 +360,6 @@
             });
         });
 
-        // Toast notification helper
-        function showToast(message, type = 'success') {
-            const toast = document.createElement('div');
-            const bgColor = type === 'success' ? 'bg-green-600' : 'bg-red-600';
-            toast.className = `fixed bottom-4 right-4 ${bgColor} text-white px-4 py-2 rounded-lg shadow-lg z-50 max-w-sm`;
-            toast.textContent = message;
-            document.body.appendChild(toast);
-            
-            setTimeout(() => {
-                toast.remove();
-            }, 4000);
-        }
-
         // Lazy loading for images
         if ('IntersectionObserver' in window) {
             const imageObserver = new IntersectionObserver((entries, observer) => {
@@ -360,4 +399,3 @@
         });
     </script>
 @endpush
-

@@ -1,25 +1,4 @@
 <footer class="bg-gray-900 text-white mt-auto">
-    <!-- Newsletter Section -->
-    <div class="bg-primary-600">
-        <div class="container-responsive py-6 md:py-8">
-            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <div class="text-center md:text-left">
-                    <h3 class="text-lg md:text-xl font-semibold">Subscribe to Our Newsletter</h3>
-                    <p class="text-sm md:text-base text-primary-100 mt-1">Get the latest beauty tips and exclusive offers!</p>
-                </div>
-                <form class="flex flex-col sm:flex-row gap-2 max-w-md mx-auto md:mx-0">
-                    <input type="email" 
-                           placeholder="Enter your email" 
-                           class="flex-1 px-4 py-2 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-white"
-                           required>
-                    <button type="submit" 
-                            class="px-6 py-2 bg-white text-primary-600 font-semibold rounded-lg hover:bg-gray-100 transition-colors">
-                        Subscribe
-                    </button>
-                </form>
-            </div>
-        </div>
-    </div>
 
     <!-- Main Footer Content -->
     <div class="container-responsive py-10 md:py-12">
