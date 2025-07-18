@@ -33,7 +33,6 @@ class ProductRequest extends FormRequest
             ],
             'brand_id' => 'required|exists:brands,id',
             'category_id' => 'required|exists:categories,id',
-            'product_type_id' => 'required|exists:product_types,id',
             'texture_id' => 'nullable|exists:textures,id',
             'main_image' => [
                 $product ? 'nullable' : 'required',
@@ -62,7 +61,6 @@ class ProductRequest extends FormRequest
             'category_id.required' => 'Please select a category.',
             'category_id.exists' => 'The selected category is invalid.',
             'product_type_id.required' => 'Please select a product type.',
-            'product_type_id.exists' => 'The selected product type is invalid.',
             'main_image.required' => 'The main product image is required.',
             'main_image.image' => 'The file must be an image.',
             'main_image.max' => 'The image may not be greater than 2MB.',
