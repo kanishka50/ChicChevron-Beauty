@@ -252,7 +252,7 @@
             </div>
             <h3 class="text-lg font-medium text-gray-900 mb-2">No orders yet</h3>
             <p class="text-gray-600 mb-6">Start shopping to see your orders here!</p>
-            <a href="{{ route('shop.index') }}" 
+            <a href="{{ route('products.index') }}"
                class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
                 <i class="fas fa-shopping-cart mr-2"></i>
                 Start Shopping
