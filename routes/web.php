@@ -112,14 +112,16 @@ Route::middleware('guest')->group(function () {
     Route::post('reset-password', [ResetPasswordController::class, 'store'])->name('password.update');
 });
 
+Route::get('verify-email/{id}/{hash}', [VerificationController::class, 'verify'])
+        ->middleware(['signed', 'throttle:6,1'])
+        ->name('verification.verify');
+
 // Authenticated routes
 Route::middleware('auth:web')->group(function () {
     Route::post('logout', [LoginController::class, 'destroy'])->name('logout');
     
     Route::get('verify-email', [VerificationController::class, 'show'])->name('verification.notice');
-    Route::get('verify-email/{id}/{hash}', [VerificationController::class, 'verify'])
-        ->middleware(['signed', 'throttle:6,1'])
-        ->name('verification.verify');
+    
     Route::post('email/verification-notification', [VerificationController::class, 'resend'])
         ->middleware('throttle:6,1')
         ->name('verification.send');
@@ -139,6 +141,8 @@ Route::middleware('auth:web')->group(function () {
 
     });
 });
+
+
 
 // Cart routes
 Route::prefix('cart')->name('cart.')->group(function () {
