@@ -8,7 +8,7 @@
             <div class="swiper-wrapper">
                 @foreach($banners as $banner)
                     <div class="swiper-slide">
-                        <div class="relative h-[400px] md:h-[600px] lg:h-[700px]">
+                        <div class="relative h-[300px] sm:h-[400px] md:h-[500px] lg:h-[600px] xl:h-[700px]">
                             <!-- Gradient Overlay -->
                             <div class="absolute inset-0 bg-gradient-to-r from-black/50 via-transparent to-transparent z-10"></div>
                             
@@ -119,6 +119,20 @@
             transform: translateY(0);
         }
     }
+
+    @media (max-width: 640px) {
+        .swiper-slide img {
+            object-fit: contain;
+            background-color: #f9fafb;
+        }
+    }
+    
+    @media (min-width: 641px) {
+        .swiper-slide img {
+            object-fit: cover;
+        }
+    }
+
     
     .animate-fadeInUp {
         animation: fadeInUp 0.8s ease-out forwards;

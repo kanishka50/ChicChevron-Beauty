@@ -33,128 +33,14 @@
     @stack('schema')
 </head>
 
-<body class="font-sans antialiased bg-gray-50" x-data="{ mobileMenuOpen: false, searchOpen: false }">
+<body class="font-sans antialiased bg-gray-50" >
     <div id="app" class="min-h-screen flex flex-col">
-        
 
-        <!-- Header -->
+        <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
         
         <!-- Navigation -->
         @include('layouts.navigation')
 
-        <!-- Mobile Menu Drawer -->
-        <div x-show="mobileMenuOpen"
-             x-transition:enter="transition ease-out duration-300"
-             x-transition:enter-start="-translate-x-full"
-             x-transition:enter-end="translate-x-0"
-             x-transition:leave="transition ease-in duration-300"
-             x-transition:leave-start="translate-x-0"
-             x-transition:leave-end="-translate-x-full"
-             class="fixed inset-y-0 left-0 w-80 max-w-full bg-white shadow-xl z-50 overflow-y-auto lg:hidden"
-             style="display: none;">
-            
-            <!-- Mobile Menu Header -->
-            <div class="flex items-center justify-between p-4 border-b">
-                <h2 class="text-lg font-semibold text-gray-900">Menu</h2>
-                <button @click="mobileMenuOpen = false" class="touch-target -mr-2 text-gray-500 hover:text-gray-700">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
-            </div>
-
-            <!-- Mobile Menu Content -->
-            <div class="py-4">
-                @auth
-                    <!-- User Info -->
-                    <div class="px-4 pb-4 border-b">
-                        <div class="flex items-center">
-                            <div class="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
-                                <span class="text-primary-600 font-semibold">{{ substr(Auth::user()->name, 0, 1) }}</span>
-                            </div>
-                            <div class="ml-3">
-                                <p class="text-sm font-medium text-gray-900">{{ Auth::user()->name }}</p>
-                                <p class="text-xs text-gray-500">{{ Auth::user()->email }}</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- User Menu Items -->
-                    <div class="py-2">
-                        <a href="{{ route('user.account.index') }}" class="mobile-menu-item">
-                            <svg class="w-5 h-5 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                            </svg>
-                            My Account
-                        </a>
-                        <a href="{{ route('user.orders.index') }}" class="mobile-menu-item">
-                            <svg class="w-5 h-5 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
-                            </svg>
-                            My Orders
-                        </a>
-                        <a href="{{ route('wishlist.index') }}" class="mobile-menu-item">
-                            <svg class="w-5 h-5 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
-                            </svg>
-                            My Wishlist
-                        </a>
-                    </div>
-                @else
-                    <!-- Guest Menu Items -->
-                    <div class="py-2 border-b">
-                        <a href="{{ route('login') }}" class="mobile-menu-item">
-                            <svg class="w-5 h-5 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
-                            </svg>
-                            Login
-                        </a>
-                        <a href="{{ route('register') }}" class="mobile-menu-item">
-                            <svg class="w-5 h-5 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
-                            </svg>
-                            Register
-                        </a>
-                    </div>
-                @endauth
-
-                <!-- Categories -->
-                <div class="py-2 border-b">
-                    <h3 class="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Categories</h3>
-                    <a href="{{ route('products.index') }}" class="mobile-menu-item">All Products</a>
-                    @foreach(\App\Models\Category::active()->ordered()->limit(10)->get() as $category)
-                        <a href="{{ route('products.index', ['category' => $category->id]) }}" class="mobile-menu-item">
-                            {{ $category->name }}
-                        </a>
-                    @endforeach
-                </div>
-
-                <!-- Other Pages -->
-                <div class="py-2">
-                    <h3 class="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Information</h3>
-                    <a href="{{ route('about') }}" class="mobile-menu-item">About Us</a>
-                    <a href="{{ route('contact') }}" class="mobile-menu-item">Contact</a>
-                    <a href="{{ route('faq') }}" class="mobile-menu-item">FAQ</a>
-                    <a href="{{ route('terms') }}" class="mobile-menu-item">Terms & Conditions</a>
-                    <a href="{{ route('privacy') }}" class="mobile-menu-item">Privacy Policy</a>
-                </div>
-
-                @auth
-                    <!-- Logout -->
-                    <div class="py-2 border-t">
-                        <form method="POST" action="{{ route('logout') }}">
-                            @csrf
-                            <button type="submit" class="mobile-menu-item w-full text-left text-red-600 hover:text-red-700 hover:bg-red-50">
-                                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
-                                </svg>
-                                Logout
-                            </button>
-                        </form>
-                    </div>
-                @endauth
-            </div>
-        </div>
 
         <!-- Breadcrumbs -->
         @if(!request()->routeIs('home'))
@@ -209,7 +95,7 @@
         @endif
 
         <!-- Main Content -->
-        <main class="flex-grow">
+        <main class="flex-grow pb-16 lg:pb-0">
             @yield('content')
         </main>
 
@@ -226,12 +112,6 @@
 <script>
     // Global flag for checkout
     window._isCheckoutInProgress = false;
-
-    // Mobile menu toggle
-    document.getElementById('mobile-menu-button').addEventListener('click', function() {
-        const mobileMenu = document.getElementById('mobile-menu');
-        mobileMenu.classList.toggle('hidden');
-    });
 
     // Define updateCartCounter function
     async function updateCartCounter() {
@@ -534,7 +414,6 @@ function updateWishlistButton(productId, isInWishlist) {
         }
     });
 }
-
 
 
 </script>

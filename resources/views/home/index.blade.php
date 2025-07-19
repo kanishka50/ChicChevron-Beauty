@@ -6,47 +6,72 @@
 @section('content')
     
     <!-- Hero Banner Section -->
-    @include('components.home.banner-slider')
+    @include('home.banner-slider')
 
     <!-- Featured Categories -->
     @if($categories->isNotEmpty())
-        <section class="py-12 md:py-20 bg-gradient-to-b from-white to-gray-50">
-            <div class="container-responsive">
-                <div class="text-center mb-8 md:mb-12">
-                    <h2 class="text-2xl md:text-4xl font-bold bg-gradient-to-r from-primary-600 to-primary-700 bg-clip-text text-transparent mb-3">
-                        Shop by Category
-                    </h2>
-                    <p class="text-gray-600 max-w-2xl mx-auto text-sm md:text-base">
-                        Discover our curated selection of beauty products across different categories
-                    </p>
-                </div>
+    <section class="py-12 md:py-20 bg-gradient-to-b from-white to-gray-50">
+        <div class="container-responsive">
+            <div class="text-center mb-8 md:mb-12">
+                <h2 class="text-2xl md:text-4xl font-bold text-gray-900 mb-3">
+                    Shop by Category
+                </h2>
+                <p class="text-gray-600 max-w-2xl mx-auto text-sm md:text-base">
+                    Discover our curated selection of beauty products across different categories
+                </p>
+            </div>
 
-                <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4 md:gap-6">
-                    @foreach($categories as $category)
-                        <a href="{{ route('products.index', ['category' => $category->id]) }}" 
-                           class="group text-center transform hover:scale-105 transition-all duration-300">
-                            <div class="relative overflow-hidden rounded-2xl w-20 h-20 md:w-24 md:h-24 mx-auto mb-3 bg-gradient-to-br from-primary-100 to-primary-200 group-hover:shadow-xl transition-all duration-300">
-                                @if($category->image)
-                                    <img src="{{ asset('storage/' . $category->image) }}" 
-                                         alt="{{ $category->name }}" 
-                                         class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
-                                @else
-                                    <div class="w-full h-full flex items-center justify-center text-xl md:text-2xl font-bold bg-gradient-to-br from-primary-400 to-primary-600 text-white">
-                                        {{ substr($category->name, 0, 1) }}
+            <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4 md:gap-6">
+                @foreach($categories as $category)
+                    <a href="{{ route('products.index', ['category' => $category->id]) }}" 
+                       class="group text-center">
+                        <!-- Modern Category Card Container -->
+                        <div class="relative mb-3 transition-all duration-300 transform group-hover:-translate-y-2">
+                            <!-- Background Shape with Gradient -->
+                            <div class="relative w-20 h-20 md:w-24 md:h-24 mx-auto">
+                                <!-- Animated Background Circle -->
+                                <div class="absolute inset-0 bg-gradient-to-br from-primary-100 to-primary-200 rounded-2xl opacity-0 group-hover:opacity-100 transform group-hover:scale-110 transition-all duration-300"></div>
+                                
+                                <!-- Main Container -->
+                                <div class="relative w-full h-full bg-white rounded-2xl shadow-md group-hover:shadow-xl transition-all duration-300 overflow-hidden">
+                                    @if($category->image)
+                                        <img src="{{ asset('storage/' . $category->image) }}" 
+                                             alt="{{ $category->name }}" 
+                                             class="w-full h-full object-contain p-3 group-hover:scale-110 transition-transform duration-500">
+                                    @else
+                                        <!-- Improved Default Icon -->
+                                        <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 group-hover:from-primary-50 group-hover:to-primary-100 transition-all duration-300">
+                                            <span class="text-2xl md:text-3xl font-bold text-gray-400 group-hover:text-primary-600 transition-colors duration-300">
+                                                {{ substr($category->name, 0, 1) }}
+                                            </span>
+                                        </div>
+                                    @endif
+                                </div>
+                                
+                                <!-- Floating Badge for Item Count -->
+                                @if($category->products_count > 0)
+                                    <div class="absolute -top-1 -right-1 bg-primary-600 text-white text-xs w-6 h-6 rounded-full flex items-center justify-center font-bold shadow-md transform scale-0 group-hover:scale-100 transition-transform duration-300">
+                                        {{ $category->products_count > 99 ? '99+' : $category->products_count }}
                                     </div>
                                 @endif
-                                <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                             </div>
-                            <h3 class="font-medium text-gray-900 group-hover:text-primary-600 transition-colors text-sm md:text-base">
-                                {{ $category->name }}
-                            </h3>
-                            <p class="text-xs text-gray-500 mt-1">{{ $category->products_count }} items</p>
-                        </a>
-                    @endforeach
-                </div>
+                        </div>
+                        
+                        <!-- Category Name -->
+                        <h3 class="font-medium text-gray-800 group-hover:text-primary-600 transition-colors text-sm md:text-base">
+                            {{ $category->name }}
+                        </h3>
+                        
+                        <!-- Subtle Item Count (Alternative to floating badge) -->
+                        <p class="text-xs text-gray-500 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                            {{ $category->products_count }} {{ Str::plural('item', $category->products_count) }}
+                        </p>
+                    </a>
+                @endforeach
             </div>
-        </section>
-    @endif
+        </div>
+    </section>
+@endif
 
     <!-- Featured Products -->
     @if($featuredProducts->isNotEmpty())
@@ -66,7 +91,7 @@
                     </a>
                 </div>
 
-                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-6">
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
                     @foreach($featuredProducts as $product)
                         @include('components.shop.product-card', ['product' => $product])
                     @endforeach
@@ -113,7 +138,7 @@
                 </div>
 
                 <div class="relative">
-                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-6">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
                         @foreach($newArrivals as $product)
                             @include('components.shop.product-card', ['product' => $product])
                         @endforeach
@@ -145,7 +170,7 @@
                     </a>
                 </div>
 
-                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-6">
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
                     @foreach($bestSellers as $product)
                         @include('components.shop.product-card', ['product' => $product])
                     @endforeach
