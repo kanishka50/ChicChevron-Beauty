@@ -17,8 +17,8 @@
     <div class="container-responsive">
         <!-- Enhanced Header -->
         <div class="mb-6 md:mb-8">
-            <h1 class="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900">Shopping Cart</h1>
-            <p class="text-gray-600 mt-1 md:mt-2 text-sm md:text-base">
+            <h1 class="text-xl md:text-2xl lg:text-3xl font-bold text-gray-900">Shopping Cart</h1>
+            <p class="text-gray-600 mt-1 md:mt-2 text-xs md:text-sm">
                 @if($cartItems->isNotEmpty())
                     You have {{ $cartSummary['total_items'] }} {{ Str::plural('item', $cartSummary['total_items']) }} in your cart
                 @else
@@ -84,7 +84,7 @@
 
                                     <!-- Product Info -->
                                     <div class="flex-1 min-w-0">
-                                        <h3 class="text-base font-semibold text-gray-900 mb-1">
+                                        <h3 class="text-sm md:text-base font-semibold text-gray-900 mb-1">
                                             <a href="{{ route('products.show', $item->product->slug) }}" 
                                                class="hover:text-primary-600 transition-colors line-clamp-2">
                                                 {{ $item->product->name }}
@@ -105,9 +105,9 @@
                                                 <span class="text-xs text-gray-500 line-through">
                                                     Rs. {{ number_format($item->product->selling_price, 2) }}
                                                 </span>
-                                                <span class="text-base font-bold text-primary-600 ml-1">{{ $item->unit_price_formatted }}</span>
+                                                <span class="text-sm md:text-base font-bold text-primary-600 ml-1">{{ $item->unit_price_formatted }}</span>
                                             @else
-                                                <span class="text-base font-bold text-gray-900">{{ $item->unit_price_formatted }}</span>
+                                                <span class="text-sm md:text-base font-bold text-gray-900">{{ $item->unit_price_formatted }}</span>
                                             @endif
                                         </div>
                                     </div>
@@ -119,7 +119,7 @@
                                     <div class="flex items-center bg-gray-100 rounded-lg">
                                         <button type="button" 
                                                 onclick="updateQuantity({{ $item->id }}, {{ $item->quantity - 1 }})"
-                                                class="p-2 hover:bg-gray-200 transition-colors rounded-l-lg"
+                                                class="p-1.5 md:p-2 hover:bg-gray-200 transition-colors rounded-l-lg"
                                                 {{ $item->quantity <= 1 ? 'disabled' : '' }}>
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
@@ -131,7 +131,7 @@
                                                value="{{ $item->quantity }}" 
                                                min="1" 
                                                max="{{ $item->available_stock }}"
-                                               class="w-12 text-center bg-transparent border-0 font-medium text-sm"
+                                               class="w-10 md:w-12 text-center bg-transparent border-0 font-medium text-sm"
                                                onchange="updateQuantity({{ $item->id }}, this.value)">
                                         
                                         <button type="button" 
@@ -147,7 +147,7 @@
                                     <!-- Item Total -->
                                     <div class="text-right">
                                         <p class="text-xs text-gray-500">Total</p>
-                                        <p class="text-lg font-bold text-gray-900" id="item-total-{{ $item->id }}">
+                                        <p class="text-base md:text-lg font-bold text-gray-900" id="item-total-{{ $item->id }}">
                                             {{ $item->total_price_formatted }}
                                         </p>
                                     </div>
@@ -191,7 +191,7 @@
 
                                     <!-- Product Details -->
                                     <div class="flex-1 min-w-0">
-                                        <h3 class="text-lg font-semibold text-gray-900 mb-1">
+                                        <h3 class="text-base md:text-lg font-semibold text-gray-900 mb-1">
                                             <a href="{{ route('products.show', $item->product->slug) }}" 
                                                class="hover:text-primary-600 transition-colors">
                                                 {{ $item->product->name }}
@@ -236,9 +236,9 @@
                                                 <p class="text-sm text-gray-500 line-through">
                                                     Rs. {{ number_format($item->product->selling_price, 2) }}
                                                 </p>
-                                                <p class="text-xl font-bold text-primary-600">{{ $item->unit_price_formatted }}</p>
+                                                <p class="text-lg md:text-xl font-bold text-primary-600">{{ $item->unit_price_formatted }}</p>
                                             @else
-                                                <p class="text-xl font-bold text-gray-900">{{ $item->unit_price_formatted }}</p>
+                                                <p class="text-lg md:text-xl font-bold text-gray-900">{{ $item->unit_price_formatted }}</p>
                                             @endif
                                         </div>
 
@@ -248,7 +248,7 @@
                                             <div class="flex items-center bg-gray-100 rounded-lg">
                                                 <button type="button" 
                                                         onclick="updateQuantity({{ $item->id }}, {{ $item->quantity - 1 }})"
-                                                        class="px-3 py-2 hover:bg-gray-200 transition-colors rounded-l-lg"
+                                                        class="px-2 py-1.5 md:px-3 md:py-2  hover:bg-gray-200 transition-colors rounded-l-lg"
                                                         {{ $item->quantity <= 1 ? 'disabled' : '' }}>
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
@@ -260,7 +260,7 @@
                                                        value="{{ $item->quantity }}" 
                                                        min="1" 
                                                        max="{{ $item->available_stock }}"
-                                                       class="w-16 text-center bg-transparent border-0 font-medium"
+                                                       class="w-12 md:w-16 text-center bg-transparent border-0 font-medium"
                                                        onchange="updateQuantity({{ $item->id }}, this.value)">
                                                 
                                                 <button type="button" 
@@ -277,7 +277,7 @@
                                         <!-- Item Total -->
                                         <div class="border-t pt-3">
                                             <p class="text-sm text-gray-600">Subtotal</p>
-                                            <p class="text-2xl font-bold text-gray-900" id="item-total-desktop-{{ $item->id }}">
+                                            <p class="text-xl md:text-2xl font-bold text-gray-900" id="item-total-desktop-{{ $item->id }}">
                                                 {{ $item->total_price_formatted }}
                                             </p>
                                         </div>
@@ -320,7 +320,7 @@
                     <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden lg:sticky lg:top-24">
                         <!-- Header -->
                         <div class="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-b border-gray-200">
-                            <h3 class="text-lg font-semibold text-gray-900">Order Summary</h3>
+                            <h3 class="text-base md:text-lg font-semibold text-gray-900">Order Summary</h3>
                         </div>
 
                         <!-- Summary Details -->
@@ -347,7 +347,7 @@
                             <div class="border-t border-gray-200 pt-4">
                                 <div class="flex justify-between items-center">
                                     <span class="text-lg font-semibold text-gray-900">Total</span>
-                                    <span class="text-2xl font-bold text-gray-900" id="cart-total">{{ $cartSummary['total_formatted'] }}</span>
+                                    <span class="text-xl md:text-2xl font-bold text-gray-900" id="cart-total">{{ $cartSummary['total_formatted'] }}</span>
                                 </div>
                                 <p class="text-xs text-gray-500 mt-1">Including all taxes</p>
                             </div>

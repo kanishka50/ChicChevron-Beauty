@@ -3,41 +3,43 @@
 namespace App\Http\Requests\Admin;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
-class BrandRequest extends FormRequest
+class BannerRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
      */
     public function authorize(): bool
     {
-        return true;
+        return auth()->guard('admin')->check();
     }
 
     /**
      * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
-        $brand = $this->route('brand');
-        
-        return [
-            'name' => [
-                'required',
-                'string',
-                'max:255',
-                Rule::unique('brands')->ignore($brand)
-            ],
-            'logo' => [
-                $brand ? 'nullable' : 'required',
-                'image',
-                'mimes:jpeg,png,jpg,webp',
-                'max:2048'
-            ],
+        $rules = [
+            'title' => 'nullable|string|max:255',
+            'description' => 'nullable|string|max:500',
+            'link_type' => 'required|in:product,category,url,none',
+            'link_value' => 'nullable|required_unless:link_type,none|string|max:255',
+            'is_active' => 'boolean',
+            'sort_order' => 'nullable|integer|min:0'
         ];
+        
+        // Image validation - No dimension restrictions
+        if ($this->isMethod('post')) {
+            // For create, desktop image is required
+            $rules['image_desktop'] = 'required|image|mimes:jpg,jpeg,png,webp|max:5120'; // 5MB max
+            $rules['image_mobile'] = 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120'; // Optional
+        } else {
+            // For update, both are optional
+            $rules['image_desktop'] = 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120';
+            $rules['image_mobile'] = 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120';
+        }
+        
+        return $rules;
     }
 
     /**
@@ -46,12 +48,14 @@ class BrandRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'name.required' => 'The brand name is required.',
-            'name.unique' => 'This brand name already exists.',
-            'logo.required' => 'The brand logo is required for new brands.',
-            'logo.image' => 'The file must be an image.',
-            'logo.mimes' => 'The logo must be a file of type: jpeg, png, jpg, webp.',
-            'logo.max' => 'The logo may not be greater than 2MB.',
+            'image_desktop.required' => 'Please upload a desktop banner image.',
+            'image_desktop.image' => 'The desktop banner must be an image file.',
+            'image_desktop.mimes' => 'The desktop banner must be a file of type: jpg, jpeg, png, webp.',
+            'image_desktop.max' => 'The desktop banner must not be larger than 5MB.',
+            'image_mobile.image' => 'The mobile banner must be an image file.',
+            'image_mobile.mimes' => 'The mobile banner must be a file of type: jpg, jpeg, png, webp.',
+            'image_mobile.max' => 'The mobile banner must not be larger than 5MB.',
+            'link_value.required_unless' => 'Please provide a link value when link type is not "none".',
         ];
     }
 }

@@ -1,4 +1,4 @@
-<!-- Add Variant Modal -->
+{{-- <!-- Add Variant Modal -->
 <div id="addVariantModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
     <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
         <div class="mt-3">
@@ -319,4 +319,4 @@
             </form>
         </div>
     </div>
-</div>
+</div> --}}

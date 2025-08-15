@@ -3,105 +3,117 @@
 @endphp
 
 @if($banners->isNotEmpty())
-    <section class="relative overflow-hidden">
-        <div class="swiper hero-swiper">
-            <div class="swiper-wrapper">
-                @foreach($banners as $banner)
-                    <div class="swiper-slide">
-                        <div class="relative h-[300px] sm:h-[400px] md:h-[500px] lg:h-[600px] xl:h-[700px]">
-                            <!-- Gradient Overlay -->
-                            <div class="absolute inset-0 bg-gradient-to-r from-black/50 via-transparent to-transparent z-10"></div>
-                            
-                            <!-- Desktop Image -->
-                            @if($banner->image_desktop)
-                                <img src="{{ $banner->desktop_image_url }}" 
-                                     alt="{{ $banner->title }}" 
-                                     class="hidden md:block w-full h-full object-cover">
+    <!-- Responsive Banner Section -->
+    <section class="container-responsive mt-4 lg:mt-6">
+        <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+            <!-- Carousel Container -->
+            <div class="relative h-[250px] sm:h-[350px] md:h-[400px] lg:h-[450px] xl:h-[500px] overflow-hidden" id="banner-container">
+                <!-- Carousel Wrapper for Sliding Effect -->
+                <div class="carousel-wrapper relative h-full">
+                    @foreach($banners as $index => $banner)
+                        <div class="carousel-item absolute inset-0 w-full h-full transition-transform duration-700 ease-in-out
+                                    {{ $index === 0 ? 'translate-x-0' : 'translate-x-full' }}" 
+                             data-index="{{ $index }}">
+                            @if($banner->link_type !== 'none' && $banner->link_value)
+                                <a href="{{ $banner->full_url }}" class="block relative h-full">
+                            @else
+                                <div class="relative h-full">
                             @endif
-                            
-                            <!-- Mobile Image -->
-                            @if($banner->image_mobile)
-                                <img src="{{ $banner->mobile_image_url }}" 
-                                     alt="{{ $banner->title }}" 
-                                     class="md:hidden w-full h-full object-cover">
-                            @elseif($banner->image_desktop)
-                                <img src="{{ $banner->desktop_image_url }}" 
-                                     alt="{{ $banner->title }}" 
-                                     class="md:hidden w-full h-full object-cover">
-                            @endif
-
-                            <!-- Banner Content -->
-                            <div class="absolute inset-0 flex items-center z-20">
-                                <div class="container-responsive">
-                                    <div class="max-w-xl">
-                                        @if($banner->subtitle)
-                                            <p class="text-primary-300 text-sm md:text-base font-medium mb-2 animate-fadeInUp">
-                                                {{ $banner->subtitle }}
-                                            </p>
-                                        @endif
-                                        
-                                        @if($banner->title)
-                                            <h1 class="text-3xl md:text-5xl lg:text-6xl font-bold text-white mb-4 animate-fadeInUp animation-delay-200">
-                                                {{ $banner->title }}
-                                            </h1>
-                                        @endif
-                                        
-                                        @if($banner->description)
-                                            <p class="text-gray-100 text-sm md:text-lg mb-6 animate-fadeInUp animation-delay-400">
-                                                {{ $banner->description }}
-                                            </p>
-                                        @endif
-                                        
-                                        @if($banner->link_type !== 'none' && $banner->link_value)
-                                            <a href="{{ $banner->full_url }}" 
-                                               class="inline-flex items-center gap-2 bg-white text-gray-900 px-6 md:px-8 py-3 md:py-4 rounded-full font-semibold hover:bg-primary-50 transition-all duration-300 hover:shadow-2xl transform hover:scale-105 group animate-fadeInUp animation-delay-600">
-                                                <span>Shop Now</span>
-                                                <svg class="w-5 h-5 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
-                                                </svg>
-                                            </a>
-                                        @endif
+                                
+                                <!-- Responsive Images -->
+                                <picture class="absolute inset-0">
+                                    <!-- Mobile Image (if exists) -->
+                                    @if($banner->image_mobile)
+                                        <source media="(max-width: 640px)" srcset="{{ asset('storage/' . $banner->image_mobile) }}">
+                                    @endif
+                                    <!-- Desktop Image (default) -->
+                                    <img src="{{ asset('storage/' . $banner->image_desktop) }}" 
+                                         alt="{{ $banner->title }}" 
+                                         class="w-full h-full object-cover">
+                                </picture>
+                                
+                                <!-- Responsive Text Overlay -->
+                                @if($banner->title || $banner->description)
+                                    <div class="absolute bottom-0 left-0 right-0 p-4 sm:p-8 md:p-12">
+                                        <div class="max-w-4xl mx-auto text-center">
+                                            @if($banner->title)
+                                                <h1 class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-black text-gray-900 mb-2 sm:mb-3" 
+                                                    style="font-family: 'Playfair Display', serif; letter-spacing: -0.02em;">
+                                                    {{ $banner->title }}
+                                                </h1>
+                                            @endif
+                                            
+                                            @if($banner->description)
+                                                <p class="text-gray-800 text-base sm:text-lg md:text-xl max-w-2xl mx-auto font-medium">
+                                                    {{ $banner->description }}
+                                                </p>
+                                            @endif
+                                        </div>
                                     </div>
+                                @endif
+                                
+                            @if($banner->link_type !== 'none' && $banner->link_value)
+                                </a>
+                            @else
                                 </div>
-                            </div>
+                            @endif
                         </div>
+                    @endforeach
+                </div>
+                
+                <!-- Pagination Dots (only if multiple banners) -->
+                @if($banners->count() > 1)
+                    <div class="absolute z-30 flex -translate-x-1/2 bottom-5 left-1/2 space-x-3 rtl:space-x-reverse">
+                        @foreach($banners as $index => $banner)
+                            <button type="button" 
+                                    class="pagination-dot w-3 h-3 rounded-full bg-white/50 hover:bg-white/75 transition-all duration-300 {{ $index === 0 ? 'bg-white' : '' }}" 
+                                    aria-current="{{ $index === 0 ? 'true' : 'false' }}"
+                                    aria-label="Slide {{ $index + 1 }}"
+                                    data-slide-to="{{ $index }}"></button>
+                        @endforeach
                     </div>
-                @endforeach
+                    
+                    <!-- Previous/Next Controls (Optional - Hidden on Mobile) -->
+                    <button type="button" 
+                            class="hidden md:flex absolute top-0 left-0 z-30 items-center justify-center h-full px-4 cursor-pointer group focus:outline-none"
+                            id="carousel-prev">
+                        <span class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-white/30 group-hover:bg-white/50 transition-colors duration-300">
+                            <svg class="w-4 h-4 text-white rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 6 10">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 1 1 5l4 4"/>
+                            </svg>
+                            <span class="sr-only">Previous</span>
+                        </span>
+                    </button>
+                    
+                    <button type="button" 
+                            class="hidden md:flex absolute top-0 right-0 z-30 items-center justify-center h-full px-4 cursor-pointer group focus:outline-none"
+                            id="carousel-next">
+                        <span class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-white/30 group-hover:bg-white/50 transition-colors duration-300">
+                            <svg class="w-4 h-4 text-white rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 6 10">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 9 4-4-4-4"/>
+                            </svg>
+                            <span class="sr-only">Next</span>
+                        </span>
+                    </button>
+                @endif
             </div>
-            
-            <!-- Navigation -->
-            @if($banners->count() > 1)
-                <div class="swiper-pagination !bottom-6"></div>
-                <div class="swiper-button-next !text-white !w-12 !h-12 !bg-white/20 !backdrop-blur-sm !rounded-full after:!text-base"></div>
-                <div class="swiper-button-prev !text-white !w-12 !h-12 !bg-white/20 !backdrop-blur-sm !rounded-full after:!text-base"></div>
-            @endif
         </div>
     </section>
 @else
-    <!-- Default Hero Section -->
-    <section class="relative h-[400px] md:h-[600px] lg:h-[700px] bg-gradient-to-br from-primary-600 via-primary-700 to-primary-800 overflow-hidden">
-        <!-- Background Pattern -->
-        <div class="absolute inset-0 opacity-20">
-            <div class="absolute -top-24 -right-24 w-96 h-96 bg-white rounded-full blur-3xl"></div>
-            <div class="absolute -bottom-24 -left-24 w-96 h-96 bg-white rounded-full blur-3xl"></div>
-        </div>
-        
-        <div class="relative h-full flex items-center">
-            <div class="container-responsive">
-                <div class="max-w-xl">
-                    <h1 class="text-3xl md:text-5xl lg:text-6xl font-bold text-white mb-4 animate-fadeInUp">
-                        Discover Your Beauty
-                    </h1>
-                    <p class="text-lg md:text-xl text-primary-100 mb-8 animate-fadeInUp animation-delay-200">
-                        Premium beauty products for every skin type and lifestyle
-                    </p>
-                    <a href="{{ route('products.index') }}" 
-                       class="inline-flex items-center gap-2 bg-white text-primary-700 px-6 md:px-8 py-3 md:py-4 rounded-full font-semibold hover:bg-primary-50 transition-all duration-300 hover:shadow-2xl transform hover:scale-105 group animate-fadeInUp animation-delay-400">
-                        <span>Shop Now</span>
-                        <svg class="w-5 h-5 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
-                        </svg>
-                    </a>
+    <!-- Default Banner Section - No Banners -->
+    <section class="container-responsive mt-4 lg:mt-6">
+        <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+            <div class="relative h-[250px] sm:h-[350px] md:h-[400px] lg:h-[450px] xl:h-[500px] bg-gradient-to-br from-primary-100 to-pink-100">
+                <!-- Default Content -->
+                <div class="absolute inset-0 flex items-center justify-center p-6 sm:p-8">
+                    <div class="text-center max-w-2xl">
+                        <h1 class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-3 sm:mb-4">
+                            Welcome to ChicChevron Beauty
+                        </h1>
+                        <p class="text-sm sm:text-base md:text-lg text-gray-600 px-4">
+                            Discover premium beauty products for every skin type. Authentic brands, competitive prices, and fast delivery across Sri Lanka.
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -109,84 +121,205 @@
 @endif
 
 <style>
-    @keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translateY(30px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
+/* Carousel sliding animation styles */
+.carousel-item {
+    will-change: transform;
+}
 
-    @media (max-width: 640px) {
-        .swiper-slide img {
-            object-fit: contain;
-            background-color: #f9fafb;
-        }
-    }
-    
-    @media (min-width: 641px) {
-        .swiper-slide img {
-            object-fit: cover;
-        }
-    }
+/* Positioning classes for sliding effect */
+.translate-x-0 {
+    transform: translateX(0);
+}
 
-    
-    .animate-fadeInUp {
-        animation: fadeInUp 0.8s ease-out forwards;
-    }
-    
-    .animation-delay-200 {
-        animation-delay: 0.2s;
-    }
-    
-    .animation-delay-400 {
-        animation-delay: 0.4s;
-    }
-    
-    .animation-delay-600 {
-        animation-delay: 0.6s;
-    }
-    
-    .swiper-pagination-bullet {
-        width: 12px;
-        height: 12px;
-        background: white;
-        opacity: 0.5;
-    }
-    
-    .swiper-pagination-bullet-active {
-        opacity: 1;
-        background: white;
-    }
+.translate-x-full {
+    transform: translateX(100%);
+}
+
+.-translate-x-full {
+    transform: translateX(-100%);
+}
+
+/* Line clamp utilities for text truncation */
+.line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* Ensure images maintain aspect ratio */
+img {
+    object-fit: cover;
+    object-position: center;
+}
+
+
+/* Prevent layout shift during transitions */
+.carousel-wrapper {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
 </style>
 
 @push('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            if (document.querySelector('.hero-swiper')) {
-                const heroSwiper = new Swiper('.hero-swiper', {
-                    loop: true,
-                    autoplay: {
-                        delay: 5000,
-                        disableOnInteraction: false,
-                    },
-                    pagination: {
-                        el: '.swiper-pagination',
-                        clickable: true,
-                    },
-                    navigation: {
-                        nextEl: '.swiper-button-next',
-                        prevEl: '.swiper-button-prev',
-                    },
-                    effect: 'fade',
-                    fadeEffect: {
-                        crossFade: true
-                    },
+            const slides = document.querySelectorAll('.carousel-item');
+            const dots = document.querySelectorAll('.pagination-dot');
+            const prevButton = document.getElementById('carousel-prev');
+            const nextButton = document.getElementById('carousel-next');
+            
+            if (slides.length <= 1) return; // No carousel needed
+            
+            let currentIndex = 0;
+            let slideInterval;
+            let isTransitioning = false;
+            
+            // Position slides initially
+            function initializeSlides() {
+                slides.forEach((slide, index) => {
+                    if (index === 0) {
+                        slide.classList.add('translate-x-0');
+                        slide.classList.remove('translate-x-full', '-translate-x-full');
+                    } else {
+                        slide.classList.add('translate-x-full');
+                        slide.classList.remove('translate-x-0', '-translate-x-full');
+                    }
                 });
             }
+            
+            // Show specific slide with sliding animation
+            function showSlide(newIndex, direction = 'next') {
+                if (isTransitioning || newIndex === currentIndex) return;
+                
+                isTransitioning = true;
+                const currentSlide = slides[currentIndex];
+                const newSlide = slides[newIndex];
+                
+                // Prepare new slide position
+                if (direction === 'next') {
+                    newSlide.classList.add('translate-x-full');
+                    newSlide.classList.remove('translate-x-0', '-translate-x-full');
+                } else {
+                    newSlide.classList.add('-translate-x-full');
+                    newSlide.classList.remove('translate-x-0', 'translate-x-full');
+                }
+                
+                // Force browser to calculate positions
+                newSlide.offsetHeight;
+                
+                // Start transition
+                requestAnimationFrame(() => {
+                    // Move current slide out
+                    if (direction === 'next') {
+                        currentSlide.classList.add('-translate-x-full');
+                        currentSlide.classList.remove('translate-x-0', 'translate-x-full');
+                    } else {
+                        currentSlide.classList.add('translate-x-full');
+                        currentSlide.classList.remove('translate-x-0', '-translate-x-full');
+                    }
+                    
+                    // Move new slide in
+                    newSlide.classList.add('translate-x-0');
+                    newSlide.classList.remove('translate-x-full', '-translate-x-full');
+                });
+                
+                // Update dots
+                dots.forEach((dot, index) => {
+                    if (index === newIndex) {
+                        dot.classList.add('bg-white');
+                        dot.classList.remove('bg-white/50');
+                        dot.setAttribute('aria-current', 'true');
+                    } else {
+                        dot.classList.remove('bg-white');
+                        dot.classList.add('bg-white/50');
+                        dot.setAttribute('aria-current', 'false');
+                    }
+                });
+                
+                currentIndex = newIndex;
+                
+                // Reset transition flag after animation completes
+                setTimeout(() => {
+                    isTransitioning = false;
+                }, 700);
+            }
+            
+            // Navigate to next slide
+            function nextSlide() {
+                const nextIndex = (currentIndex + 1) % slides.length;
+                showSlide(nextIndex, 'next');
+            }
+            
+            // Navigate to previous slide
+            function prevSlide() {
+                const prevIndex = (currentIndex - 1 + slides.length) % slides.length;
+                showSlide(prevIndex, 'prev');
+            }
+            
+            // Auto-play functionality
+            function startSlideshow() {
+                slideInterval = setInterval(nextSlide, 5000);
+            }
+            
+            function stopSlideshow() {
+                clearInterval(slideInterval);
+            }
+            
+            // Initialize
+            initializeSlides();
+            startSlideshow();
+            
+            // Event listeners for dots
+            dots.forEach((dot, index) => {
+                dot.addEventListener('click', () => {
+                    stopSlideshow();
+                    const direction = index > currentIndex ? 'next' : 'prev';
+                    showSlide(index, direction);
+                    startSlideshow();
+                });
+            });
+            
+            // Event listeners for prev/next buttons
+            if (prevButton) {
+                prevButton.addEventListener('click', () => {
+                    stopSlideshow();
+                    prevSlide();
+                    startSlideshow();
+                });
+            }
+            
+            if (nextButton) {
+                nextButton.addEventListener('click', () => {
+                    stopSlideshow();
+                    nextSlide();
+                    startSlideshow();
+                });
+            }
+            
+            // Pause on hover (desktop only)
+            const container = document.getElementById('banner-container');
+            if (container && window.innerWidth >= 768) {
+                container.addEventListener('mouseenter', stopSlideshow);
+                container.addEventListener('mouseleave', startSlideshow);
+            }
+            
+            // Handle visibility change
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden) {
+                    stopSlideshow();
+                } else {
+                    startSlideshow();
+                }
+            });
         });
     </script>
 @endpush

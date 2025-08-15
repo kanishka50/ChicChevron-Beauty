@@ -84,53 +84,50 @@
     .safe-bottom {
         padding-bottom: env(safe-area-inset-bottom);
     }
+}
 
-
-
-
+@layer base {
     /* Animation for loading spinner */
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
-
-.animate-spin {
-    animation: spin 1s linear infinite;
-}
-
-/* Smooth scroll behavior */
-html {
-    scroll-behavior: smooth;
-    -webkit-tap-highlight-color: transparent;
-}
-
-/* Prevent horizontal scroll on mobile */
-body {
-    overflow-x: hidden;
-}
-
-/* Better focus states for accessibility */
-button:focus-visible,
-a:focus-visible {
-    @apply ring-2 ring-primary-500 ring-offset-2;
-}
-
-/* Remove default focus outline */
-*:focus {
-    outline: none;
-}
-
-/* Ensure images don't overflow */
-img {
-    max-width: 100%;
-    height: auto;
-}
-
-/* Optional: Add if you want backdrop blur support fallback */
-@supports not (backdrop-filter: blur(1px)) {
-    .backdrop-blur-sm {
-        @apply bg-white bg-opacity-95;
+    @keyframes spin {
+        to { transform: rotate(360deg); }
     }
-}
 
+    .animate-spin {
+        animation: spin 1s linear infinite;
+    }
 
+    /* Smooth scroll behavior */
+    html {
+        scroll-behavior: smooth;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Prevent horizontal scroll on mobile */
+    body {
+        overflow-x: hidden;
+    }
+
+    /* Better focus states for accessibility */
+    button:focus-visible,
+    a:focus-visible {
+        @apply ring-2 ring-primary-500 ring-offset-2;
+    }
+
+    /* Remove default focus outline */
+    *:focus {
+        outline: none;
+    }
+
+    /* Ensure images don't overflow */
+    img {
+        max-width: 100%;
+        height: auto;
+    }
+
+    /* Optional: Add if you want backdrop blur support fallback */
+    @supports not (backdrop-filter: blur(1px)) {
+        .backdrop-blur-sm {
+            @apply bg-white bg-opacity-95;
+        }
+    }
 }

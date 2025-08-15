@@ -80,7 +80,7 @@
                             @endif
                         </a>
                     @endif
-                    <h1 class="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 mt-2 leading-tight">{{ $product->name }}</h1>
+                    <h1 class="text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 mt-2 leading-tight">{{ $product->name }}</h1>
                     
                     <!-- Enhanced Rating Display -->
                     @if($product->reviews->isNotEmpty())
@@ -106,12 +106,12 @@
                         @if($product->variants->count() > 1)
                             <div class="flex items-baseline gap-2">
                                 <span class="text-sm text-gray-600">Starting from</span>
-                                <span class="text-3xl md:text-4xl font-bold text-gray-900">
+                                <span class="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900">
                                     Rs. {{ number_format($product->variants->min('price'), 2) }}
                                 </span>
                             </div>
                         @else
-                            <span class="text-3xl md:text-4xl font-bold text-gray-900">
+                            <span class="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900">
                                 Rs. {{ number_format($product->variants->first()->price ?? 0, 2) }}
                             </span>
                         @endif
@@ -135,42 +135,47 @@
                 </div>
 
                 <!-- Modern Variant Selection -->
-                @if($product->has_variants && $product->variants->isNotEmpty())
-                    <div class="space-y-4" id="variant-selection">
-                        <label class="block text-base font-semibold text-gray-900">Choose Your Option</label>
-                        <div class="grid grid-cols-1 gap-3">
-                            @foreach($product->variants as $variant)
-                                <button type="button" 
-                                        class="variant-option group relative flex items-center justify-between p-4 bg-white border-2 border-gray-200 rounded-xl hover:border-primary-400 hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
-                                        data-variant-id="{{ $variant->id }}"
-                                        data-price="{{ $variant->price }}"
-                                        data-stock="{{ $variant->available_stock }}"
-                                        data-sku="{{ $variant->sku }}"
-                                        onclick="selectProductVariant(this)">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-12 h-12 bg-gradient-to-br from-primary-100 to-primary-200 rounded-lg flex items-center justify-center">
-                                            <span class="text-primary-700 font-medium text-sm">{{ substr($variant->display_name, 0, 2) }}</span>
-                                        </div>
-                                        <div class="text-left">
-                                            <span class="font-medium text-gray-900">{{ $variant->display_name }}</span>
-                                            @if($variant->available_stock < 5 && $variant->available_stock > 0)
-                                                <p class="text-xs text-orange-600 mt-0.5">Only {{ $variant->available_stock }} left!</p>
-                                            @endif
-                                        </div>
-                                    </div>
-                                    <div class="text-right">
-                                        <span class="text-lg font-semibold text-gray-900">Rs. {{ number_format($variant->price, 2) }}</span>
-                                        @if($variant->available_stock == 0)
-                                            <p class="text-xs text-red-600 mt-0.5">Out of stock</p>
-                                        @endif
-                                    </div>
-                                    <!-- Selected indicator -->
-                                    <div class="absolute inset-0 border-2 border-primary-500 rounded-xl opacity-0 pointer-events-none transition-opacity duration-200"></div>
-                                </button>
-                            @endforeach
+                <!-- Modern Variant Selection -->
+@if($product->has_variants && $product->variants->isNotEmpty())
+    <div class="space-y-3" id="variant-selection">
+        <label class="block text-sm font-medium text-gray-900">Choose Your Option</label>
+        <div class="space-y-2">
+            @foreach($product->variants as $variant)
+                <div class="variant-option relative bg-white border border-gray-200 rounded-lg hover:border-gray-300 focus-within:border-primary-500 focus-within:ring-1 focus-within:ring-primary-500 transition-all cursor-pointer"
+                     data-variant-id="{{ $variant->id }}"
+                     data-price="{{ $variant->price }}"
+                     data-stock="{{ $variant->available_stock }}"
+                     data-sku="{{ $variant->sku }}"
+                     onclick="selectProductVariant(this)">
+                    
+                    <div class="flex items-center p-4">
+                        <!-- Radio Button -->
+                        <div class="flex-shrink-0">
+                            <div class="radio-button w-4 h-4 border-2 border-gray-300 rounded-full relative transition-colors">
+                                <div class="radio-dot w-2 h-2 bg-primary-600 rounded-full absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 opacity-0 scale-0 transition-all"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Content -->
+                        <div class="ml-3 flex-1 flex items-center justify-between">
+                            <div>
+                                <span class="text-sm font-medium text-gray-900">{{ $variant->display_name }}</span>
+                                @if($variant->available_stock < 5 && $variant->available_stock > 0)
+                                    <p class="text-xs text-orange-600 mt-0.5">Only {{ $variant->available_stock }} left</p>
+                                @elseif($variant->available_stock == 0)
+                                    <p class="text-xs text-red-600 mt-0.5">Out of stock</p>
+                                @endif
+                            </div>
+                            <div class="text-right">
+                                <span class="text-sm font-semibold text-gray-900">Rs. {{ number_format($variant->price, 2) }}</span>
+                            </div>
                         </div>
                     </div>
-                @endif
+                </div>
+            @endforeach
+        </div>
+    </div>
+@endif
 
                 <!-- Enhanced Quantity and Add to Cart -->
                 <div class="space-y-4">
@@ -180,7 +185,7 @@
                         <div class="flex items-center bg-gray-100 rounded-xl overflow-hidden">
                             <button type="button" 
                                     onclick="changeQuantity(-1)" 
-                                    class="px-4 py-3 text-gray-600 hover:bg-gray-200 transition-colors focus:outline-none">
+                                    class="px-3 py-2 md:px-4 md:py-3 text-gray-600 hover:bg-gray-200 transition-colors focus:outline-none">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
                                 </svg>
@@ -190,10 +195,10 @@
                                    value="1" 
                                    min="1" 
                                    max="10" 
-                                   class="w-16 text-center bg-transparent border-0 focus:ring-0 font-medium">
+                                   class="w-12 md:w-16 text-center bg-transparent border-0 focus:ring-0 font-medium">
                             <button type="button" 
                                     onclick="changeQuantity(1)" 
-                                    class="px-4 py-3 text-gray-600 hover:bg-gray-200 transition-colors focus:outline-none">
+                                    class="px-3 py-2 md:px-4 md:py-3 text-gray-600 hover:bg-gray-200 transition-colors focus:outline-none">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                                 </svg>
@@ -202,31 +207,32 @@
                     </div>
 
                     <!-- Action Buttons -->
-                    <div class="flex gap-3">
-                        <button id="add-to-cart-btn" 
-                                onclick="addToCart()"
-                                class="flex-1 bg-gradient-to-r from-primary-600 to-primary-700 text-white py-4 px-6 rounded-xl font-semibold hover:from-primary-700 hover:to-primary-800 transform hover:scale-[1.02] transition-all duration-200 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed disabled:transform-none shadow-lg">
-                            <span class="flex items-center justify-center gap-2">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                    <!-- Action Buttons -->
+                        <div class="flex gap-2 md:gap-3">
+                            <button id="add-to-cart-btn" 
+                                    onclick="addToCart()"
+                                    class="flex-1 bg-gradient-to-r from-primary-600 to-primary-700 text-white py-2 px-3 md:py-3 md:px-4 lg:py-4 lg:px-6 rounded-xl font-semibold hover:from-primary-700 hover:to-primary-800 transform hover:scale-[1.02] transition-all duration-200 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed disabled:transform-none shadow-lg">
+                                <span class="flex items-center justify-center gap-2 text-sm md:text-base">
+                                    <svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                                    </svg>
+                                    Add to Cart
+                                </span>
+                            </button>
+                            
+                            <button onclick="toggleWishlist({{ $product->id }})" 
+                                    class="p-2 md:p-3 lg:p-4 bg-white border-2 border-gray-200 rounded-xl hover:border-primary-400 hover:bg-primary-50 transition-all duration-200 group"
+                                    data-product-id="{{ $product->id }}">
+                                <svg class="w-5 h-5 md:w-6 md:h-6 text-gray-600 group-hover:text-primary-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
                                 </svg>
-                                Add to Cart
-                            </span>
-                        </button>
-                        
-                        <button onclick="toggleWishlist({{ $product->id }})" 
-                                class="p-4 bg-white border-2 border-gray-200 rounded-xl hover:border-primary-400 hover:bg-primary-50 transition-all duration-200 group"
-                                data-product-id="{{ $product->id }}">
-                            <svg class="w-6 h-6 text-gray-600 group-hover:text-primary-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
-                            </svg>
-                        </button>
-                    </div>
+                            </button>
+                        </div>
 
                     <!-- Trust Badges -->
                     <div class="grid grid-cols-3 gap-3 pt-4">
                         <div class="text-center">
-                            <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                            <div class="w-8 h-8 md:w-10 md:h-10 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
                                 <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                 </svg>
@@ -234,7 +240,7 @@
                             <p class="text-xs text-gray-600">100% Authentic</p>
                         </div>
                         <div class="text-center">
-                            <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                            <div class="w-8 h-8 md:w-10 md:h-10 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-2">
                                 <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
                                 </svg>
@@ -242,7 +248,7 @@
                             <p class="text-xs text-gray-600">Secure Payment</p>
                         </div>
                         <div class="text-center">
-                            <div class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                            <div class="w-8 h-8 md:w-10 md:h-10 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-2">
                                 <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"></path>
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"></path>
@@ -575,25 +581,21 @@
     }
 
     function selectProductVariant(button) {
-        // Remove active state from all buttons
-        document.querySelectorAll('.variant-option').forEach(btn => {
-            btn.classList.remove('border-primary-500', 'bg-primary-50', 'shadow-md');
-            btn.classList.add('border-gray-200', 'bg-white');
-            btn.querySelector('.absolute').classList.add('opacity-0');
-        });
-
-        // Add active state
-        button.classList.remove('border-gray-200', 'bg-white');
-        button.classList.add('border-primary-500', 'bg-primary-50', 'shadow-md');
-        button.querySelector('.absolute').classList.remove('opacity-0');
-
-        // Update selected variant
-        selectedVariant = {
-            id: button.dataset.variantId,
-            price: button.dataset.price,
-            stock: parseInt(button.dataset.stock),
-            sku: button.dataset.sku
-        };
+        // Remove selected class from all variants
+    document.querySelectorAll('.variant-option').forEach(option => {
+        option.classList.remove('selected');
+    });
+    
+    // Add selected class to clicked variant
+    button.classList.add('selected');
+    
+    // Your existing logic remains the same...
+    selectedVariant = {
+        id: button.dataset.variantId,
+        price: button.dataset.price,
+        stock: parseInt(button.dataset.stock),
+        sku: button.dataset.sku
+    };
 
         // Update price display with animation
         const priceDisplay = document.getElementById('price-display');
@@ -762,5 +764,33 @@
 /* Smooth fade transitions */
 .opacity-0 {
     transition: opacity 150ms ease-in-out;
+}
+
+
+
+
+
+
+.variant-option.selected {
+    border-color: #e11d48;
+    background-color: #fef7f7;
+}
+
+.variant-option.selected .radio-button {
+    border-color: #e11d48;
+}
+
+.variant-option.selected .radio-dot {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+}
+
+.variant-option[data-stock="0"] {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.variant-option[data-stock="0"]:hover {
+    border-color: #d1d5db;
 }
 </style>

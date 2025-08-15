@@ -1,29 +1,41 @@
+<!-- ORDER DETAIL PAGE -->
 @extends('layouts.app')
 
-@section('title', 'Order Details - ' . $order->order_number)
+@section('title', 'Order #' . $order->order_number . ' - ChicChevron Beauty')
 
 @section('content')
-<div class="min-h-screen bg-gray-50 py-8">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <!-- Breadcrumb -->
-        <nav class="mb-8">
-            <ol class="flex items-center space-x-2 text-sm">
-                <li><a href="{{ route('home') }}" class="text-gray-500 hover:text-gray-700">Home</a></li>
-                <li><span class="text-gray-400">/</span></li>
-                <li><a href="{{ route('user.orders.index') }}" class="text-gray-500 hover:text-gray-700">My Orders</a></li>
-                <li><span class="text-gray-400">/</span></li>
-                <li class="text-gray-900">{{ $order->order_number }}</li>
+<div class="min-h-screen bg-gradient-to-br from-gray-50 via-primary-50/20 to-gray-50">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
+        <!-- Mobile Header -->
+        <div class="lg:hidden mb-6 bg-white rounded-2xl shadow-sm p-4 flex items-center justify-between">
+            <a href="{{ route('user.orders.index') }}" class="touch-target">
+                <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                </svg>
+            </a>
+            <h1 class="text-lg font-bold text-gray-900">#{{ $order->order_number }}</h1>
+            <div class="w-10"></div>
+        </div>
+
+        <!-- Desktop Breadcrumb -->
+        <nav class="hidden lg:block mb-6 text-sm">
+            <ol class="flex items-center space-x-1">
+                <li><a href="{{ route('home') }}" class="text-gray-500 hover:text-gray-700 transition-colors">Home</a></li>
+                <li class="text-gray-400">/</li>
+                <li><a href="{{ route('user.orders.index') }}" class="text-gray-500 hover:text-gray-700 transition-colors">My Orders</a></li>
+                <li class="text-gray-400">/</li>
+                <li class="text-gray-900 font-medium">#{{ $order->order_number }}</li>
             </ol>
         </nav>
 
         <!-- Order Header -->
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-            <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+        <div class="bg-white rounded-2xl shadow-sm p-6 mb-6">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
                 <div>
-                    <h1 class="text-2xl font-bold text-gray-900">Order {{ $order->order_number }}</h1>
-                    <p class="text-sm text-gray-600 mt-1">Placed on {{ $order->created_at->format('F j, Y \a\t g:i A') }}</p>
+                    <h1 class="text-2xl font-bold text-gray-900 mb-1">Order #{{ $order->order_number }}</h1>
+                    <p class="text-sm text-gray-600">Placed on {{ $order->created_at->format('F j, Y \a\t g:i A') }}</p>
                 </div>
-                <div class="mt-4 md:mt-0">
+                <div class="flex items-center space-x-3">
                     <x-order-status-badge :status="$order->status" />
                 </div>
             </div>
@@ -32,22 +44,31 @@
             <div class="mt-6 flex flex-wrap gap-3">
                 @if($order->status !== 'cancelled')
                     <a href="{{ route('user.orders.invoice', $order) }}" 
-                       class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                        <i class="fas fa-download mr-2"></i> Download Invoice
+                       class="btn btn-outline inline-flex items-center group">
+                        <svg class="w-5 h-5 mr-2 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"></path>
+                        </svg>
+                        Download Invoice
                     </a>
                 @endif
 
                 @if($order->status === 'shipping')
                     <button onclick="markOrderComplete({{ $order->id }})"
-                            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700">
-                        <i class="fas fa-check mr-2"></i> Mark as Received
+                            class="btn btn-primary inline-flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        Mark as Received
                     </button>
                 @endif
 
                 @if($order->can_be_cancelled && in_array($order->status, ['payment_completed', 'processing']))
                     <button onclick="requestCancellation({{ $order->id }})"
-                            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700">
-                        <i class="fas fa-times mr-2"></i> Request Cancellation
+                            class="btn btn-outline text-red-600 border-red-600 hover:bg-red-50 inline-flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                        Request Cancellation
                     </button>
                 @endif
             </div>
@@ -57,142 +78,148 @@
             <!-- Order Items -->
             <div class="lg:col-span-2 space-y-6">
                 <!-- Items List -->
-                <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-                    <div class="px-6 py-4 border-b border-gray-200">
-                        <h2 class="text-lg font-semibold text-gray-900">Order Items</h2>
+                <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
+                    <div class="px-6 py-4 bg-gradient-to-r from-blue-50 to-white border-b border-gray-100">
+                        <h2 class="text-lg font-semibold text-gray-900 flex items-center">
+                            <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                                <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                                </svg>
+                            </div>
+                            Order Items
+                        </h2>
                     </div>
                     <div class="p-6">
                         <div class="space-y-4">
-    @php
-        // Group items by product_id
-        $groupedItems = $order->items->groupBy('product_id');
-    @endphp
+                            @php
+                                $groupedItems = $order->items->groupBy('product_id');
+                            @endphp
 
-    @foreach($groupedItems as $productId => $productItems)
-        @php
-            $firstItem = $productItems->first();
-            $product = $firstItem->product;
-            $hasReviewed = \App\Models\Review::where('user_id', auth()->id())
-                ->where('product_id', $product->id)
-                ->exists();
-        @endphp
+                            @foreach($groupedItems as $productId => $productItems)
+                                @php
+                                    $firstItem = $productItems->first();
+                                    $product = $firstItem->product;
+                                    $hasReviewed = \App\Models\Review::where('user_id', auth()->id())
+                                        ->where('product_id', $product->id)
+                                        ->exists();
+                                @endphp
 
-        <div class="border rounded-lg p-4 {{ $productItems->count() > 1 ? 'bg-gray-50' : 'bg-white' }}">
-            {{-- If multiple variants, show a header --}}
-            @if($productItems->count() > 1)
-                <div class="mb-3 pb-3 border-b">
-                    <h4 class="font-medium text-gray-900">{{ $product->name }}</h4>
-                    <p class="text-sm text-gray-600">{{ $productItems->count() }} variants ordered</p>
-                </div>
-            @endif
+                                <div class="border border-gray-200 rounded-xl p-4 {{ $productItems->count() > 1 ? 'bg-gradient-to-r from-gray-50 to-white' : 'bg-white' }} hover:shadow-sm transition-shadow duration-200">
+                                    @if($productItems->count() > 1)
+                                        <div class="mb-3 pb-3 border-b border-gray-100">
+                                            <h4 class="font-medium text-gray-900">{{ $product->name }}</h4>
+                                            <p class="text-sm text-gray-600">{{ $productItems->count() }} variants ordered</p>
+                                        </div>
+                                    @endif
 
-            {{-- Show each variant --}}
-            @foreach($productItems as $item)
-                <div class="flex items-start space-x-4 {{ !$loop->last && $productItems->count() > 1 ? 'mb-3 pb-3 border-b border-gray-100' : '' }}">
-                    <div class="flex-shrink-0 w-20 h-20">
-                        @if($loop->first || $productItems->count() == 1)
-                            @if($item->product && $item->product->main_image)
-                                <img src="{{ Storage::url($item->product->main_image) }}" 
-                                     alt="{{ $item->product_name }}"
-                                     class="w-full h-full object-cover rounded-md">
-                            @else
-                                <div class="w-full h-full bg-gray-200 rounded-md flex items-center justify-center">
-                                    <i class="fas fa-image text-gray-400"></i>
+                                    @foreach($productItems as $item)
+                                        <div class="flex items-start space-x-4 {{ !$loop->last && $productItems->count() > 1 ? 'mb-3 pb-3 border-b border-gray-100' : '' }}">
+                                            <div class="flex-shrink-0 w-20 h-20">
+                                                @if($loop->first || $productItems->count() == 1)
+                                                    @if($item->product && $item->product->main_image)
+                                                        <img src="{{ Storage::url($item->product->main_image) }}" 
+                                                             alt="{{ $item->product_name }}"
+                                                             class="w-full h-full object-cover rounded-lg hover:scale-105 transition-transform duration-200">
+                                                    @else
+                                                        <div class="w-full h-full bg-gray-200 rounded-lg flex items-center justify-center">
+                                                            <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                                            </svg>
+                                                        </div>
+                                                    @endif
+                                                @else
+                                                    <div class="w-20"></div>
+                                                @endif
+                                            </div>
+                                            
+                                            <div class="flex-1">
+                                                @if($productItems->count() == 1)
+                                                    <h3 class="text-sm font-medium text-gray-900">{{ $item->product_name }}</h3>
+                                                @endif
+                                                
+                                                @if($item->variant_details)
+                                                    @php $variantDetails = json_decode($item->variant_details, true); @endphp
+                                                    <div class="flex flex-wrap gap-2 mt-1">
+                                                        @if(!empty($variantDetails['size']))
+                                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                                Size: {{ $variantDetails['size'] }}
+                                                            </span>
+                                                        @endif
+                                                        @if(!empty($variantDetails['color']))
+                                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                                Color: {{ $variantDetails['color'] }}
+                                                            </span>
+                                                        @endif
+                                                        @if(!empty($variantDetails['scent']))
+                                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                                                Scent: {{ $variantDetails['scent'] }}
+                                                            </span>
+                                                        @endif
+                                                    </div>
+                                                @endif
+                                                
+                                                <div class="mt-2 flex items-center space-x-4 text-sm">
+                                                    <span class="text-gray-600">Qty: <span class="font-medium">{{ $item->quantity }}</span></span>
+                                                    <span class="text-gray-600">Unit: <span class="font-medium">LKR {{ number_format($item->unit_price, 2) }}</span></span>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="text-right">
+                                                <p class="text-sm font-medium text-gray-900">LKR {{ number_format($item->total_price, 2) }}</p>
+                                            </div>
+                                        </div>
+                                    @endforeach
+
+                                    @if($order->status === 'completed' && $product)
+                                        <div class="mt-3 pt-3 border-t border-gray-100 {{ $productItems->count() > 1 ? 'bg-gradient-to-r from-primary-50 to-white -mx-4 -mb-4 px-4 pb-4 rounded-b-xl' : '' }}">
+                                            @if(!$hasReviewed)
+                                                <a href="{{ route('user.reviews.create.single', [$order, $product]) }}" 
+                                                   class="inline-flex items-center text-sm text-primary-600 hover:text-primary-700 font-medium transition-colors group">
+                                                    <svg class="w-4 h-4 mr-1 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path>
+                                                    </svg>
+                                                    Write a Review for This Product
+                                                </a>
+                                                @if($productItems->count() > 1)
+                                                    <p class="text-xs text-gray-500 mt-1">
+                                                        <svg class="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                        </svg>
+                                                        Your review will apply to all variants of this product
+                                                    </p>
+                                                @endif
+                                            @else
+                                                <span class="inline-flex items-center text-sm text-green-600">
+                                                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                                    </svg>
+                                                    Product Reviewed
+                                                </span>
+                                            @endif
+                                        </div>
+                                    @endif
                                 </div>
-                            @endif
-                        @else
-                            <div class="w-20"></div> {{-- Spacer for alignment when multiple variants --}}
-                        @endif
-                    </div>
-                    
-                    <div class="flex-1">
-                        @if($productItems->count() == 1)
-                            <h3 class="text-sm font-medium text-gray-900">{{ $item->product_name }}</h3>
-                        @endif
-                        
-                        @if($item->variant_details)
-                            @php $variantDetails = json_decode($item->variant_details, true); @endphp
-                            <div class="flex flex-wrap gap-2 mt-1">
-                                @if(!empty($variantDetails['size']))
-                                    <span class="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded">
-                                        Size: {{ $variantDetails['size'] }}
-                                    </span>
-                                @endif
-                                @if(!empty($variantDetails['color']))
-                                    <span class="inline-block bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded">
-                                        Color: {{ $variantDetails['color'] }}
-                                    </span>
-                                @endif
-                                @if(!empty($variantDetails['scent']))
-                                    <span class="inline-block bg-purple-100 text-purple-800 text-xs px-2 py-0.5 rounded">
-                                        Scent: {{ $variantDetails['scent'] }}
-                                    </span>
-                                @endif
-                            </div>
-                        @endif
-                        
-                        <div class="mt-1 flex items-center space-x-4">
-                            <span class="text-sm text-gray-600">Qty: {{ $item->quantity }}</span>
-                            <span class="text-sm text-gray-600">LKR {{ number_format($item->unit_price, 2) }} each</span>
-                        </div>
-                    </div>
-                    
-                    <div class="text-right">
-                        <p class="text-sm font-medium text-gray-900">LKR {{ number_format($item->total_price, 2) }}</p>
-                    </div>
-                </div>
-            @endforeach
-
-            {{-- Single review button for all variants --}}
-            @if($order->status === 'completed' && $product)
-                <div class="mt-3 pt-3 border-t {{ $productItems->count() > 1 ? 'bg-blue-50 -mx-4 -mb-4 px-4 pb-4 rounded-b-lg' : '' }}">
-                    @if(!$hasReviewed)
-                        <a href="{{ route('user.reviews.create.single', [$order, $product]) }}" 
-                           class="inline-flex items-center text-sm text-pink-600 hover:text-pink-700 font-medium">
-                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path>
-                            </svg>
-                            Write a Review for This Product
-                        </a>
-                        @if($productItems->count() > 1)
-                            <p class="text-xs text-gray-500 mt-1">
-                                <i class="fas fa-info-circle mr-1"></i>
-                                Your review will apply to all variants of this product
-                            </p>
-                        @endif
-                    @else
-                        <span class="inline-flex items-center text-sm text-green-600">
-                            <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                            </svg>
-                            Product Reviewed
-                        </span>
-                    @endif
-                </div>
-            @endif
-        </div>
-    @endforeach
-</div>
+                            @endforeach
                         </div>
 
                         <!-- Order Summary -->
                         <div class="mt-6 pt-6 border-t border-gray-200">
-                            <dl class="space-y-2">
+                            <dl class="space-y-3">
                                 <div class="flex justify-between text-sm">
                                     <dt class="text-gray-600">Subtotal</dt>
-                                    <dd class="text-gray-900">LKR {{ number_format($order->subtotal, 2) }}</dd>
+                                    <dd class="text-gray-900 font-medium">LKR {{ number_format($order->subtotal, 2) }}</dd>
                                 </div>
                                 @if($order->discount_amount > 0)
                                     <div class="flex justify-between text-sm">
                                         <dt class="text-gray-600">Discount</dt>
-                                        <dd class="text-green-600">- LKR {{ number_format($order->discount_amount, 2) }}</dd>
+                                        <dd class="text-green-600 font-medium">- LKR {{ number_format($order->discount_amount, 2) }}</dd>
                                     </div>
                                 @endif
                                 <div class="flex justify-between text-sm">
                                     <dt class="text-gray-600">Shipping</dt>
-                                    <dd class="text-gray-900">LKR {{ number_format($order->shipping_amount, 2) }}</dd>
+                                    <dd class="text-gray-900 font-medium">LKR {{ number_format($order->shipping_amount, 2) }}</dd>
                                 </div>
-                                <div class="flex justify-between text-base font-semibold pt-2 border-t border-gray-200">
+                                <div class="flex justify-between text-base font-semibold pt-3 border-t border-gray-200">
                                     <dt class="text-gray-900">Total</dt>
                                     <dd class="text-gray-900">LKR {{ number_format($order->total_amount, 2) }}</dd>
                                 </div>
@@ -202,24 +229,46 @@
                 </div>
 
                 <!-- Order Status Timeline -->
-                <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-                    <div class="px-6 py-4 border-b border-gray-200">
-                        <h2 class="text-lg font-semibold text-gray-900">Order Timeline</h2>
+                <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
+                    <div class="px-6 py-4 bg-gradient-to-r from-indigo-50 to-white border-b border-gray-100">
+                        <h2 class="text-lg font-semibold text-gray-900 flex items-center">
+                            <div class="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center mr-3">
+                                <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                            Order Timeline
+                        </h2>
                     </div>
                     <div class="p-6">
-                        <ol class="relative border-l border-gray-200">
-                            @foreach($order->statusHistory as $history)
-                                <li class="mb-6 ml-4 {{ $loop->last ? '' : 'pb-6' }}">
-                                    <div class="absolute w-3 h-3 bg-gray-400 rounded-full mt-1.5 -left-1.5 border border-white"></div>
-                                    <time class="mb-1 text-sm font-normal leading-none text-gray-500">
-                                        {{ $history->created_at->format('F j, Y \a\t g:i A') }}
-                                    </time>
-                                    <h3 class="text-sm font-semibold text-gray-900">
-                                        {{ ucwords(str_replace('_', ' ', $history->status)) }}
-                                    </h3>
-                                    @if($history->comment)
-                                        <p class="text-sm text-gray-600">{{ $history->comment }}</p>
+                        <ol class="relative">
+                            @foreach($order->statusHistory as $index => $history)
+                                <li class="mb-8 ml-6 {{ $loop->last ? '' : '' }}">
+                                    <span class="absolute flex items-center justify-center w-8 h-8 rounded-full -left-4 ring-4 ring-white {{ $loop->first ? 'bg-primary-100' : 'bg-gray-100' }}">
+                                        @if($loop->first)
+                                            <svg class="w-4 h-4 text-primary-600" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                            </svg>
+                                        @else
+                                            <svg class="w-3 h-3 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
+                                                <circle cx="10" cy="10" r="3"></circle>
+                                            </svg>
+                                        @endif
+                                    </span>
+                                    @if(!$loop->last)
+                                        <div class="absolute w-0.5 bg-gray-200 h-full left-4 top-8"></div>
                                     @endif
+                                    <div class="p-4 bg-gray-50 rounded-lg {{ $loop->first ? 'ring-1 ring-primary-200' : '' }}">
+                                        <time class="mb-1 text-xs font-normal leading-none text-gray-500">
+                                            {{ $history->created_at->format('F j, Y \a\t g:i A') }}
+                                        </time>
+                                        <h3 class="text-sm font-semibold text-gray-900">
+                                            {{ ucwords(str_replace('_', ' ', $history->status)) }}
+                                        </h3>
+                                        @if($history->comment)
+                                            <p class="text-sm text-gray-600 mt-1">{{ $history->comment }}</p>
+                                        @endif
+                                    </div>
                                 </li>
                             @endforeach
                         </ol>
@@ -230,23 +279,31 @@
             <!-- Order Information -->
             <div class="space-y-6">
                 <!-- Delivery Information -->
-                <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-                    <div class="px-6 py-4 border-b border-gray-200">
-                        <h2 class="text-lg font-semibold text-gray-900">Delivery Information</h2>
+                <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
+                    <div class="px-6 py-4 bg-gradient-to-r from-green-50 to-white border-b border-gray-100">
+                        <h2 class="text-lg font-semibold text-gray-900 flex items-center">
+                            <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3">
+                                <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                </svg>
+                            </div>
+                            Delivery Information
+                        </h2>
                     </div>
                     <div class="p-6">
-                        <dl class="space-y-3">
+                        <dl class="space-y-4">
                             <div>
-                                <dt class="text-sm font-medium text-gray-600">Name</dt>
-                                <dd class="text-sm text-gray-900 mt-1">{{ $order->shipping_name }}</dd>
+                                <dt class="text-sm font-medium text-gray-600 mb-1">Name</dt>
+                                <dd class="text-sm text-gray-900">{{ $order->shipping_name }}</dd>
                             </div>
                             <div>
-                                <dt class="text-sm font-medium text-gray-600">Phone</dt>
-                                <dd class="text-sm text-gray-900 mt-1">{{ $order->shipping_phone }}</dd>
+                                <dt class="text-sm font-medium text-gray-600 mb-1">Phone</dt>
+                                <dd class="text-sm text-gray-900">{{ $order->shipping_phone }}</dd>
                             </div>
                             <div>
-                                <dt class="text-sm font-medium text-gray-600">Address</dt>
-                                <dd class="text-sm text-gray-900 mt-1">
+                                <dt class="text-sm font-medium text-gray-600 mb-1">Address</dt>
+                                <dd class="text-sm text-gray-900">
                                     {{ $order->shipping_address_line_1 }}<br>
                                     @if($order->shipping_address_line_2)
                                         {{ $order->shipping_address_line_2 }}<br>
@@ -259,8 +316,8 @@
                             </div>
                             @if($order->notes)
                                 <div>
-                                    <dt class="text-sm font-medium text-gray-600">Delivery Notes</dt>
-                                    <dd class="text-sm text-gray-900 mt-1">{{ $order->notes }}</dd>
+                                    <dt class="text-sm font-medium text-gray-600 mb-1">Delivery Notes</dt>
+                                    <dd class="text-sm text-gray-900 bg-gray-50 rounded-lg p-3">{{ $order->notes }}</dd>
                                 </div>
                             @endif
                         </dl>
@@ -268,46 +325,141 @@
                 </div>
 
                 <!-- Payment Information -->
-                <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-                    <div class="px-6 py-4 border-b border-gray-200">
-                        <h2 class="text-lg font-semibold text-gray-900">Payment Information</h2>
+                <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
+                    <div class="px-6 py-4 bg-gradient-to-r from-purple-50 to-white border-b border-gray-100">
+                        <h2 class="text-lg font-semibold text-gray-900 flex items-center">
+                            <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center mr-3">
+                                <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
+                                </svg>
+                            </div>
+                            Payment Information
+                        </h2>
                     </div>
                     <div class="p-6">
-                        <dl class="space-y-3">
+                        <dl class="space-y-4">
                             <div>
-                                <dt class="text-sm font-medium text-gray-600">Payment Method</dt>
-                                <dd class="text-sm text-gray-900 mt-1">
+                                <dt class="text-sm font-medium text-gray-600 mb-1">Payment Method</dt>
+                                <dd class="text-sm text-gray-900">
                                     {{ $order->payment_method === 'cod' ? 'Cash on Delivery' : 'PayHere (Online)' }}
                                 </dd>
                             </div>
                             <div>
-                                <dt class="text-sm font-medium text-gray-600">Payment Status</dt>
-                                <dd class="text-sm mt-1">
+                                <dt class="text-sm font-medium text-gray-600 mb-1">Payment Status</dt>
+                                <dd class="text-sm">
                                     @if($order->payment_status === 'completed')
-                                        <span class="text-green-600 font-medium">Paid</span>
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                            </svg>
+                                            Paid
+                                        </span>
                                     @elseif($order->payment_status === 'pending')
-                                        <span class="text-yellow-600 font-medium">Pending</span>
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"></path>
+                                            </svg>
+                                            Pending
+                                        </span>
                                     @else
-                                        <span class="text-red-600 font-medium">{{ ucfirst($order->payment_status) }}</span>
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                            {{ ucfirst($order->payment_status) }}
+                                        </span>
                                     @endif
                                 </dd>
                             </div>
                             @if($order->payment_reference)
                                 <div>
-                                    <dt class="text-sm font-medium text-gray-600">Transaction Reference</dt>
-                                    <dd class="text-sm text-gray-900 mt-1">{{ $order->payment_reference }}</dd>
+                                    <dt class="text-sm font-medium text-gray-600 mb-1">Transaction Reference</dt>
+                                    <dd class="text-sm text-gray-900 font-mono bg-gray-50 rounded px-2 py-1">
+                                        {{ $order->payment_reference }}
+                                    </dd>
                                 </div>
                             @endif
                         </dl>
                     </div>
+                </div>
+
+                <!-- Quick Help -->
+                <div class="bg-gradient-to-br from-primary-50 to-primary-100 rounded-2xl p-6">
+                    <h3 class="text-sm font-semibold text-primary-900 mb-3 flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        Need Help?
+                    </h3>
+                    <p class="text-sm text-primary-800 mb-4">Have questions about your order?</p>
+                    <a href="{{ route('contact') }}" class="btn btn-sm btn-primary w-full justify-center">
+                        Contact Support
+                    </a>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
+<!-- Success Toast for Actions -->
+<div id="toast-container" class="fixed bottom-4 right-4 z-50 space-y-2"></div>
+
+@push('styles')
+<style>
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .toast-notification {
+        animation: slideInRight 0.3s ease-out;
+    }
+    
+    @keyframes slideInRight {
+        from {
+            opacity: 0;
+            transform: translateX(100px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+</style>
+@endpush
+
 @push('scripts')
 <script>
+function showToast(message, type = 'success') {
+    const toastContainer = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    
+    const bgColor = type === 'success' ? 'bg-green-500' : 'bg-red-500';
+    const icon = type === 'success' 
+        ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>'
+        : '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>';
+    
+    toast.className = `toast-notification flex items-center space-x-3 ${bgColor} text-white px-6 py-4 rounded-lg shadow-lg max-w-md`;
+    toast.innerHTML = `
+        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            ${icon}
+        </svg>
+        <span class="text-sm font-medium">${message}</span>
+    `;
+    
+    toastContainer.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(100px)';
+        toast.style.transition = 'all 0.3s ease-out';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
 function markOrderComplete(orderId) {
     if (confirm('Have you received your order? This action confirms delivery and cannot be undone.')) {
         fetch(`/orders/${orderId}/complete`, {
@@ -321,11 +473,14 @@ function markOrderComplete(orderId) {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                alert(data.message);
-                window.location.reload();
+                showToast(data.message);
+                setTimeout(() => window.location.reload(), 1500);
             } else {
-                alert('Error: ' + data.message);
+                showToast(data.message || 'Error processing request', 'error');
             }
+        })
+        .catch(error => {
+            showToast('Something went wrong. Please try again.', 'error');
         });
     }
 }
@@ -345,14 +500,31 @@ function requestCancellation(orderId) {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                alert(data.message);
-                window.location.reload();
+                showToast(data.message);
+                setTimeout(() => window.location.reload(), 1500);
             } else {
-                alert('Error: ' + data.message);
+                showToast(data.message || 'Error processing request', 'error');
             }
+        })
+        .catch(error => {
+            showToast('Something went wrong. Please try again.', 'error');
         });
     }
 }
+
+// Smooth scroll to sections
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+            target.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }
+    });
+});
 </script>
 @endpush
 @endsection

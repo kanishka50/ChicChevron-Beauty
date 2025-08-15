@@ -19,8 +19,8 @@
     <div class="container-responsive">
         <!-- Enhanced Header -->
         <div class="mb-6 md:mb-8">
-            <h1 class="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900">Checkout</h1>
-            <p class="text-gray-600 mt-1 md:mt-2 text-sm md:text-base">Complete your order in just a few steps</p>
+            <h1 class="text-xl md:text-2xl lg:text-3xl font-bold text-gray-900">Checkout</h1>
+            <p class="text-gray-600 mt-1 md:mt-2 text-xs md:text-sm">Complete your order in just a few steps</p>
         </div>
 
         <form action="{{ route('checkout.store') }}" method="POST" id="checkout-form">
@@ -33,8 +33,8 @@
                     <!-- Customer Information - Enhanced Mobile Design -->
                     <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                         <div class="bg-gradient-to-r from-primary-50 to-pink-50 px-4 md:px-6 py-4">
-                            <h2 class="text-lg md:text-xl font-semibold text-gray-900 flex items-center gap-2">
-                                <span class="w-8 h-8 bg-white rounded-full flex items-center justify-center text-primary-600 font-bold text-sm">1</span>
+                            <h2 class="text-base md:text-lg font-semibold text-gray-900 flex items-center gap-2">
+                                <span class="w-6 h-6 md:w-8 md:h-8 bg-white rounded-full flex items-center justify-center text-primary-600 font-bold text-sm">1</span>
                                 Customer Information
                             </h2>
                         </div>
@@ -43,18 +43,18 @@
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div class="col-span-1 md:col-span-2 md:grid md:grid-cols-2 md:gap-4 space-y-4 md:space-y-0">
                                     <div>
-                                        <label for="customer_name" class="block text-sm font-medium text-gray-700 mb-2">
+                                        <label for="customer_name" class="block text-xs md:text-sm font-medium text-gray-700 mb-2">
                                             Full Name <span class="text-red-500">*</span>
                                         </label>
                                         <input type="text" 
                                                id="customer_name" 
                                                name="customer_name" 
                                                value="{{ old('customer_name', Auth::user()->name ?? '') }}"
-                                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 @error('customer_name') border-red-500 @enderror"
+                                               class="w-full px-3 py-2 md:px-4 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 @error('customer_name') border-red-500 @enderror"
                                                placeholder="Enter your full name"
                                                required>
                                         @error('customer_name')
-                                            <p class="mt-1 text-sm text-red-500 flex items-center gap-1">
+                                            <p class="mt-1 text-xs md:text-sm text-red-500 flex items-center gap-1">
                                                 <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                                                     <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
                                                 </svg>
@@ -64,18 +64,18 @@
                                     </div>
 
                                     <div>
-                                        <label for="customer_phone" class="block text-sm font-medium text-gray-700 mb-2">
+                                        <label for="customer_phone" class="block text-xs md:text-sm font-medium text-gray-700 mb-2">
                                             Phone Number <span class="text-red-500">*</span>
                                         </label>
                                         <input type="tel" 
                                                id="customer_phone" 
                                                name="customer_phone" 
                                                value="{{ old('customer_phone', Auth::user()->phone ?? '') }}"
-                                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 @error('customer_phone') border-red-500 @enderror"
+                                               class="w-full px-3 py-2 md:px-4 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 @error('customer_phone') border-red-500 @enderror"
                                                placeholder="07X XXX XXXX"
                                                required>
                                         @error('customer_phone')
-                                            <p class="mt-1 text-sm text-red-500 flex items-center gap-1">
+                                            <p class="mt-1 text-xs md:text-sm text-red-500 flex items-center gap-1">
                                                 <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                                                     <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
                                                 </svg>
@@ -86,18 +86,18 @@
                                 </div>
 
                                 <div class="md:col-span-2">
-                                    <label for="customer_email" class="block text-sm font-medium text-gray-700 mb-2">
+                                    <label for="customer_email" class="block text-xs md:text-sm font-medium text-gray-700 mb-2">
                                         Email Address <span class="text-red-500">*</span>
                                     </label>
                                     <input type="email" 
                                            id="customer_email" 
                                            name="customer_email" 
                                            value="{{ old('customer_email', Auth::user()->email ?? '') }}"
-                                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 @error('customer_email') border-red-500 @enderror"
+                                           class="w-full px-3 py-2 md:px-4 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 @error('customer_email') border-red-500 @enderror"
                                            placeholder="your@email.com"
                                            required>
                                     @error('customer_email')
-                                        <p class="mt-1 text-sm text-red-500 flex items-center gap-1">
+                                        <p class="mt-1 text-xs md:text-sm text-red-500 flex items-center gap-1">
                                             <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                                                 <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
                                             </svg>
@@ -112,8 +112,8 @@
                     <!-- Delivery Address - Enhanced Mobile Design -->
                     <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                         <div class="bg-gradient-to-r from-primary-50 to-pink-50 px-4 md:px-6 py-4">
-                            <h2 class="text-lg md:text-xl font-semibold text-gray-900 flex items-center gap-2">
-                                <span class="w-8 h-8 bg-white rounded-full flex items-center justify-center text-primary-600 font-bold text-sm">2</span>
+                            <h2 class="text-base md:text-lg font-semibold text-gray-900 flex items-center gap-2">
+                                <span class="w-6 h-6 md:w-8 md:h-8 bg-white rounded-full flex items-center justify-center text-primary-600 font-bold text-sm">2</span>
                                 Delivery Address
                             </h2>
                         </div>
@@ -122,9 +122,9 @@
                             @if($userAddresses->isNotEmpty())
                                 <!-- Saved Addresses - Mobile Optimized -->
                                 <div class="mb-6">
-                                    <label class="block text-sm font-medium text-gray-700 mb-3">Select Delivery Address</label>
+                                    <label class="block text-xs md:text-sm font-medium text-gray-700 mb-3">Select Delivery Address</label>
                                     <div class="space-y-3">
-                                        <label class="flex items-start space-x-3 p-4 border-2 border-gray-200 rounded-xl hover:border-primary-200 hover:bg-primary-50/30 cursor-pointer transition-all duration-200 group">
+                                        <label class="flex items-start space-x-3 p-3 md:p-4 border-2 border-gray-200 rounded-xl hover:border-primary-200 hover:bg-primary-50/30 cursor-pointer transition-all duration-200 group">
                                             <input type="radio" 
                                                    name="address_selection" 
                                                    value="new"
@@ -132,13 +132,13 @@
                                                    checked
                                                    onchange="useNewAddress()">
                                             <div class="flex-1">
-                                                <div class="font-medium text-gray-900 group-hover:text-primary-700">Enter New Address</div>
-                                                <div class="text-sm text-gray-500 mt-1">Fill in the delivery details below</div>
+                                                <div class="font-medium text-gray-900 group-hover:text-primary-700 text-sm md:text-base">Enter New Address</div>
+                                                <div class="text-xs md:text-sm text-gray-500 mt-1">Fill in the delivery details below</div>
                                             </div>
                                         </label>
                                         
                                         @foreach($userAddresses as $address)
-                                            <label class="flex items-start space-x-3 p-4 border-2 border-gray-200 rounded-xl hover:border-primary-200 hover:bg-primary-50/30 cursor-pointer transition-all duration-200 group">
+                                            <label class="flex items-start space-x-3 p-3 md:p-4 border-2 border-gray-200 rounded-xl hover:border-primary-200 hover:bg-primary-50/30 cursor-pointer transition-all duration-200 group">
                                                 <input type="radio" 
                                                        name="address_selection" 
                                                        value="saved_{{ $address->id }}"
@@ -146,19 +146,19 @@
                                                        onchange="useSavedAddress({{ $address->toJson() }})">
                                                 <div class="flex-1">
                                                     <div class="flex items-center gap-2 mb-1">
-                                                        <span class="font-medium text-gray-900 group-hover:text-primary-700">{{ $address->name }}</span>
+                                                        <span class="font-medium text-gray-900 group-hover:text-primary-700 text-sm md:text-base">{{ $address->name }}</span>
                                                         @if($address->is_default)
                                                             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                                                 Default
                                                             </span>
                                                         @endif
                                                     </div>
-                                                    <div class="text-sm text-gray-600">{{ $address->phone }}</div>
-                                                    <div class="text-sm text-gray-600 mt-1">{{ $address->address_line_1 }}</div>
+                                                    <div class="text-xs md:text-sm text-gray-600">{{ $address->phone }}</div>
+                                                    <div class="text-xs md:text-sm text-gray-600 mt-1">{{ $address->address_line_1 }}</div>
                                                     @if($address->address_line_2)
-                                                        <div class="text-sm text-gray-600">{{ $address->address_line_2 }}</div>
+                                                        <div class="text-xs md:text-sm text-gray-600">{{ $address->address_line_2 }}</div>
                                                     @endif
-                                                    <div class="text-sm text-gray-600">
+                                                    <div class="text-xs md:text-sm text-gray-600">
                                                         {{ $address->city }}, {{ $address->district }} {{ $address->postal_code }}
                                                     </div>
                                                 </div>
@@ -174,7 +174,7 @@
                                 <input type="hidden" name="saved_address_id" id="saved_address_id" value="">
                                 
                                 <div>
-                                    <label for="address_line_1" class="block text-sm font-medium text-gray-700 mb-2">
+                                    <label for="address_line_1" class="block text-xs md:text-sm font-medium text-gray-700 mb-2">
                                         Address Line 1 <span class="text-red-500">*</span>
                                     </label>
                                     <input type="text" 
@@ -182,10 +182,10 @@
                                            name="address_line_1" 
                                            value="{{ old('address_line_1') }}"
                                            placeholder="House/Building No, Street Name"
-                                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 @error('address_line_1') border-red-500 @enderror"
+                                           class="w-full px-3 py-2 md:px-4 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 @error('address_line_1') border-red-500 @enderror"
                                            required>
                                     @error('address_line_1')
-                                        <p class="mt-1 text-sm text-red-500 flex items-center gap-1">
+                                        <p class="mt-1 text-xs md:text-sm text-red-500 flex items-center gap-1">
                                             <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                                                 <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
                                             </svg>
@@ -195,7 +195,7 @@
                                 </div>
 
                                 <div>
-                                    <label for="address_line_2" class="block text-sm font-medium text-gray-700 mb-2">
+                                    <label for="address_line_2" class="block text-xs md:text-sm font-medium text-gray-700 mb-2">
                                         Address Line 2 <span class="text-gray-400 text-xs">(Optional)</span>
                                     </label>
                                     <input type="text" 
@@ -203,9 +203,9 @@
                                            name="address_line_2" 
                                            value="{{ old('address_line_2') }}"
                                            placeholder="Apartment, Suite, Unit, etc."
-                                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 @error('address_line_2') border-red-500 @enderror">
+                                           class="w-full px-3 py-2 md:px-4 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 @error('address_line_2') border-red-500 @enderror">
                                     @error('address_line_2')
-                                        <p class="mt-1 text-sm text-red-500 flex items-center gap-1">
+                                        <p class="mt-1 text-xs md:text-sm text-red-500 flex items-center gap-1">
                                             <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                                                 <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
                                             </svg>
@@ -216,7 +216,7 @@
 
                                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                                     <div>
-                                        <label for="city" class="block text-sm font-medium text-gray-700 mb-2">
+                                        <label for="city" class="block text-xs md:text-sm font-medium text-gray-700 mb-2">
                                             City <span class="text-red-500">*</span>
                                         </label>
                                         <input type="text" 
@@ -224,10 +224,10 @@
                                             name="city" 
                                             value="{{ old('city') }}"
                                             placeholder="Enter your city"
-                                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 @error('city') border-red-500 @enderror"
+                                            class="w-full px-3 py-2 md:px-4 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 @error('city') border-red-500 @enderror"
                                             required>
                                         @error('city')
-                                            <p class="mt-1 text-sm text-red-500 flex items-center gap-1">
+                                            <p class="mt-1 text-xs md:text-sm text-red-500 flex items-center gap-1">
                                                 <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                                                     <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
                                                 </svg>
@@ -237,12 +237,12 @@
                                     </div>
 
                                     <div>
-                                        <label for="district" class="block text-sm font-medium text-gray-700 mb-2">
+                                        <label for="district" class="block text-xs md:text-sm font-medium text-gray-700 mb-2">
                                             District <span class="text-red-500">*</span>
                                         </label>
                                         <select id="district" 
                                                 name="district" 
-                                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 @error('district') border-red-500 @enderror"
+                                                class="w-full px-3 py-2 md:px-4 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 @error('district') border-red-500 @enderror"
                                                 required>
                                             <option value="">Select District</option>
                                             @foreach(['Colombo', 'Gampaha', 'Kalutara', 'Kandy', 'Matale', 'Nuwara Eliya', 'Galle', 'Matara', 'Hambantota', 'Jaffna', 'Kilinochchi', 'Mannar', 'Mullaitivu', 'Vavuniya', 'Puttalam', 'Kurunegala', 'Anuradhapura', 'Polonnaruwa', 'Badulla', 'Moneragala', 'Ratnapura', 'Kegalle', 'Batticaloa', 'Ampara', 'Trincomalee'] as $district)
@@ -252,7 +252,7 @@
                                             @endforeach
                                         </select>
                                         @error('district')
-                                            <p class="mt-1 text-sm text-red-500 flex items-center gap-1">
+                                            <p class="mt-1 text-xs md:text-sm text-red-500 flex items-center gap-1">
                                                 <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                                                     <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
                                                 </svg>
@@ -262,7 +262,7 @@
                                     </div>
 
                                     <div>
-                                        <label for="postal_code" class="block text-sm font-medium text-gray-700 mb-2">
+                                        <label for="postal_code" class="block text-xs md:text-sm font-medium text-gray-700 mb-2">
                                             Postal Code <span class="text-gray-400 text-xs">(Optional)</span>
                                         </label>
                                         <input type="text" 
@@ -270,10 +270,10 @@
                                                name="postal_code" 
                                                value="{{ old('postal_code') }}"
                                                placeholder="00000"
-                                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 @error('postal_code') border-red-500 @enderror"
+                                               class="w-full px-3 py-2 md:px-4 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 @error('postal_code') border-red-500 @enderror"
                                                >
                                         @error('postal_code')
-                                            <p class="mt-1 text-sm text-red-500 flex items-center gap-1">
+                                            <p class="mt-1 text-xs md:text-sm text-red-500 flex items-center gap-1">
                                                 <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                                                     <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
                                                 </svg>
@@ -284,13 +284,13 @@
                                 </div>
 
                                 <div>
-                                    <label for="delivery_notes" class="block text-sm font-medium text-gray-700 mb-2">
+                                    <label for="delivery_notes" class="block text-xs md:text-sm font-medium text-gray-700 mb-2">
                                         Delivery Notes <span class="text-gray-400 text-xs">(Optional)</span>
                                     </label>
                                     <textarea id="delivery_notes" 
                                               name="delivery_notes" 
                                               rows="3"
-                                              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
+                                              class="w-full px-3 py-2 md:px-4 md:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200"
                                               placeholder="Any special delivery instructions">{{ old('delivery_notes') }}</textarea>
                                 </div>
 
@@ -302,7 +302,7 @@
                                                value="1"
                                                class="rounded border-gray-300 text-primary-600 focus:ring-primary-500 w-4 h-4"
                                                {{ old('save_address') ? 'checked' : '' }}>
-                                        <span class="text-sm text-gray-700">Save this address for future orders</span>
+                                        <span class="text-xs md:text-sm text-gray-700">Save this address for future orders</span>
                                     </label>
                                 </div>
                             </div>
@@ -312,8 +312,8 @@
                     <!-- Payment Method - Enhanced Mobile Design -->
                     <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                         <div class="bg-gradient-to-r from-primary-50 to-pink-50 px-4 md:px-6 py-4">
-                            <h2 class="text-lg md:text-xl font-semibold text-gray-900 flex items-center gap-2">
-                                <span class="w-8 h-8 bg-white rounded-full flex items-center justify-center text-primary-600 font-bold text-sm">3</span>
+                            <h2 class="text-base md:text-lg font-semibold text-gray-900 flex items-center gap-2">
+                                <span class="w-6 h-6 md:w-8 md:h-8 bg-white rounded-full flex items-center justify-center text-primary-600 font-bold text-sm">3</span>
                                 Payment Method
                             </h2>
                         </div>
@@ -321,7 +321,7 @@
                         <div class="p-4 md:p-6">
                             <div class="space-y-3">
                                 <!-- Cash on Delivery -->
-                                <label class="flex items-start space-x-3 p-4 border-2 border-gray-200 rounded-xl hover:border-primary-200 hover:bg-primary-50/30 cursor-pointer transition-all duration-200 group">
+                                <label class="flex items-start space-x-3 p-3 md:p-4 border-2 border-gray-200 rounded-xl hover:border-primary-200 hover:bg-primary-50/30 cursor-pointer transition-all duration-200 group">
                                     <input type="radio" 
                                            name="payment_method" 
                                            value="cod" 
@@ -329,29 +329,29 @@
                                            checked>
                                     <div class="flex-1">
                                         <div class="flex items-center gap-2">
-                                            <span class="font-medium text-gray-900 group-hover:text-primary-700">Cash on Delivery</span>
+                                            <span class="font-medium text-gray-900 group-hover:text-primary-700 text-sm md:text-base">Cash on Delivery</span>
                                             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                                 Recommended
                                             </span>
                                         </div>
-                                        <div class="text-sm text-gray-600 mt-1">Pay when you receive your order (Max: Rs. 10,000)</div>
+                                        <div class="text-xs md:text-sm text-gray-600 mt-1">Pay when you receive your order (Max: Rs. 10,000)</div>
                                     </div>
                                 </label>
 
                                 <!-- PayHere -->
-                                <label class="flex items-start space-x-3 p-4 border-2 border-gray-200 rounded-xl hover:border-primary-200 hover:bg-primary-50/30 cursor-pointer transition-all duration-200 group">
+                                <label class="flex items-start space-x-3 p-3 md:p-4 border-2 border-gray-200 rounded-xl hover:border-primary-200 hover:bg-primary-50/30 cursor-pointer transition-all duration-200 group">
                                     <input type="radio" 
                                            name="payment_method" 
                                            value="payhere" 
                                            class="mt-1 text-primary-600 focus:ring-primary-500 w-4 h-4">
                                     <div class="flex-1">
                                         <div class="flex items-center gap-2">
-                                            <span class="font-medium text-gray-900 group-hover:text-primary-700">Online Payment (PayHere)</span>
+                                            <span class="font-medium text-gray-900 group-hover:text-primary-700 text-sm md:text-base">Online Payment (PayHere)</span>
                                             <svg class="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
                                                 <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
                                             </svg>
                                         </div>
-                                        <div class="text-sm text-gray-600 mt-1">Pay securely with credit/debit cards</div>
+                                        <div class="text-xs md:text-sm text-gray-600 mt-1">Pay securely with credit/debit cards</div>
                                     </div>
                                 </label>
                             </div>
@@ -363,7 +363,7 @@
                 <div class="lg:col-span-1">
                     <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden lg:sticky lg:top-4">
                         <div class="bg-gradient-to-r from-gray-800 to-gray-900 px-4 md:px-6 py-4">
-                            <h2 class="text-lg md:text-xl font-semibold text-white">Order Summary</h2>
+                            <h2 class="text-base md:text-lg font-semibold text-white">Order Summary</h2>
                         </div>
                         
                         <div class="p-4 md:p-6">
@@ -375,7 +375,7 @@
                                              alt="{{ $item->product->name }}" 
                                              class="w-14 h-14 object-cover rounded-lg flex-shrink-0">
                                         <div class="flex-1 min-w-0">
-                                            <h3 class="text-sm font-medium text-gray-900 line-clamp-1">{{ $item->product->name }}</h3>
+                                            <h3 class="text-xs md:text-sm font-medium text-gray-900 line-clamp-1">{{ $item->product->name }}</h3>
                                             @if($item->variant_details_formatted)
                                                 <p class="text-xs text-gray-500 mt-0.5">{{ $item->variant_details_formatted }}</p>
                                             @endif
@@ -428,12 +428,12 @@
                                            value="1"
                                            class="mt-0.5 text-primary-600 focus:ring-primary-500 rounded w-4 h-4 @error('terms_accepted') border-red-500 @enderror"
                                            required>
-                                    <span class="text-sm text-gray-600 flex-1">
+                                    <span class="text-xs md:text-sm text-gray-600 flex-1">
                                         I agree to the <a href="#" class="text-primary-600 hover:text-primary-700 underline">Terms and Conditions</a> and <a href="#" class="text-primary-600 hover:text-primary-700 underline">Privacy Policy</a>
                                     </span>
                                 </label>
                                 @error('terms_accepted')
-                                    <p class="mt-2 text-sm text-red-500 px-4 flex items-center gap-1">
+                                    <p class="mt-2 text-xs md:text-sm text-red-500 px-4 flex items-center gap-1">
                                         <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                                             <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
                                         </svg>
@@ -444,7 +444,7 @@
 
                             <!-- Place Order Button - Enhanced Mobile Design -->
                             <button type="submit" 
-                                    class="w-full mt-6 bg-gradient-to-r from-primary-600 to-primary-700 text-white py-4 px-6 rounded-lg hover:from-primary-700 hover:to-primary-800 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 font-semibold transform hover:scale-[1.02] transition-all duration-200 shadow-lg flex items-center justify-center gap-2">
+                                    class="w-full mt-6 bg-gradient-to-r from-primary-600 to-primary-700 text-white py-3 px-4 md:py-4 md:px-6 rounded-lg hover:from-primary-700 hover:to-primary-800 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 font-semibold transform hover:scale-[1.02] transition-all duration-200 shadow-lg flex items-center justify-center gap-2">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
                                 </svg>

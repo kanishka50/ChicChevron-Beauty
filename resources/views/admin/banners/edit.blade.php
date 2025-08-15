@@ -1,34 +1,57 @@
 @extends('admin.layouts.app')
 
 @section('content')
-<div class="p-6">
-    <div class="max-w-4xl mx-auto">
-        <!-- Header -->
-        <div class="mb-6">
-            <h1 class="text-2xl font-bold text-gray-800">Edit Banner</h1>
-            <p class="text-gray-600 mt-1">Update banner information</p>
+<div class="container-fluid px-4 max-w-4xl mx-auto">
+    <!-- Header Section -->
+    <div class="mb-6">
+        <div class="flex justify-between items-center">
+            <h1 class="text-2xl font-semibold text-gray-800">Edit Banner</h1>
+            <a href="{{ route('admin.banners.index') }}" 
+               class="bg-gray-500 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded-lg inline-flex items-center transition-colors">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                </svg>
+                Back to Banners
+            </a>
         </div>
+        <p class="text-gray-600 mt-1">Update banner information</p>
+    </div>
 
-        <!-- Form -->
-        <form action="{{ route('admin.banners.update', $banner) }}" method="POST" enctype="multipart/form-data" class="space-y-6">
-            @csrf
-            @method('PUT')
-            
-            <div class="bg-white rounded-lg shadow p-6 space-y-6">
-                <!-- Current Desktop Image -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Current Desktop Banner</label>
-                    <img src="{{ $banner->desktop_image_url }}" alt="{{ $banner->title }}" class="max-w-full h-48 object-cover rounded-lg">
+    <!-- Form -->
+    <form action="{{ route('admin.banners.update', $banner) }}" method="POST" enctype="multipart/form-data">
+        @csrf
+        @method('PUT')
+        
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <!-- Current Images Section -->
+            <div class="mb-8">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">Current Images</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Current Desktop Image -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Current Desktop Banner</label>
+                        <img src="{{ $banner->desktop_image_url }}" 
+                             alt="{{ $banner->title }}" 
+                             class="w-full h-48 object-cover rounded-lg border border-gray-300">
+                    </div>
+
+                    <!-- Current Mobile Image (if exists) -->
+                    @if($banner->image_mobile)
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Current Mobile Banner</label>
+                        <img src="{{ $banner->mobile_image_url }}" 
+                             alt="{{ $banner->title }}" 
+                             class="w-full h-48 object-cover rounded-lg border border-gray-300">
+                    </div>
+                    @endif
                 </div>
+            </div>
 
-                <!-- Current Mobile Image (if exists) -->
-                @if($banner->image_mobile)
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Current Mobile Banner</label>
-                    <img src="{{ $banner->mobile_image_url }}" alt="{{ $banner->title }}" class="max-w-full h-48 object-cover rounded-lg">
-                </div>
-                @endif
-
+            <!-- Basic Information Section -->
+            <div class="mb-8">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">Basic Information</h3>
+                
                 <!-- Title -->
                 <div>
                     <label for="title" class="block text-sm font-medium text-gray-700 mb-2">
@@ -38,40 +61,50 @@
                            name="title" 
                            id="title" 
                            value="{{ old('title', $banner->title) }}"
-                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500 @error('title') border-red-500 @enderror"
-                           placeholder="e.g., Summer Collection 2025">
+                           placeholder="e.g., Summer Collection 2025"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 @error('title') border-red-500 @enderror">
                     @error('title')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
                     @enderror
                 </div>
+            </div>
 
+            <!-- Update Images Section -->
+            <div class="mb-8">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">Update Images</h3>
+                
                 <!-- Desktop Image Upload (Optional for edit) -->
-                <div>
+                <div class="mb-6">
                     <label for="image_desktop" class="block text-sm font-medium text-gray-700 mb-2">
                         Change Desktop Banner Image <span class="text-gray-500">(Optional)</span>
                     </label>
-                    <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
-                        <div class="space-y-1 text-center">
-                            <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
-                                <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                            </svg>
-                            <div class="flex text-sm text-gray-600">
-                                <label for="image_desktop" class="relative cursor-pointer bg-white rounded-md font-medium text-purple-600 hover:text-purple-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-purple-500">
-                                    <span>Upload new desktop image</span>
-                                    <input id="image_desktop" name="image_desktop" type="file" class="sr-only" accept="image/*" onchange="previewImage(this, 'desktop')">
-                                </label>
-                                <p class="pl-1">or drag and drop</p>
+                    <div class="flex items-start space-x-6">
+                        <div class="flex-1">
+                            <input type="file" 
+                                   name="image_desktop" 
+                                   id="image_desktop"
+                                   accept="image/jpeg,image/png,image/jpg,image/webp"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 @error('image_desktop') border-red-500 @enderror"
+                                   onchange="previewImage(event, 'desktop')">
+                            @error('image_desktop')
+                                <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                            @enderror
+                            <p class="mt-1 text-sm text-gray-500">Leave empty to keep current image. Maximum file size: 2MB</p>
+                        </div>
+                        
+                        <div class="flex-shrink-0">
+                            <p class="text-sm font-medium text-gray-700 mb-2">New Preview</p>
+                            <div id="new-desktop-preview" class="hidden">
+                                <img id="desktop-preview" 
+                                     src="#" 
+                                     alt="New preview" 
+                                     class="h-32 w-48 object-cover rounded-lg border-2 border-blue-300">
                             </div>
-                            <p class="text-xs text-gray-500">PNG, JPG, WEBP up to 2MB (min. 1200x400px)</p>
+                            <div id="desktop-placeholder" class="h-32 w-48 bg-gray-100 rounded-lg border border-gray-300 flex items-center justify-center">
+                                <span class="text-xs text-gray-500">No new image</span>
+                            </div>
                         </div>
                     </div>
-                    <div id="desktop-preview" class="mt-4 hidden">
-                        <p class="text-sm text-gray-700 mb-2">New Desktop Image Preview:</p>
-                        <img src="" alt="Desktop Preview" class="max-w-full h-48 object-cover rounded-lg">
-                    </div>
-                    @error('image_desktop')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
                 </div>
 
                 <!-- Mobile Image Upload (Optional) -->
@@ -79,46 +112,56 @@
                     <label for="image_mobile" class="block text-sm font-medium text-gray-700 mb-2">
                         {{ $banner->image_mobile ? 'Change' : 'Add' }} Mobile Banner Image <span class="text-gray-500">(Optional)</span>
                     </label>
-                    <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
-                        <div class="space-y-1 text-center">
-                            <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
-                                <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                            </svg>
-                            <div class="flex text-sm text-gray-600">
-                                <label for="image_mobile" class="relative cursor-pointer bg-white rounded-md font-medium text-purple-600 hover:text-purple-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-purple-500">
-                                    <span>Upload {{ $banner->image_mobile ? 'new' : '' }} mobile image</span>
-                                    <input id="image_mobile" name="image_mobile" type="file" class="sr-only" accept="image/*" onchange="previewImage(this, 'mobile')">
-                                </label>
-                                <p class="pl-1">or drag and drop</p>
+                    <div class="flex items-start space-x-6">
+                        <div class="flex-1">
+                            <input type="file" 
+                                   name="image_mobile" 
+                                   id="image_mobile"
+                                   accept="image/jpeg,image/png,image/jpg,image/webp"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 @error('image_mobile') border-red-500 @enderror"
+                                   onchange="previewImage(event, 'mobile')">
+                            @error('image_mobile')
+                                <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                            @enderror
+                            <p class="mt-1 text-sm text-gray-500">For better mobile experience. Recommended: 600x800px</p>
+                        </div>
+                        
+                        <div class="flex-shrink-0">
+                            <p class="text-sm font-medium text-gray-700 mb-2">New Preview</p>
+                            <div id="new-mobile-preview" class="hidden">
+                                <img id="mobile-preview" 
+                                     src="#" 
+                                     alt="New preview" 
+                                     class="h-32 w-24 object-cover rounded-lg border-2 border-blue-300">
                             </div>
-                            <p class="text-xs text-gray-500">For better mobile experience (optional)</p>
+                            <div id="mobile-placeholder" class="h-32 w-24 bg-gray-100 rounded-lg border border-gray-300 flex items-center justify-center">
+                                <span class="text-xs text-gray-500">No new image</span>
+                            </div>
                         </div>
                     </div>
-                    <div id="mobile-preview" class="mt-4 hidden">
-                        <p class="text-sm text-gray-700 mb-2">New Mobile Image Preview:</p>
-                        <img src="" alt="Mobile Preview" class="max-w-full h-48 object-cover rounded-lg">
-                    </div>
-                    @error('image_mobile')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
                 </div>
+            </div>
 
+            <!-- Link Settings Section -->
+            <div class="mb-8">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">Link Settings</h3>
+                
                 <!-- Link Type -->
-                <div>
+                <div class="mb-4">
                     <label for="link_type" class="block text-sm font-medium text-gray-700 mb-2">
                         Link Type <span class="text-red-500">*</span>
                     </label>
                     <select name="link_type" 
                             id="link_type" 
                             onchange="toggleLinkValue(this.value)"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500 @error('link_type') border-red-500 @enderror">
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 @error('link_type') border-red-500 @enderror">
                         <option value="none" {{ old('link_type', $banner->link_type) == 'none' ? 'selected' : '' }}>No Link</option>
                         <option value="product" {{ old('link_type', $banner->link_type) == 'product' ? 'selected' : '' }}>Link to Product</option>
                         <option value="category" {{ old('link_type', $banner->link_type) == 'category' ? 'selected' : '' }}>Link to Category</option>
                         <option value="url" {{ old('link_type', $banner->link_type) == 'url' ? 'selected' : '' }}>Custom URL</option>
                     </select>
                     @error('link_type')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
                     @enderror
                 </div>
 
@@ -131,7 +174,7 @@
                         </label>
                         <select name="link_value" 
                                 id="product_link"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500">
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
                             <option value="">Choose a product...</option>
                             @foreach($products as $product)
                                 <option value="{{ $product->slug }}" {{ old('link_value', $banner->link_value) == $product->slug ? 'selected' : '' }}>
@@ -148,7 +191,7 @@
                         </label>
                         <select name="link_value" 
                                 id="category_link"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500">
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
                             <option value="">Choose a category...</option>
                             @foreach($categories as $category)
                                 <option value="{{ $category->slug }}" {{ old('link_value', $banner->link_value) == $category->slug ? 'selected' : '' }}>
@@ -168,74 +211,85 @@
                                id="url_link"
                                value="{{ old('link_value', $banner->link_value) }}"
                                placeholder="https://example.com"
-                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500">
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
                     </div>
 
                     @error('link_value')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
                     @enderror
-                </div>
-
-                <!-- Sort Order -->
-                <div>
-                    <label for="sort_order" class="block text-sm font-medium text-gray-700 mb-2">
-                        Display Order
-                    </label>
-                    <input type="number" 
-                           name="sort_order" 
-                           id="sort_order" 
-                           value="{{ old('sort_order', $banner->sort_order) }}"
-                           min="0"
-                           class="w-32 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500 @error('sort_order') border-red-500 @enderror">
-                    <p class="mt-1 text-xs text-gray-500">Lower numbers appear first</p>
-                    @error('sort_order')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                <!-- Active Status -->
-                <div>
-                    <label class="flex items-center">
-                        <input type="checkbox" 
-                               name="is_active" 
-                               value="1" 
-                               {{ old('is_active', $banner->is_active) ? 'checked' : '' }}
-                               class="rounded border-gray-300 text-purple-600 shadow-sm focus:border-purple-300 focus:ring focus:ring-purple-200 focus:ring-opacity-50">
-                        <span class="ml-2 text-sm text-gray-700">Active (Show on homepage)</span>
-                    </label>
                 </div>
             </div>
 
-            <!-- Action Buttons -->
-            <div class="flex justify-end space-x-3">
+            <!-- Display Settings Section -->
+            <div class="mb-8">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">Display Settings</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Sort Order -->
+                    <div>
+                        <label for="sort_order" class="block text-sm font-medium text-gray-700 mb-2">
+                            Display Order
+                        </label>
+                        <input type="number" 
+                               name="sort_order" 
+                               id="sort_order" 
+                               value="{{ old('sort_order', $banner->sort_order) }}"
+                               min="0"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 @error('sort_order') border-red-500 @enderror">
+                        <p class="mt-1 text-sm text-gray-500">Lower numbers appear first</p>
+                        @error('sort_order')
+                            <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Active Status -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                        <div class="mt-2">
+                            <label class="flex items-center">
+                                <input type="checkbox" 
+                                       name="is_active" 
+                                       value="1" 
+                                       {{ old('is_active', $banner->is_active) ? 'checked' : '' }}
+                                       class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                <span class="ml-2 text-sm text-gray-700">Active (Show on homepage)</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit Buttons -->
+            <div class="flex justify-end space-x-3 pt-6 border-t border-gray-200">
                 <a href="{{ route('admin.banners.index') }}" 
-                   class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+                   class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-2 px-6 rounded-lg transition-colors">
                     Cancel
                 </a>
                 <button type="submit" 
-                        class="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700">
+                        class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-6 rounded-lg transition-colors">
                     Update Banner
                 </button>
             </div>
-        </form>
-    </div>
+        </div>
+    </form>
 </div>
 
 @push('scripts')
 <script>
-function previewImage(input, type) {
-    const preview = document.getElementById(type + '-preview');
-    const previewImg = preview.querySelector('img');
-    
-    if (input.files && input.files[0]) {
+function previewImage(event, type) {
+    const file = event.target.files[0];
+    if (file) {
         const reader = new FileReader();
-        
-        reader.onload = function(e) {
-            previewImg.src = e.target.result;
-            preview.classList.remove('hidden');
+        reader.onload = function() {
+            const preview = document.getElementById(type + '-preview');
+            const newPreviewSection = document.getElementById('new-' + type + '-preview');
+            const placeholder = document.getElementById(type + '-placeholder');
+            
+            preview.src = reader.result;
+            newPreviewSection.classList.remove('hidden');
+            placeholder.classList.add('hidden');
         }
-        
-        reader.readAsDataURL(input.files[0]);
+        reader.readAsDataURL(file);
     }
 }
 

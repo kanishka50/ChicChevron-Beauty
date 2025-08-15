@@ -60,31 +60,77 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
 
+
+
+```
 ```
 chicchevron-beauty
 ├─ .editorconfig
 ├─ app
+│  ├─ Console
+│  │  └─ Commands
+│  │     └─ MigrateToVariantOnly.php
+│  ├─ Exports
+│  │  ├─ CustomerReportExport.php
+│  │  ├─ InventoryReportExport.php
+│  │  └─ SalesReportExport.php
 │  ├─ Http
 │  │  ├─ Controllers
 │  │  │  ├─ Admin
-│  │  │  │  └─ AdminAuthController.php
+│  │  │  │  ├─ AdminAuthController.php
+│  │  │  │  ├─ AdminDashboardController.php
+│  │  │  │  ├─ BannerController.php
+│  │  │  │  ├─ BrandController.php
+│  │  │  │  ├─ CategoryController.php
+│  │  │  │  ├─ ColorController.php
+│  │  │  │  ├─ ComplaintController.php
+│  │  │  │  ├─ InventoryController.php
+│  │  │  │  ├─ OrderController.php
+│  │  │  │  ├─ ProductController.php
+│  │  │  │  ├─ ProductVariantController.php
+│  │  │  │  ├─ ReportController.php
+│  │  │  │  └─ TextureController.php
 │  │  │  ├─ Auth
 │  │  │  │  ├─ ForgotPasswordController.php
 │  │  │  │  ├─ LoginController.php
 │  │  │  │  ├─ RegisterController.php
 │  │  │  │  ├─ ResetPasswordController.php
 │  │  │  │  └─ VerificationController.php
-│  │  │  └─ Controller.php
+│  │  │  ├─ CartController.php
+│  │  │  ├─ CheckoutController.php
+│  │  │  ├─ ComplaintController.php
+│  │  │  ├─ Controller.php
+│  │  │  ├─ HomeController.php
+│  │  │  ├─ OrderController.php
+│  │  │  ├─ PaymentController.php
+│  │  │  ├─ ProductController.php
+│  │  │  ├─ ReviewController.php
+│  │  │  ├─ SearchController.php
+│  │  │  ├─ UserAccountController.php
+│  │  │  └─ WishlistController.php
 │  │  ├─ Middleware
 │  │  │  ├─ AdminAuth.php
 │  │  │  ├─ EnsureEmailIsVerified.php
 │  │  │  └─ GuestOrAuth.php
 │  │  └─ Requests
-│  │     └─ Auth
-│  │        ├─ LoginRequest.php
-│  │        ├─ RegisterRequest.php
-│  │        └─ ResetPasswordRequest.php
+│  │     ├─ Admin
+│  │     │  ├─ BannerRequest.php
+│  │     │  ├─ BrandRequest.php
+│  │     │  ├─ CategoryRequest.php
+│  │     │  ├─ InventoryRequest.php
+│  │     │  ├─ OrderUpdateRequest.php
+│  │     │  ├─ ProductRequest.php
+│  │     │  └─ ProductVariantRequest.php
+│  │     ├─ Auth
+│  │     │  ├─ LoginRequest.php
+│  │     │  ├─ RegisterRequest.php
+│  │     │  └─ ResetPasswordRequest.php
+│  │     ├─ CheckoutRequest.php
+│  │     ├─ ComplaintRequest.php
+│  │     └─ ReviewRequest.php
 │  ├─ Mail
+│  │  ├─ OrderConfirmation.php
+│  │  ├─ OrderStatusUpdate.php
 │  │  └─ WelcomeMail.php
 │  ├─ Models
 │  │  ├─ ActivityLog.php
@@ -100,10 +146,12 @@ chicchevron-beauty
 │  │  ├─ Faq.php
 │  │  ├─ Inventory.php
 │  │  ├─ InventoryMovement.php
+│  │  ├─ MainCategory.php
 │  │  ├─ Order.php
 │  │  ├─ OrderItem.php
 │  │  ├─ OrderStatusHistory.php
 │  │  ├─ Page.php
+│  │  ├─ PaymentMethod.php
 │  │  ├─ Product.php
 │  │  ├─ ProductColor.php
 │  │  ├─ ProductImage.php
@@ -114,24 +162,41 @@ chicchevron-beauty
 │  │  ├─ PromotionProduct.php
 │  │  ├─ PromotionUsage.php
 │  │  ├─ Review.php
+│  │  ├─ ShippingMethod.php
 │  │  ├─ Texture.php
 │  │  ├─ User.php
 │  │  ├─ UserAddress.php
-│  │  ├─ VariantCombination.php
 │  │  └─ Wishlist.php
+│  ├─ Notifications
+│  │  ├─ ResetPassword.php
+│  │  └─ VerifyEmail.php
+│  ├─ Policies
+│  │  └─ OrderPolicy.php
 │  ├─ Providers
 │  │  ├─ AppServiceProvider.php
 │  │  └─ RouteServiceProvider.php
+│  ├─ Services
+│  │  ├─ CartService.php
+│  │  ├─ InventoryService.php
+│  │  ├─ InvoiceService.php
+│  │  ├─ OrderService.php
+│  │  ├─ PayHereService.php
+│  │  ├─ PaymentService.php
+│  │  ├─ ProductVariantService.php
+│  │  └─ ReportService.php
 │  ├─ Traits
 │  │  ├─ HasSlug.php
 │  │  ├─ LogsActivity.php
 │  │  └─ ManagesInventory.php
 │  └─ View
 │     └─ Components
-│        └─ Admin
-│           ├─ Card.php
-│           ├─ Modal.php
-│           └─ Table.php
+│        ├─ Admin
+│        │  ├─ Card.php
+│        │  ├─ Modal.php
+│        │  └─ Table.php
+│        ├─ OrderStatusBadge.php
+│        └─ Shop
+│           └─ ProductVariantSelector.php
 ├─ artisan
 ├─ bootstrap
 │  ├─ app.php
@@ -146,6 +211,8 @@ chicchevron-beauty
 │  ├─ auth.php
 │  ├─ cache.php
 │  ├─ database.php
+│  ├─ dompdf.php
+│  ├─ excel.php
 │  ├─ filesystems.php
 │  ├─ logging.php
 │  ├─ mail.php
@@ -155,7 +222,6 @@ chicchevron-beauty
 │  ├─ session.php
 │  └─ shop.php
 ├─ database
-│  ├─ database.sqlite
 │  ├─ factories
 │  │  ├─ BrandFactory.php
 │  │  ├─ CategoryFactory.php
@@ -165,13 +231,13 @@ chicchevron-beauty
 │  │  ├─ 0001_01_01_000000_create_users_table.php
 │  │  ├─ 0001_01_01_000001_create_cache_table.php
 │  │  ├─ 0001_01_01_000002_create_jobs_table.php
+│  │  ├─ 2025_05_30_084000_create_product_types_table.php
+│  │  ├─ 2025_05_30_084001_create_textures_table.php
+│  │  ├─ 2025_05_30_084002_create_colors_table.php
 │  │  ├─ 2025_05_30_084812_create_user_addresses_table.php
 │  │  ├─ 2025_05_30_084855_create_categories_table.php
 │  │  ├─ 2025_05_30_084928_create_brands_table.php
 │  │  ├─ 2025_05_30_085032_create_products_table.php
-│  │  ├─ 2025_05_30_090444_create_product_types_table.php
-│  │  ├─ 2025_05_30_090452_create_textures_table.php
-│  │  ├─ 2025_05_30_090500_create_colors_table.php
 │  │  ├─ 2025_05_30_090510_create_product_images_table.php
 │  │  ├─ 2025_05_30_090521_create_product_ingredients_table.php
 │  │  ├─ 2025_05_30_090530_create_product_colors_table.php
@@ -179,19 +245,30 @@ chicchevron-beauty
 │  │  ├─ 2025_05_30_090546_create_variant_combinations_table.php
 │  │  ├─ 2025_05_30_090554_create_inventory_table.php
 │  │  ├─ 2025_05_30_090610_create_inventory_movements_table.php
+│  │  ├─ 2025_05_30_090615_create_orders_table.php
+│  │  ├─ 2025_05_30_090616_create_admins_table.php
 │  │  ├─ 2025_05_30_090618_create_order_items_table.php
 │  │  ├─ 2025_05_30_090626_create_order_status_history_table.php
+│  │  ├─ 2025_05_30_090630_create_promotions_table.php
 │  │  ├─ 2025_05_30_090633_create_promotion_products_table.php
 │  │  ├─ 2025_05_30_090640_create_promotion_usage_table.php
 │  │  ├─ 2025_05_30_090647_create_wishlists_table.php
 │  │  ├─ 2025_05_30_090655_create_cart_items_table.php
 │  │  ├─ 2025_05_30_090703_create_reviews_table.php
+│  │  ├─ 2025_05_30_090710_create_complaints_table.php
 │  │  ├─ 2025_05_30_090713_create_complaint_responses_table.php
 │  │  ├─ 2025_05_30_090719_create_activity_logs_table.php
+│  │  ├─ 2025_05_30_090720_create_banners_table.php
+│  │  ├─ 2025_05_30_090721_create_faqs_table.php
 │  │  ├─ 2025_05_30_090725_create_email_logs_table.php
-│  │  ├─ 2025_05_30_091617_create_admins_table.php
 │  │  ├─ 2025_05_30_092153_create_pages_table.php
-│  │  └─ 2025_05_30_171914_create_password_reset_tokens_table.php
+│  │  ├─ 2025_05_30_171914_create_password_reset_tokens_table.php
+│  │  ├─ 2025_07_10_072432_add_unit_price_to_cart_items_table.php
+│  │  ├─ 2025_07_10_172124_add_customer_email_to_orders_table.php
+│  │  ├─ 2025_07_10_172156_add_is_active_to_user_addresses_table.php
+│  │  ├─ 2025_07_13_081912_add_rating_columns_to_products_table.php
+│  │  ├─ 2025_07_14_040011_add_discount_price_to_variant_combinations_table.php
+│  │  └─ 2025_07_15_071731_clean_variant_system_migration.php
 │  └─ seeders
 │     ├─ AdminSeeder.php
 │     ├─ BrandSeeder.php
@@ -199,9 +276,9 @@ chicchevron-beauty
 │     ├─ ColorSeeder.php
 │     ├─ DatabaseSeeder.php
 │     ├─ PageSeeder.php
+│     ├─ ProductSeeder.php
 │     ├─ ProductTypeSeeder.php
 │     └─ TextureSeeder.php
-├─ package-lock.json
 ├─ package.json
 ├─ phpunit.xml
 ├─ postcss.config.js
@@ -216,25 +293,91 @@ chicchevron-beauty
 │  │  └─ app.css
 │  ├─ js
 │  │  ├─ admin
-│  │  │  └─ app.js
+│  │  │  ├─ app.js
+│  │  │  ├─ dashboard.js
+│  │  │  └─ reports.js
 │  │  ├─ app.js
-│  │  └─ bootstrap.js
+│  │  ├─ bootstrap.js
+│  │  └─ shop
+│  │     └─ cart.js
 │  └─ views
 │     ├─ admin
 │     │  ├─ auth
-│     │  │  └─ login.blade.php
+│     │  ├─ banners
+│     │  │  ├─ create.blade.php
+│     │  │  ├─ edit.blade.php
+│     │  │  └─ index.blade.php
+│     │  ├─ brands
+│     │  │  ├─ create.blade.php
+│     │  │  ├─ edit.blade.php
+│     │  │  └─ index.blade.php
+│     │  ├─ categories
+│     │  │  ├─ create.blade.php
+│     │  │  ├─ edit.blade.php
+│     │  │  └─ index.blade.php
+│     │  ├─ colors
+│     │  │  └─ index.blade.php
+│     │  ├─ complaints
+│     │  │  ├─ index.blade.php
+│     │  │  └─ show.blade.php
 │     │  ├─ dashboard
 │     │  │  └─ index.blade.php
-│     │  └─ layouts
-│     │     ├─ app.blade.php
-│     │     ├─ navigation.blade.php
-│     │     └─ sidebar.blade.php
+│     │  ├─ inventory
+│     │  │  ├─ index.blade.php
+│     │  │  ├─ movements.blade.php
+│     │  │  └─ partials
+│     │  │     ├─ add-stock-modal.blade.php
+│     │  │     ├─ adjust-stock-modal.blade.php
+│     │  │     ├─ inventory-scripts.blade.php
+│     │  │     └─ stock-details-modal.blade.php
+│     │  ├─ layouts
+│     │  │  ├─ app.blade.php
+│     │  │  ├─ navigation.blade.php
+│     │  │  └─ sidebar.blade.php
+│     │  ├─ orders
+│     │  │  ├─ index.blade.php
+│     │  │  ├─ invoice.blade.php
+│     │  │  └─ show.blade.php
+│     │  ├─ products
+│     │  │  ├─ create.blade.php
+│     │  │  ├─ edit.blade.php
+│     │  │  ├─ index.blade.php
+│     │  │  ├─ partials
+│     │  │  │  ├─ create-attributes.blade.php
+│     │  │  │  ├─ edit-attributes.blade.php
+│     │  │  │  ├─ image-upload.blade.php
+│     │  │  │  ├─ ingredients-form.blade.php
+│     │  │  │  ├─ stock-indicators.blade.php
+│     │  │  │  ├─ variant-form.blade.php
+│     │  │  │  └─ variant-scripts.blade.php
+│     │  │  ├─ show.blade.php
+│     │  │  └─ variants
+│     │  │     ├─ create.blade.php
+│     │  │     ├─ edit.blade.php
+│     │  │     └─ index.blade.php
+│     │  ├─ reports
+│     │  │  ├─ customers.blade.php
+│     │  │  ├─ index.blade.php
+│     │  │  ├─ inventory.blade.php
+│     │  │  └─ sales.blade.php
+│     │  └─ textures
+│     │     └─ index.blade.php
 │     ├─ auth
 │     │  ├─ forgot-password.blade.php
 │     │  ├─ login.blade.php
 │     │  ├─ register.blade.php
 │     │  ├─ reset-password.blade.php
 │     │  └─ verify-email.blade.php
+│     ├─ cart
+│     │  └─ index.blade.php
+│     ├─ checkout
+│     │  ├─ index.blade.php
+│     │  ├─ payment-processing.blade.php
+│     │  ├─ payment-success.blade.php
+│     │  ├─ payment.blade.php
+│     │  └─ success.blade.php
+│     ├─ colors
+│     │  └─ index.blade.php
 │     ├─ components
 │     │  ├─ admin
 │     │  │  ├─ card.blade.php
@@ -243,87 +386,63 @@ chicchevron-beauty
 │     │  ├─ alert.blade.php
 │     │  ├─ input-error.blade.php
 │     │  ├─ input-label.blade.php
+│     │  ├─ order-status-badge.blade.php
 │     │  ├─ primary-button.blade.php
 │     │  ├─ secondary-button.blade.php
+│     │  ├─ shop
+│     │  │  ├─ cart-dropdown.blade.php
+│     │  │  ├─ product-card.blade.php
+│     │  │  └─ variant-selector.blade.php
 │     │  └─ text-input.blade.php
 │     ├─ emails
+│     │  ├─ order-confirmation.blade.php
+│     │  ├─ order-status.blade.php
+│     │  ├─ password-reset.blade.php
+│     │  ├─ verify-email.blade.php
 │     │  └─ welcome.blade.php
 │     ├─ errors
 │     │  ├─ 404.blade.php
 │     │  ├─ 500.blade.php
 │     │  └─ 503.blade.php
+│     ├─ home
+│     │  ├─ banner-slider.blade.php
+│     │  └─ index.blade.php
 │     ├─ layouts
 │     │  ├─ app.blade.php
 │     │  ├─ footer.blade.php
 │     │  ├─ guest.blade.php
 │     │  └─ navigation.blade.php
+│     ├─ products
+│     │  ├─ index.blade.php
+│     │  └─ show.blade.php
+│     ├─ user
+│     │  ├─ account
+│     │  │  ├─ address-create.blade.php
+│     │  │  ├─ address-edit.blade.php
+│     │  │  ├─ addresses.blade.php
+│     │  │  ├─ index.blade.php
+│     │  │  ├─ profile.blade.php
+│     │  │  └─ security.blade.php
+│     │  ├─ complaints
+│     │  │  ├─ create.blade.php
+│     │  │  ├─ index.blade.php
+│     │  │  └─ show.blade.php
+│     │  ├─ orders
+│     │  │  ├─ index.blade.php
+│     │  │  └─ show.blade.php
+│     │  ├─ reviews
+│     │  │  ├─ create-single.blade.php
+│     │  │  ├─ create.blade.php
+│     │  │  └─ index.blade.php
+│     │  └─ wishlist
+│     │     └─ index.blade.php
 │     └─ welcome.blade.php
 ├─ routes
 │  ├─ admin.php
 │  ├─ console.php
 │  └─ web.php
 ├─ storage
-│  ├─ app
-│  │  ├─ private
-│  │  └─ public
-│  │     ├─ banners
-│  │     ├─ brands
-│  │     ├─ categories
-│  │     └─ products
-│  ├─ framework
-│  │  ├─ cache
-│  │  │  └─ data
-│  │  ├─ sessions
-│  │  │  ├─ 8uTKWWEOBhqTc6Qfno1RMFPwscA0M8MxYFOBDcPe
-│  │  │  ├─ 95LYLlt4v7Xb3dgFyN0XY7r4i5lMjXiWfodJeso2
-│  │  │  ├─ TLiCH1Dxpz5f2c2HPEDJi6ePrBUbeuhvhZtdWOgI
-│  │  │  └─ ZkyF5p95YinFsbzrP384AismzCTbNEhDtnmvsDJM
-│  │  ├─ testing
-│  │  └─ views
-│  │     ├─ 02097000b2a9d6e8bc560575383d0f91.php
-│  │     ├─ 026419a83c4b57301f816523a0d181c3.php
-│  │     ├─ 02d52fcb8486925b5f04659bcb64dc95.php
-│  │     ├─ 0a7245d0aa8271f04e66e9c6b5ca4fbf.php
-│  │     ├─ 17fff6e597d2c1f8e125078bc4467bbc.php
-│  │     ├─ 1c36cf04197d149e1fee529072af132d.php
-│  │     ├─ 1ce62dd79ad4e233a55945d284ea59be.php
-│  │     ├─ 1cedcc34bb8727f82956a9bc217f6400.php
-│  │     ├─ 1d8c777ceb845cba32dd081eaf314625.php
-│  │     ├─ 1fc83f1771c0fe25bb433de17bbeb775.php
-│  │     ├─ 2383baa099758ef2667cfa4865a64a7a.php
-│  │     ├─ 262bb6226dc1540398bb5049f5c38760.php
-│  │     ├─ 2812a292b4d78c65830370f2ece13768.php
-│  │     ├─ 302be44af181fdb55676cfbf4e84bc40.php
-│  │     ├─ 39bc060b04d07d3030bd57d52c711bc1.php
-│  │     ├─ 3b08aa323537ca06e873e471477fa766.php
-│  │     ├─ 4299808e82bcb111a8f7d98d386f533f.php
-│  │     ├─ 4a60a99dba9b2fd2d19918cb32cee02b.php
-│  │     ├─ 4ae20849f1e604e4e60155789684ceab.php
-│  │     ├─ 4b9f7e317ba2b31d75db52aabdfeae32.php
-│  │     ├─ 4e0fd7e1c496fa9c5e5de70c71b08534.php
-│  │     ├─ 5120d53e0fb046d561bf40a086a77b49.php
-│  │     ├─ 5497cd7c56dbc0bc6fcd6cf5fe9718ed.php
-│  │     ├─ 5d1db28a671098ccdb8dd8d169d62c70.php
-│  │     ├─ 660d00f49f4717e2939f9615fa2df1a4.php
-│  │     ├─ 68d9550d6aecf5cac099ba2bec2239ec.php
-│  │     ├─ 6ffe50eb49ac34f15e8a0d9cbd40c8ac.php
-│  │     ├─ 7673981fd3fdacc7a1acd535a002c33f.php
-│  │     ├─ 9098bbd40cc52455737a5394396dd38c.php
-│  │     ├─ 91de65cd345d0796e76b1b37cdb42be2.php
-│  │     ├─ 9c64735f3bde91f8e18c06a08517aded.php
-│  │     ├─ a6fe1ebb0c7f0e5b24a78d89eb23347d.php
-│  │     ├─ aa1999ee9e3b5b5b4ec7de121d6cd8e2.php
-│  │     ├─ ae1413591198bbfe795d8c47893e194d.php
-│  │     ├─ b0cdb8ac5a091bb3575cb25de2e05df2.php
-│  │     ├─ c1c1f09926c5f0bd50bd7266978523cd.php
-│  │     ├─ c79b12c1982b43aa04f3ba19a3d6a8a3.php
-│  │     ├─ dcae0ff1c633f9ea4ebc791aeffe62d8.php
-│  │     ├─ de2b2c05871f09630d22029ad17f9245.php
-│  │     ├─ e2b1dd266e22f62061e1a6e0da78ade2.php
-│  │     ├─ f47cbfa9974571d95055babb77b4aba6.php
-│  │     ├─ f8a29ef4c7f1921745945e20d617966d.php
-│  │     └─ fba93916fdccafc3a5b98f47378cde6f.php
-│  └─ logs
+│  └─ framework
 ├─ tailwind.config.js
 ├─ tests
 │  ├─ Feature
