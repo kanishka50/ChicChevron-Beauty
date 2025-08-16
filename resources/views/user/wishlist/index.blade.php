@@ -301,23 +301,25 @@ function showToast(message, type = 'success') {
 }
 
 // Remove from wishlist
+// Update the removeFromWishlist function in your wishlist index page to use the toggle endpoint
 async function removeFromWishlist(productId) {
     try {
-        const response = await fetch('/wishlist/remove', {
+        const response = await fetch(`/wishlist/toggle/${productId}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-            },
-            body: JSON.stringify({
-                product_id: productId
-            })
+            }
         });
 
         const data = await response.json();
         
         if (data.success) {
-            showToast('Item removed from wishlist');
+            showToast(data.message, 'success');
+            // Update wishlist counter
+            if (window.updateWishlistCounter) {
+                window.updateWishlistCounter();
+            }
             setTimeout(() => location.reload(), 1000);
         } else {
             showToast(data.message || 'Error removing item', 'error');

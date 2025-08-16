@@ -301,120 +301,123 @@
             }, 5000);
         };
 
-// Wishlist functions
-function addToWishlist(productId) {
+
+
+
+// Updated toggleWishlist function to use the new toggle endpoint
+
+function toggleWishlist(productId) {
+    console.log('Toggle wishlist called for product:', productId);
+    
     @auth
-        fetch('/wishlist/add', {
+        // Disable all wishlist buttons for this product during request
+        const buttons = document.querySelectorAll(`[data-product-id="${productId}"]`);
+        buttons.forEach(button => button.disabled = true);
+        
+        fetch(`/wishlist/toggle/${productId}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            },
-            body: JSON.stringify({
-                product_id: productId
-            })
+            }
         })
-        .then(response => response.json())
+        .then(response => {
+            console.log('Response status:', response.status);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
         .then(data => {
+            console.log('Response data:', data);
+            
             if (data.success) {
-                // Update the heart icon
-                updateWishlistButton(productId, true);
-                showToast(data.message, 'success'); // Changed from showNotification
+                // Update button appearance based on whether item was added or removed
+                updateWishlistButton(productId, data.added);
+                
+                // Show appropriate message
+                showToast(data.message, 'success');
+                
                 // Update wishlist count in header
-                updateWishlistCounter(); // Changed to use existing function
+                updateWishlistCounter();
+                
+                // Dispatch custom event for other components
+                window.dispatchEvent(new CustomEvent('wishlist-updated', { 
+                    detail: { productId: productId, added: data.added } 
+                }));
             } else {
-                showToast(data.message, 'error');
+                showToast(data.message || 'Error updating wishlist', 'error');
             }
         })
         .catch(error => {
-            console.error('Error:', error);
-            showToast('Error adding to wishlist', 'error');
+            console.error('Fetch error:', error);
+            showToast('Error updating wishlist. Please check console for details.', 'error');
+        })
+        .finally(() => {
+            // Re-enable buttons
+            buttons.forEach(button => button.disabled = false);
         });
     @else
+        console.log('User not authenticated, redirecting to login');
         // Redirect to login if not authenticated
         window.location.href = '{{ route("login") }}?redirect=' + window.location.pathname;
     @endauth
 }
-
-function removeFromWishlist(productId) {
-    @auth
-        fetch('/wishlist/remove', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            },
-            body: JSON.stringify({
-                product_id: productId
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Update the heart icon
-                updateWishlistButton(productId, false);
-                showToast(data.message, 'success');
-                // Update wishlist count in header
-                updateWishlistCounter();
-            } else {
-                showToast(data.message, 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showToast('Error removing from wishlist', 'error');
-        });
-    @else
-        window.location.href = '{{ route("login") }}?redirect=' + window.location.pathname;
-    @endauth
-}
-
-function toggleWishlist(productId) {
-    const button = document.querySelector(`[data-product-id="${productId}"]`);
-    if (button && button.classList.contains('in-wishlist')) {
-        removeFromWishlist(productId);
-    } else {
-        addToWishlist(productId);
-    }
-}
-
+// Updated updateWishlistButton function for better SVG handling
 function updateWishlistButton(productId, isInWishlist) {
     const buttons = document.querySelectorAll(`[data-product-id="${productId}"]`);
+    
     buttons.forEach(button => {
-        if (isInWishlist) {
-            button.classList.add('in-wishlist');
-            button.classList.add('text-red-500');
-            button.classList.remove('text-gray-400');
-            // Update icon - check if using FontAwesome or SVG
-            const icon = button.querySelector('i');
-            if (icon) {
-                icon.classList.remove('far');
-                icon.classList.add('fas');
+        const svg = button.querySelector('svg');
+        
+        if (svg) {
+            if (isInWishlist) {
+                // Added to wishlist - fill the heart
+                svg.classList.add('text-pink-500', 'fill-current');
+                svg.classList.remove('text-gray-500');
+                svg.setAttribute('fill', 'currentColor');
+                button.setAttribute('title', 'Remove from wishlist');
+                button.classList.add('in-wishlist');
             } else {
-                // If using SVG, update the fill
-                button.innerHTML = `<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
-                </svg>`;
+                // Removed from wishlist - outline only
+                svg.classList.remove('text-pink-500', 'fill-current');
+                svg.classList.add('text-gray-500');
+                svg.setAttribute('fill', 'none');
+                button.setAttribute('title', 'Add to wishlist');
+                button.classList.remove('in-wishlist');
             }
         } else {
-            button.classList.remove('in-wishlist');
-            button.classList.remove('text-red-500');
-            button.classList.add('text-gray-400');
-            // Update icon
-            const icon = button.querySelector('i');
-            if (icon) {
-                icon.classList.remove('fas');
-                icon.classList.add('far');
+            // Fallback for icon fonts or other implementations
+            if (isInWishlist) {
+                button.classList.add('in-wishlist', 'text-pink-500');
+                button.classList.remove('text-gray-500');
+                const icon = button.querySelector('i');
+                if (icon) {
+                    icon.classList.remove('far');
+                    icon.classList.add('fas');
+                }
             } else {
-                // If using SVG, update to outline
-                button.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
-                </svg>`;
+                button.classList.remove('in-wishlist', 'text-pink-500');
+                button.classList.add('text-gray-500');
+                const icon = button.querySelector('i');
+                if (icon) {
+                    icon.classList.remove('fas');
+                    icon.classList.add('far');
+                }
             }
         }
     });
 }
 
+// Keep the existing addToWishlist and removeFromWishlist functions for backward compatibility
+// but update them to use the toggle endpoint internally
+function addToWishlist(productId) {
+    toggleWishlist(productId);
+}
+
+function removeFromWishlist(productId) {
+    toggleWishlist(productId);
+}
 
 </script>
 </body>

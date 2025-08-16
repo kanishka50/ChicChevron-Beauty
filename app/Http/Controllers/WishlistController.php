@@ -7,15 +7,14 @@ use App\Models\Wishlist;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class WishlistController extends Controller
 {
-    
-
     /**
      * Display user's wishlist
      */
-     public function index()
+    public function index()
     {
         $wishlistItems = Wishlist::where('user_id', Auth::id())
             ->with(['product.brand', 'product.images'])
@@ -23,6 +22,59 @@ class WishlistController extends Controller
             ->get();
 
         return view('user.wishlist.index', compact('wishlistItems'));
+    }
+
+    /**
+     * Toggle product in wishlist
+     */
+    public function toggle($productId)
+    {
+        try {
+            // Validate product exists
+            $product = Product::findOrFail($productId);
+            
+            // Check if already in wishlist
+            $existingItem = Wishlist::where('user_id', Auth::id())
+                ->where('product_id', $productId)
+                ->first();
+
+            if ($existingItem) {
+                // Remove from wishlist
+                $existingItem->delete();
+                
+                $wishlistCount = Wishlist::where('user_id', Auth::id())->count();
+                
+                return response()->json([
+                    'success' => true,
+                    'added' => false,
+                    'message' => 'Product removed from wishlist',
+                    'wishlist_count' => $wishlistCount
+                ]);
+            } else {
+                // Add to wishlist
+                Wishlist::create([
+                    'user_id' => Auth::id(),
+                    'product_id' => $productId
+                ]);
+                
+                $wishlistCount = Wishlist::where('user_id', Auth::id())->count();
+                
+                return response()->json([
+                    'success' => true,
+                    'added' => true,
+                    'message' => 'Product added to wishlist',
+                    'wishlist_count' => $wishlistCount
+                ]);
+            }
+
+        } catch (\Exception $e) {
+            Log::error('Wishlist toggle error: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Error updating wishlist. Please try again.'
+            ], 500);
+        }
     }
 
     /**
