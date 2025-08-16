@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use App\Models\ProductVariant;
 use App\Models\Brand;
 use App\Models\Category;
 use Illuminate\Http\Request;
@@ -17,29 +18,105 @@ class SearchController extends Controller
      * Handle search requests with advanced filtering
      */
     public function index(Request $request)
-    {
-        $query = $request->get('q', '');
-        
-        if (empty($query)) {
-            return redirect()->route('products.index')
-                ->with('message', 'Please enter a search term.');
-        }
+{
+    $query = Product::active()
+        ->with(['brand', 'category', 'images', 'variants.inventory', 'colors', 'texture']);
 
-        // Perform the search
-        $results = $this->performSearch($query, $request);
-
-        // Log search for analytics (optional)
-        $this->logSearch($query, $results['products']->total());
-
-        return view('search.results', [
-            'query' => $query,
-            'products' => $results['products'],
-            'filters' => $results['filters'],
-            'currentFilters' => $request->all(),
-            'totalProducts' => $results['products']->total(),
-            'searchSuggestions' => $this->getSearchSuggestions($query),
-        ]);
+    // Check if this is a search request
+    $searchQuery = $request->get('q');
+    $isSearchResult = !empty($searchQuery);
+    
+    if ($isSearchResult) {
+        // Apply search logic
+        $this->applySearch($query, $searchQuery);
     }
+
+    // Apply filters (works for both search and regular browsing)
+    $this->applyFilters($query, $request);
+
+    // Apply sorting
+    $this->applySorting($query, $request);
+
+    // Paginate results
+    $products = $query->paginate(20)->withQueryString();
+
+    // Load reviews with proper aggregation
+    $products->getCollection()->load([
+        'reviews' => function($query) {
+            $query->where('is_approved', true);
+        }
+    ]);
+
+    // Calculate averages manually to avoid GROUP BY issues
+    $products->getCollection()->each(function ($product) {
+        $product->reviews_avg_rating = $product->reviews->avg('rating') ?: 0;
+        $product->reviews_count = $product->reviews->count();
+    });
+
+    // Get filter data
+    $filterData = $this->getFilterData($request);
+
+    return view('products.index', [
+        'products' => $products,
+        'filters' => $filterData,
+        'currentFilters' => $request->all(),
+        'totalProducts' => $products->total(),
+        'searchQuery' => $searchQuery,  // Add this
+        'isSearchResult' => $isSearchResult  // Add this
+    ]);
+}
+
+
+/**
+ * Apply search logic to the query
+ * NEW METHOD - Add this after the index method
+ */
+private function applySearch($query, $searchTerm)
+{
+    $query->where(function ($q) use ($searchTerm) {
+        // Search in product name (highest priority)
+        $q->where('name', 'LIKE', "%{$searchTerm}%")
+          // Search in description
+          ->orWhere('description', 'LIKE', "%{$searchTerm}%")
+          // Search in SKU
+          ->orWhere('sku', 'LIKE', "%{$searchTerm}%")
+          // Search in brand name
+          ->orWhereHas('brand', function ($brandQuery) use ($searchTerm) {
+              $brandQuery->where('name', 'LIKE', "%{$searchTerm}%");
+          })
+          // Search in category name
+          ->orWhereHas('category', function ($categoryQuery) use ($searchTerm) {
+              $categoryQuery->where('name', 'LIKE', "%{$searchTerm}%");
+          })
+          // Search in ingredients
+          ->orWhereHas('ingredients', function ($ingredientQuery) use ($searchTerm) {
+              $ingredientQuery->where('ingredient_name', 'LIKE', "%{$searchTerm}%");
+          })
+          // Search in variant SKUs
+          ->orWhereHas('variants', function ($variantQuery) use ($searchTerm) {
+              $variantQuery->where('sku', 'LIKE', "%{$searchTerm}%")
+                          ->where('is_active', true);
+          });
+    });
+
+    // Add relevance scoring for better search results
+    $query->selectRaw("*, 
+        CASE 
+            WHEN name LIKE ? THEN 100
+            WHEN name LIKE ? THEN 50
+            WHEN description LIKE ? THEN 20
+            WHEN sku LIKE ? THEN 30
+            ELSE 10
+        END as search_relevance", 
+        [
+            $searchTerm . '%',  // Starts with (highest priority)
+            '%' . $searchTerm . '%',  // Contains
+            '%' . $searchTerm . '%',  // In description
+            '%' . $searchTerm . '%'   // In SKU
+        ]
+    )->orderBy('search_relevance', 'DESC');
+}
+
 
     /**
      * Get autocomplete suggestions for search
@@ -57,28 +134,37 @@ class SearchController extends Controller
         $suggestions = Cache::remember($cacheKey, 300, function () use ($query) {
             $suggestions = collect();
 
-            // Product name suggestions
-            $productSuggestions = Product::active()
+            // Product name suggestions with price from variants
+            $productSuggestions = Product::where('is_active', true)
                 ->where('name', 'like', "%{$query}%")
-                ->select('name', 'slug', 'main_image')
-                ->with('brand:id,name')
+                ->select('id', 'name', 'slug', 'main_image')
+                ->with(['brand:id,name', 'variants' => function($q) {
+                    $q->where('is_active', true)
+                      ->select('product_id', 'price', 'discount_price')
+                      ->orderBy('price', 'asc')
+                      ->limit(1);
+                }])
                 ->limit(5)
                 ->get()
                 ->map(function ($product) {
+                    $variant = $product->variants->first();
+                    $price = $variant ? ($variant->discount_price ?? $variant->price) : null;
+                    
                     return [
                         'type' => 'product',
                         'text' => $product->name,
                         'subtitle' => $product->brand->name ?? '',
+                        'price' => $price ? 'Rs. ' . number_format($price, 2) : '',
                         'url' => route('products.show', $product->slug),
                         'image' => $product->main_image ? asset('storage/' . $product->main_image) : null,
                     ];
                 });
 
             // Brand suggestions
-            $brandSuggestions = Brand::active()
+            $brandSuggestions = Brand::where('is_active', true)
                 ->where('name', 'like', "%{$query}%")
                 ->whereHas('products', function ($q) {
-                    $q->active();
+                    $q->where('is_active', true);
                 })
                 ->select('id', 'name', 'logo')
                 ->limit(3)
@@ -94,10 +180,10 @@ class SearchController extends Controller
                 });
 
             // Category suggestions
-            $categorySuggestions = Category::active()
+            $categorySuggestions = Category::where('is_active', true)
                 ->where('name', 'like', "%{$query}%")
                 ->whereHas('products', function ($q) {
-                    $q->active();
+                    $q->where('is_active', true);
                 })
                 ->select('id', 'name', 'image')
                 ->limit(3)
@@ -143,56 +229,11 @@ class SearchController extends Controller
     }
 
     /**
-     * Ingredient-based search
-     */
-    public function ingredients(Request $request)
-    {
-        $request->validate([
-            'ingredients' => 'required|array',
-            'ingredients.*' => 'string|max:255',
-            'search_type' => 'in:include,exclude',
-        ]);
-
-        $ingredients = $request->get('ingredients', []);
-        $searchType = $request->get('search_type', 'include');
-
-        $query = Product::active()
-            ->with(['brand', 'category', 'images', 'inventory', 'reviews'])
-            ->withAvg('reviews', 'rating');
-
-        if ($searchType === 'exclude') {
-            // Find products WITHOUT these ingredients
-            $query->whereDoesntHave('ingredients', function ($ingredientQuery) use ($ingredients) {
-                $ingredientQuery->whereIn('ingredient_name', $ingredients);
-            });
-        } else {
-            // Find products WITH these ingredients
-            $query->whereHas('ingredients', function ($ingredientQuery) use ($ingredients) {
-                $ingredientQuery->whereIn('ingredient_name', $ingredients);
-            });
-        }
-
-        // Apply additional filters
-        $this->applyFilters($query, $request);
-
-        $products = $query->paginate(20)->withQueryString();
-
-        return view('search.ingredients', [
-            'products' => $products,
-            'ingredients' => $ingredients,
-            'searchType' => $searchType,
-            'totalProducts' => $products->total(),
-        ]);
-    }
-
-    /**
      * Get trending search terms
      */
     public function trending()
     {
         $trendingSearches = Cache::remember('trending_searches', 3600, function () {
-            // This would typically come from a search_logs table
-            // For now, return some static popular searches
             return [
                 'moisturizer',
                 'vitamin c serum',
@@ -213,10 +254,25 @@ class SearchController extends Controller
      */
     private function performSearch($query, Request $request)
     {
-        $productQuery = Product::active()
+        $productQuery = Product::where('is_active', true)
             ->with(['brand', 'category', 'images', 'inventory', 'reviews'])
             ->withAvg('reviews', 'rating')
             ->withCount('reviews');
+
+        // Add subquery to get minimum variant price for each product
+        $productQuery->addSelect([
+            'min_price' => ProductVariant::select('price')
+                ->whereColumn('product_id', 'products.id')
+                ->where('is_active', true)
+                ->orderBy('price', 'asc')
+                ->limit(1),
+            'min_discount_price' => ProductVariant::select('discount_price')
+                ->whereColumn('product_id', 'products.id')
+                ->where('is_active', true)
+                ->whereNotNull('discount_price')
+                ->orderBy('discount_price', 'asc')
+                ->limit(1)
+        ]);
 
         // Main search logic
         $productQuery->where(function ($q) use ($query) {
@@ -239,6 +295,13 @@ class SearchController extends Controller
         $this->applySorting($productQuery, $request);
 
         $products = $productQuery->paginate(20)->withQueryString();
+
+        // Load variants for each product to display price ranges
+        $products->load(['variants' => function($query) {
+            $query->where('is_active', true)
+                  ->select('product_id', 'price', 'discount_price', 'size', 'color', 'scent')
+                  ->orderBy('price', 'asc');
+        }]);
 
         // Get filter data
         $filterData = $this->getFilterData();
@@ -265,15 +328,31 @@ class SearchController extends Controller
             $query->whereIn('brand_id', $brands);
         }
 
-        // Price range
-        if ($request->filled('min_price')) {
-            $query->where('selling_price', '>=', $request->min_price);
-        }
-        if ($request->filled('max_price')) {
-            $query->where('selling_price', '<=', $request->max_price);
+        // Price range filter based on variant prices
+        if ($request->filled('min_price') || $request->filled('max_price')) {
+            $query->whereHas('variants', function($variantQuery) use ($request) {
+                $variantQuery->where('is_active', true);
+                
+                if ($request->filled('min_price')) {
+                    $variantQuery->where(function($q) use ($request) {
+                        $q->where('price', '>=', $request->min_price)
+                          ->orWhere('discount_price', '>=', $request->min_price);
+                    });
+                }
+                
+                if ($request->filled('max_price')) {
+                    $variantQuery->where(function($q) use ($request) {
+                        $q->where('price', '<=', $request->max_price)
+                          ->orWhere(function($subQ) use ($request) {
+                              $subQ->whereNotNull('discount_price')
+                                   ->where('discount_price', '<=', $request->max_price);
+                          });
+                    });
+                }
+            });
         }
 
-        // Color filter
+        // Color filter (from product_colors table)
         if ($request->filled('colors')) {
             $colors = is_array($request->colors) ? $request->colors : [$request->colors];
             $query->whereHas('colors', function ($colorQuery) use ($colors) {
@@ -291,6 +370,24 @@ class SearchController extends Controller
         if ($request->filled('min_rating')) {
             $query->having('reviews_avg_rating', '>=', $request->min_rating);
         }
+
+        // Size filter (from variants)
+        if ($request->filled('sizes')) {
+            $sizes = is_array($request->sizes) ? $request->sizes : [$request->sizes];
+            $query->whereHas('variants', function($variantQuery) use ($sizes) {
+                $variantQuery->whereIn('size', $sizes)
+                            ->where('is_active', true);
+            });
+        }
+
+        // Scent filter (from variants)
+        if ($request->filled('scents')) {
+            $scents = is_array($request->scents) ? $request->scents : [$request->scents];
+            $query->whereHas('variants', function($variantQuery) use ($scents) {
+                $variantQuery->whereIn('scent', $scents)
+                            ->where('is_active', true);
+            });
+        }
     }
 
     /**
@@ -302,10 +399,12 @@ class SearchController extends Controller
 
         switch ($sortBy) {
             case 'price_low':
-                $query->orderBy('selling_price', 'asc');
+                // Sort by minimum variant price
+                $query->orderByRaw('COALESCE(min_discount_price, min_price) ASC');
                 break;
             case 'price_high':
-                $query->orderBy('selling_price', 'desc');
+                // Sort by maximum variant price
+                $query->orderByRaw('COALESCE(min_discount_price, min_price) DESC');
                 break;
             case 'rating':
                 $query->orderBy('reviews_avg_rating', 'desc');
@@ -318,8 +417,7 @@ class SearchController extends Controller
                 break;
             case 'relevance':
             default:
-                // For relevance, we could implement a scoring system
-                // For now, just use name match priority
+                // For relevance, prioritize name matches
                 $query->orderByRaw("CASE 
                     WHEN name LIKE ? THEN 1 
                     WHEN description LIKE ? THEN 2 
@@ -338,27 +436,68 @@ class SearchController extends Controller
     private function getFilterData()
     {
         return Cache::remember('search_filters', 600, function () {
+            // Get categories
+            $categories = Category::where('is_active', true)
+                ->whereHas('products', function ($query) {
+                    $query->where('is_active', true);
+                })
+                ->withCount(['products' => function ($query) {
+                    $query->where('is_active', true);
+                }])
+                ->orderBy('name')
+                ->get();
+
+            // Get brands
+            $brands = Brand::where('is_active', true)
+                ->whereHas('products', function ($query) {
+                    $query->where('is_active', true);
+                })
+                ->withCount(['products' => function ($query) {
+                    $query->where('is_active', true);
+                }])
+                ->orderBy('name')
+                ->get();
+
+            // Get price range from variants
+            $minPrice = ProductVariant::whereHas('product', function($q) {
+                $q->where('is_active', true);
+            })
+            ->where('is_active', true)
+            ->min(DB::raw('COALESCE(discount_price, price)')) ?? 0;
+            
+            $maxPrice = ProductVariant::whereHas('product', function($q) {
+                $q->where('is_active', true);
+            })
+            ->where('is_active', true)
+            ->max('price') ?? 10000;
+
+            // Get available sizes from variants
+            $sizes = ProductVariant::whereHas('product', function($q) {
+                    $q->where('is_active', true);
+                })
+                ->where('is_active', true)
+                ->whereNotNull('size')
+                ->distinct()
+                ->pluck('size');
+
+            // Get available scents from variants
+            $scents = ProductVariant::whereHas('product', function($q) {
+                    $q->where('is_active', true);
+                })
+                ->where('is_active', true)
+                ->whereNotNull('scent')
+                ->distinct()
+                ->pluck('scent');
+
             return [
-                'categories' => Category::active()
-                    ->whereHas('products', function ($query) {
-                        $query->active();
-                    })
-                    ->withCount('products')
-                    ->orderBy('name')
-                    ->get(),
-
-                'brands' => Brand::active()
-                    ->whereHas('products', function ($query) {
-                        $query->active();
-                    })
-                    ->withCount('products')
-                    ->orderBy('name')
-                    ->get(),
-
+                'categories' => $categories,
+                'brands' => $brands,
                 'priceRange' => [
-                    'min' => Product::active()->min('selling_price') ?? 0,
-                    'max' => Product::active()->max('selling_price') ?? 1000,
+                    'min' => $minPrice,
+                    'max' => $maxPrice,
                 ],
+                'sizes' => $sizes,
+                'scents' => $scents,
             ];
         });
     }
@@ -374,14 +513,14 @@ class SearchController extends Controller
 
         return Cache::remember('related_searches_' . md5($query), 600, function () use ($query) {
             // Find related products and extract keywords
-            $relatedProducts = Product::active()
+            $relatedProducts = Product::where('is_active', true)
                 ->where('name', 'like', "%{$query}%")
                 ->orWhere('description', 'like', "%{$query}%")
                 ->select('name', 'description')
                 ->limit(10)
                 ->get();
 
-            // Simple keyword extraction (in a real app, you might use more sophisticated NLP)
+            // Simple keyword extraction
             $keywords = collect();
             foreach ($relatedProducts as $product) {
                 $words = str_word_count($product->name . ' ' . $product->description, 1);
@@ -395,7 +534,8 @@ class SearchController extends Controller
                 })
                 ->unique()
                 ->values()
-                ->take(5);
+                ->take(5)
+                ->toArray();
         });
     }
 
@@ -404,8 +544,6 @@ class SearchController extends Controller
      */
     private function logSearch($query, $resultCount)
     {
-        // In a production app, you might store this in a database
-        // For now, we'll just use logs
         Log::info('Search performed', [
             'query' => $query,
             'result_count' => $resultCount,
@@ -413,5 +551,76 @@ class SearchController extends Controller
             'user_agent' => request()->userAgent(),
             'timestamp' => now(),
         ]);
+    }
+
+    /**
+     * Ingredient-based search
+     */
+    public function ingredients(Request $request)
+    {
+        $request->validate([
+            'ingredients' => 'required|array',
+            'ingredients.*' => 'string|max:255',
+            'search_type' => 'in:include,exclude',
+        ]);
+
+        $ingredients = $request->get('ingredients', []);
+        $searchType = $request->get('search_type', 'include');
+
+        $query = Product::where('is_active', true)
+            ->with(['brand', 'category', 'images', 'inventory', 'reviews', 'variants'])
+            ->withAvg('reviews', 'rating');
+
+        // Add variant price subqueries
+        $query->addSelect([
+            'min_price' => ProductVariant::select('price')
+                ->whereColumn('product_id', 'products.id')
+                ->where('is_active', true)
+                ->orderBy('price', 'asc')
+                ->limit(1),
+            'min_discount_price' => ProductVariant::select('discount_price')
+                ->whereColumn('product_id', 'products.id')
+                ->where('is_active', true)
+                ->whereNotNull('discount_price')
+                ->orderBy('discount_price', 'asc')
+                ->limit(1)
+        ]);
+
+        if ($searchType === 'exclude') {
+            // Find products WITHOUT these ingredients
+            $query->whereDoesntHave('ingredients', function ($ingredientQuery) use ($ingredients) {
+                $ingredientQuery->whereIn('ingredient_name', $ingredients);
+            });
+        } else {
+            // Find products WITH these ingredients
+            $query->whereHas('ingredients', function ($ingredientQuery) use ($ingredients) {
+                $ingredientQuery->whereIn('ingredient_name', $ingredients);
+            });
+        }
+
+        // Apply additional filters
+        $this->applyFilters($query, $request);
+
+        $products = $query->paginate(20)->withQueryString();
+
+        // Check if view exists
+        if (view()->exists('search.ingredients')) {
+            return view('search.ingredients', [
+                'products' => $products,
+                'ingredients' => $ingredients,
+                'searchType' => $searchType,
+                'totalProducts' => $products->total(),
+            ]);
+        } else {
+            // Fall back to search results or products index
+            return view('search.results', [
+                'query' => implode(', ', $ingredients),
+                'products' => $products,
+                'filters' => $this->getFilterData(),
+                'currentFilters' => $request->all(),
+                'totalProducts' => $products->total(),
+                'searchSuggestions' => [],
+            ]);
+        }
     }
 }

@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProductController;
-use App\Http\Controllers\SearchController;
+
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\PaymentController;
@@ -22,6 +22,7 @@ use App\Http\Controllers\ReviewController;
 
 // Public routes (accessible by everyone)
 Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/search/suggestions', [HomeController::class, 'searchSuggestions'])->name('search.suggestions');
 
 // Public shop routes
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
@@ -32,10 +33,7 @@ Route::get('/api/variants/{variant}', [ProductController::class, 'getVariantDeta
 
 
 // Search functionality
-Route::get('/search', [SearchController::class, 'index'])->name('search');
-Route::get('/search/suggestions', [SearchController::class, 'suggestions'])->name('search.suggestions');
-Route::get('/search/ingredients', [SearchController::class, 'ingredients'])->name('search.ingredients');
-Route::get('/search/trending', [SearchController::class, 'trending'])->name('search.trending');
+
 
 // Categories
 Route::get('/categories', function () {
@@ -236,7 +234,7 @@ Route::get('/orders', function () {
 // API routes
 Route::prefix('api/v1')->group(function () {
     Route::get('/products/{product}/variants', [ProductController::class, 'getVariantDetails'])->name('api.products.variants');
-    Route::get('/search/autocomplete', [SearchController::class, 'suggestions'])->name('api.search.autocomplete');
+    
     
     Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/orders', [OrderController::class, 'index'])->name('api.orders.index');

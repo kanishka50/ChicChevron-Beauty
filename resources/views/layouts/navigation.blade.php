@@ -36,29 +36,29 @@
             </div>
 
             <!-- Desktop Search -->
-            <div class="hidden lg:flex flex-1 max-w-xl mx-auto px-8">
-                <form action="{{ route('search') }}" method="GET" class="w-full">
-                    <label for="desktop-search" class="mb-2 text-sm font-medium text-gray-900 sr-only">Search</label>
-                    <div class="relative">
-                        <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                            <svg class="w-5 h-5 text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
-                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"/>
-                            </svg>
-                        </div>
-                        <input type="search" 
-                               id="desktop-search"
-                               name="q" 
-                               value="{{ request('q') }}"
-                               class="block w-full p-3 pl-10 pr-20 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-primary-500 focus:border-primary-500" 
-                               placeholder="Search products..." 
-                               required />
-                        <button type="submit" 
-                                class="text-white absolute right-2 bottom-2 bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-3 py-1.5">
-                            Search
-                        </button>
-                    </div>
-                </form>
+<div class="hidden lg:flex flex-1 max-w-xl mx-auto px-8">
+    <form action="{{ route('products.index') }}" method="GET" class="w-full">
+        <label for="desktop-search" class="mb-2 text-sm font-medium text-gray-900 sr-only">Search</label>
+        <div class="relative">
+            <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                <svg class="w-5 h-5 text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"/>
+                </svg>
             </div>
+            <input type="search" 
+                   id="desktop-search"
+                   name="q" 
+                   value="{{ request('q') }}"
+                   class="block w-full p-3 pl-10 pr-20 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-primary-500 focus:border-primary-500" 
+                   placeholder="Search products, brands, ingredients..." 
+                   autocomplete="off" />
+            <button type="submit" 
+                    class="text-white absolute right-2 bottom-2 bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-3 py-1.5">
+                Search
+            </button>
+        </div>
+    </form>
+</div>
 
             <!-- Desktop User Actions -->
             <div class="hidden lg:flex items-center gap-3">
@@ -163,7 +163,7 @@
 
         <!-- Mobile Search Bar -->
         <div id="mobileSearchBar" class="lg:hidden pb-4 hidden">
-            <form action="{{ route('search') }}" method="GET">
+            <form action="{{ route('products.index') }}" method="GET">
                 <label for="mobile-search" class="mb-2 text-sm font-medium text-gray-900 sr-only">Search</label>
                 <div class="relative">
                     <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
@@ -172,12 +172,12 @@
                         </svg>
                     </div>
                     <input type="search" 
-                           id="mobile-search"
-                           name="q" 
-                           value="{{ request('q') }}"
-                           class="block w-full p-3 pl-10 pr-20 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-primary-500 focus:border-primary-500" 
-                           placeholder="Search products..." 
-                           required />
+                        id="mobile-search"
+                        name="q" 
+                        value="{{ request('q') }}"
+                        class="block w-full p-3 pl-10 pr-20 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-primary-500 focus:border-primary-500" 
+                        placeholder="Search products, brands, ingredients..." 
+                        autocomplete="off" />
                     <button type="submit" 
                             class="text-white absolute right-2 bottom-2 bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-3 py-1.5">
                         Search

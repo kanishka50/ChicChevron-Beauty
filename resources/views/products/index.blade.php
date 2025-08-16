@@ -235,8 +235,8 @@
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <div>
                             <h1 class="text-xl sm:text-2xl font-bold text-gray-900">
-                                @if(request('q'))
-                                    Search Results for "{{ request('q') }}"
+                                @if($isSearchResult)
+                                    Search Results for "{{ $searchQuery }}"
                                 @elseif(request('category'))
                                     @php $category = \App\Models\Category::find(request('category')); @endphp
                                     {{ $category->name ?? 'Products' }}
@@ -245,8 +245,17 @@
                                 @endif
                             </h1>
                             <p class="text-gray-600 text-sm mt-1">
-                                <span class="font-medium">{{ $totalProducts }}</span> products found
+                                <span class="font-medium">{{ $totalProducts }}</span> 
+                                {{ $isSearchResult ? 'results' : 'products' }} found
                             </p>
+                            
+                            @if($isSearchResult && $totalProducts == 0)
+                                <div class="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                                    <p class="text-sm text-yellow-800">
+                                        No products found for your search. Try different keywords or browse our categories.
+                                    </p>
+                                </div>
+                            @endif
                         </div>
 
                         <!-- Sort Options -->

@@ -120,71 +120,89 @@ class HomeController extends Controller
     /**
      * Get quick search suggestions
      */
-    public function searchSuggestions(Request $request)
-    {
-        $query = $request->get('q', '');
-        
-        if (strlen($query) < 2) {
-            return response()->json([]);
-        }
-
-        $suggestions = Cache::remember('search_suggestions_' . md5($query), 300, function () use ($query) {
-            // Product suggestions
-            $products = Product::active()
-                ->where('name', 'like', "%{$query}%")
-                ->with(['brand', 'category'])
-                ->limit(5)
-                ->get()
-                ->map(function ($product) {
-                    return [
-                        'type' => 'product',
-                        'title' => $product->name,
-                        'subtitle' => $product->brand->name ?? '',
-                        'url' => route('products.show', $product->slug),
-                        'image' => $product->main_image ? asset('storage/' . $product->main_image) : null,
-                        'price' => $product->display_price,
-                    ];
-                });
-
-            // Brand suggestions
-            $brands = Brand::active()
-                ->where('name', 'like', "%{$query}%")
-                ->whereHas('products', function ($q) {
-                    $q->active()->inStock();
-                })
-                ->limit(3)
-                ->get()
-                ->map(function ($brand) {
-                    return [
-                        'type' => 'brand',
-                        'title' => $brand->name,
-                        'subtitle' => $brand->products_count . ' products',
-                        'url' => route('products.index', ['brand' => $brand->id]),
-                        'image' => $brand->logo ? asset('storage/' . $brand->logo) : null,
-                    ];
-                });
-
-            // Category suggestions
-            $categories = Category::active()
-                ->where('name', 'like', "%{$query}%")
-                ->whereHas('products', function ($q) {
-                    $q->active()->inStock();
-                })
-                ->limit(3)
-                ->get()
-                ->map(function ($category) {
-                    return [
-                        'type' => 'category',
-                        'title' => $category->name,
-                        'subtitle' => $category->products_count . ' products',
-                        'url' => route('products.index', ['category' => $category->id]),
-                        'image' => $category->image ? asset('storage/' . $category->image) : null,
-                    ];
-                });
-
-            return $products->concat($brands)->concat($categories)->take(10);
-        });
-
-        return response()->json($suggestions);
+    /**
+ * Get quick search suggestions
+ */
+public function searchSuggestions(Request $request)
+{
+    $query = $request->get('q', '');
+    
+    if (strlen($query) < 2) {
+        return response()->json([]);
     }
+
+    $suggestions = Cache::remember('search_suggestions_' . md5($query), 300, function () use ($query) {
+        $suggestions = collect();
+        
+        // Product suggestions with variants
+        $products = Product::active()
+            ->where('name', 'like', "%{$query}%")
+            ->with(['brand', 'category', 'variants' => function($q) {
+                $q->where('is_active', true)
+                  ->orderBy('price', 'asc')
+                  ->limit(1);
+            }])
+            ->limit(5)
+            ->get()
+            ->map(function ($product) {
+                $variant = $product->variants->first();
+                $price = $variant ? ($variant->discount_price ?? $variant->price) : 0;
+                
+                return [
+                    'type' => 'product',
+                    'text' => $product->name,
+                    'subtitle' => $product->brand->name ?? '',
+                    'url' => route('products.show', $product->slug),
+                    'image' => $product->main_image ? asset('storage/' . $product->main_image) : null,
+                    'price' => $price > 0 ? 'Rs. ' . number_format($price, 2) : null,
+                ];
+            });
+
+        // Brand suggestions
+        $brands = Brand::active()
+            ->where('name', 'like', "%{$query}%")
+            ->whereHas('products', function ($q) {
+                $q->active();
+            })
+            ->withCount('products')
+            ->limit(3)
+            ->get()
+            ->map(function ($brand) {
+                return [
+                    'type' => 'brand',
+                    'text' => $brand->name,
+                    'subtitle' => $brand->products_count . ' products',
+                    'url' => route('products.index', ['brands' => [$brand->id]]),
+                    'image' => $brand->logo ? asset('storage/' . $brand->logo) : null,
+                ];
+            });
+
+        // Category suggestions
+        $categories = Category::active()
+            ->where('name', 'like', "%{$query}%")
+            ->whereHas('products', function ($q) {
+                $q->active();
+            })
+            ->withCount('products')
+            ->limit(3)
+            ->get()
+            ->map(function ($category) {
+                return [
+                    'type' => 'category',
+                    'text' => $category->name,
+                    'subtitle' => $category->products_count . ' products',
+                    'url' => route('products.index', ['category' => $category->id]),
+                    'image' => $category->image ? asset('storage/' . $category->image) : null,
+                ];
+            });
+
+        return $suggestions
+            ->concat($products)
+            ->concat($brands)
+            ->concat($categories)
+            ->take(10);
+    });
+
+    return response()->json($suggestions);
+}
 }
