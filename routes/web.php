@@ -191,6 +191,7 @@ Route::middleware('auth')->prefix('wishlist')->name('wishlist.')->group(function
     Route::get('/', [App\Http\Controllers\WishlistController::class, 'index'])->name('index');
     Route::post('/add', [App\Http\Controllers\WishlistController::class, 'add'])->name('add');
     Route::post('/remove', [App\Http\Controllers\WishlistController::class, 'remove'])->name('remove');
+    Route::post('/toggle/{product}', [App\Http\Controllers\WishlistController::class, 'toggle'])->name('toggle');
     Route::post('/clear', [App\Http\Controllers\WishlistController::class, 'clear'])->name('clear');
     Route::get('/count', [App\Http\Controllers\WishlistController::class, 'getCount'])->name('count');
     Route::post('/check', [App\Http\Controllers\WishlistController::class, 'check'])->name('check');
