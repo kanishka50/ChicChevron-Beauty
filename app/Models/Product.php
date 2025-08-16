@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use App\Traits\ManagesInventory;
 use Illuminate\Support\Facades\Auth;
 
+
 class Product extends Model
 {
     use HasFactory, HasSlug, ManagesInventory;
@@ -794,14 +795,14 @@ if ($variant->price <= 0) {
  * Check if product is in user's wishlist
  */
 public function isInWishlist()
-    {
-        if (!Auth::check()) {
-            return false;
-        }
-        
-        return $this->wishlists()
-            ->where('user_id', Auth::id())
-            ->exists();
+{
+    if (!Auth::check()) {
+        return false;
     }
+    
+    return $this->wishlists()
+        ->where('user_id', Auth::id())
+        ->exists();
+}
     
 }

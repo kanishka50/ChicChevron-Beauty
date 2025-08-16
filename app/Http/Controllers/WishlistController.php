@@ -27,15 +27,15 @@ class WishlistController extends Controller
     /**
      * Toggle product in wishlist
      */
-    public function toggle($productId)
+    public function toggle(Product $product)
     {
         try {
-            // Validate product exists
-            $product = Product::findOrFail($productId);
+            // The product is automatically injected by Laravel's route model binding
+            // No need to find it again
             
             // Check if already in wishlist
             $existingItem = Wishlist::where('user_id', Auth::id())
-                ->where('product_id', $productId)
+                ->where('product_id', $product->id)
                 ->first();
 
             if ($existingItem) {
@@ -54,7 +54,7 @@ class WishlistController extends Controller
                 // Add to wishlist
                 Wishlist::create([
                     'user_id' => Auth::id(),
-                    'product_id' => $productId
+                    'product_id' => $product->id
                 ]);
                 
                 $wishlistCount = Wishlist::where('user_id', Auth::id())->count();

@@ -109,75 +109,210 @@
 <!-- Scripts -->
 @stack('scripts')
 
+// Add this complete script section at the bottom of your app.blade.php file
+// Replace everything between <script> and </script> tags with this:
+
 <script>
     // Global flag for checkout
     window._isCheckoutInProgress = false;
 
     // Define updateCartCounter function
     async function updateCartCounter() {
-            // Your existing updateCartCounter function
-            if (window._isCheckoutInProgress || 
-                window.location.pathname.includes('/checkout') || 
-                document.querySelector('#checkout-form')) {
-                console.log('Cart update blocked - checkout in progress');
-                return;
+        if (window._isCheckoutInProgress || 
+            window.location.pathname.includes('/checkout') || 
+            document.querySelector('#checkout-form')) {
+            console.log('Cart update blocked - checkout in progress');
+            return;
+        }
+        
+        try {
+            const response = await fetch('/cart/count');
+            const data = await response.json();
+            
+            const cartCount = document.getElementById('cart-count');
+            if (cartCount) {
+                cartCount.textContent = data.count || 0;
+                if (data.count > 0) {
+                    cartCount.style.display = 'flex';
+                    cartCount.classList.remove('hidden');
+                } else {
+                    cartCount.style.display = 'none';
+                    cartCount.classList.add('hidden');
+                }
             }
             
-            try {
-                const response = await fetch('/cart/count');
-                const data = await response.json();
-                
-                const cartCount = document.getElementById('cart-count');
-                if (cartCount) {
-                    cartCount.textContent = data.count || 0;
-                    if (data.count > 0) {
-                        cartCount.style.display = 'flex';
-                        cartCount.classList.remove('hidden');
-                    } else {
-                        cartCount.style.display = 'none';
-                        cartCount.classList.add('hidden');
-                    }
-                }
-                
-                document.querySelectorAll('.cart-count').forEach(counter => {
-                    counter.textContent = data.count || 0;
-                    counter.style.display = data.count > 0 ? 'flex' : 'none';
-                });
-                
-            } catch (error) {
-                console.error('Error updating cart counter:', error);
-            }
+            document.querySelectorAll('.cart-count').forEach(counter => {
+                counter.textContent = data.count || 0;
+                counter.style.display = data.count > 0 ? 'flex' : 'none';
+            });
+            
+        } catch (error) {
+            console.error('Error updating cart counter:', error);
         }
+    }
 
     async function updateWishlistCounter() {
-            // Your existing updateWishlistCounter function
-            if (window._isCheckoutInProgress || 
-                window.location.pathname.includes('/checkout') || 
-                document.querySelector('#checkout-form')) {
-                console.log('Wishlist update blocked - checkout in progress');
-                return;
+        if (window._isCheckoutInProgress || 
+            window.location.pathname.includes('/checkout') || 
+            document.querySelector('#checkout-form')) {
+            console.log('Wishlist update blocked - checkout in progress');
+            return;
+        }
+        
+        try {
+            const response = await fetch('/wishlist/count');
+            const data = await response.json();
+            
+            const wishlistCount = document.getElementById('wishlist-count');
+            if (wishlistCount) {
+                wishlistCount.textContent = data.count || 0;
+                if (data.count > 0) {
+                    wishlistCount.style.display = 'flex';
+                    wishlistCount.classList.remove('hidden');
+                } else {
+                    wishlistCount.style.display = 'none';
+                    wishlistCount.classList.add('hidden');
+                }
             }
             
-            try {
-                const response = await fetch('/wishlist/count');
-                const data = await response.json();
-                
-                const wishlistCount = document.getElementById('wishlist-count');
-                if (wishlistCount) {
-                    wishlistCount.textContent = data.count || 0;
-                    if (data.count > 0) {
-                        wishlistCount.style.display = 'flex';
-                        wishlistCount.classList.remove('hidden');
-                    } else {
-                        wishlistCount.style.display = 'none';
-                        wishlistCount.classList.add('hidden');
-                    }
-                }
-                
-            } catch (error) {
-                console.error('Error updating wishlist counter:', error);
-            }
+        } catch (error) {
+            console.error('Error updating wishlist counter:', error);
         }
+    }
+
+    // Enhanced mobile-friendly toast function
+    window.showToast = function(message, type = 'success') {
+        const toastContainer = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        
+        toast.className = `transform transition-all duration-300 ease-in-out p-4 rounded-lg shadow-lg max-w-sm w-full ${
+            type === 'success' ? 'bg-green-600' : 'bg-red-600'
+        } text-white translate-x-full`;
+        
+        toast.innerHTML = `
+            <div class="flex items-center justify-between">
+                <div class="flex items-center flex-1">
+                    <svg class="w-5 h-5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        ${type === 'success' 
+                            ? '<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>'
+                            : '<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>'
+                        }
+                    </svg>
+                    <span class="text-sm">${message}</span>
+                </div>
+                <button onclick="this.parentElement.parentElement.remove()" 
+                        class="ml-3 text-white hover:text-gray-200 flex-shrink-0">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+        `;
+
+        toastContainer.appendChild(toast);
+
+        // Trigger animation
+        setTimeout(() => {
+            toast.classList.remove('translate-x-full');
+            toast.classList.add('translate-x-0');
+        }, 100);
+
+        // Auto remove after 5 seconds
+        setTimeout(() => {
+            toast.classList.add('translate-x-full');
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.remove();
+                }
+            }, 300);
+        }, 5000);
+    };
+
+    // Wishlist toggle function - MAKE IT GLOBAL
+    window.toggleWishlist = function(productId) {
+        console.log('Toggle wishlist called for product:', productId);
+        
+        @auth
+            // Disable all wishlist buttons for this product during request
+            const buttons = document.querySelectorAll(`[data-product-id="${productId}"]`);
+            buttons.forEach(button => button.disabled = true);
+            
+            fetch(`/wishlist/toggle/${productId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+            })
+            .then(response => {
+                console.log('Response status:', response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Response data:', data);
+                
+                if (data.success) {
+                    // Update button appearance based on whether item was added or removed
+                    updateWishlistButton(productId, data.added);
+                    
+                    // Show appropriate message
+                    showToast(data.message, 'success');
+                    
+                    // Update wishlist count in header
+                    updateWishlistCounter();
+                    
+                    // Dispatch custom event for other components
+                    window.dispatchEvent(new CustomEvent('wishlist-updated', { 
+                        detail: { productId: productId, added: data.added } 
+                    }));
+                } else {
+                    showToast(data.message || 'Error updating wishlist', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Fetch error:', error);
+                showToast('Error updating wishlist. Please check console for details.', 'error');
+            })
+            .finally(() => {
+                // Re-enable buttons
+                buttons.forEach(button => button.disabled = false);
+            });
+        @else
+            console.log('User not authenticated, redirecting to login');
+            // Redirect to login if not authenticated
+            window.location.href = '{{ route("login") }}?redirect=' + window.location.pathname;
+        @endauth
+    };
+
+    // Update wishlist button appearance
+    function updateWishlistButton(productId, isInWishlist) {
+        const buttons = document.querySelectorAll(`[data-product-id="${productId}"]`);
+        
+        buttons.forEach(button => {
+            const svg = button.querySelector('svg');
+            
+            if (svg) {
+                if (isInWishlist) {
+                    // Added to wishlist - fill the heart
+                    svg.classList.add('text-pink-500', 'fill-current');
+                    svg.classList.remove('text-gray-500');
+                    svg.setAttribute('fill', 'currentColor');
+                    button.setAttribute('title', 'Remove from wishlist');
+                    button.classList.add('in-wishlist');
+                } else {
+                    // Removed from wishlist - outline only
+                    svg.classList.remove('text-pink-500', 'fill-current');
+                    svg.classList.add('text-gray-500');
+                    svg.setAttribute('fill', 'none');
+                    button.setAttribute('title', 'Add to wishlist');
+                    button.classList.remove('in-wishlist');
+                }
+            }
+        });
+    }
 
     // Search suggestions
     const searchInput = document.getElementById('search-input');
@@ -252,173 +387,6 @@
             updateWishlistCounter();
         }
     });
-
-     // Enhanced mobile-friendly toast function
-        window.showToast = function(message, type = 'success') {
-            const toastContainer = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            
-            toast.className = `transform transition-all duration-300 ease-in-out p-4 rounded-lg shadow-lg max-w-sm w-full ${
-                type === 'success' ? 'bg-green-600' : 'bg-red-600'
-            } text-white translate-x-full`;
-            
-            toast.innerHTML = `
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center flex-1">
-                        <svg class="w-5 h-5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                            ${type === 'success' 
-                                ? '<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>'
-                                : '<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>'
-                            }
-                        </svg>
-                        <span class="text-sm">${message}</span>
-                    </div>
-                    <button onclick="this.parentElement.parentElement.remove()" 
-                            class="ml-3 text-white hover:text-gray-200 flex-shrink-0">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-                    </button>
-                </div>
-            `;
-
-            toastContainer.appendChild(toast);
-
-            // Trigger animation
-            setTimeout(() => {
-                toast.classList.remove('translate-x-full');
-                toast.classList.add('translate-x-0');
-            }, 100);
-
-            // Auto remove after 5 seconds
-            setTimeout(() => {
-                toast.classList.add('translate-x-full');
-                setTimeout(() => {
-                    if (toast.parentNode) {
-                        toast.remove();
-                    }
-                }, 300);
-            }, 5000);
-        };
-
-
-
-
-// Updated toggleWishlist function to use the new toggle endpoint
-
-function toggleWishlist(productId) {
-    console.log('Toggle wishlist called for product:', productId);
-    
-    @auth
-        // Disable all wishlist buttons for this product during request
-        const buttons = document.querySelectorAll(`[data-product-id="${productId}"]`);
-        buttons.forEach(button => button.disabled = true);
-        
-        fetch(`/wishlist/toggle/${productId}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            }
-        })
-        .then(response => {
-            console.log('Response status:', response.status);
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            console.log('Response data:', data);
-            
-            if (data.success) {
-                // Update button appearance based on whether item was added or removed
-                updateWishlistButton(productId, data.added);
-                
-                // Show appropriate message
-                showToast(data.message, 'success');
-                
-                // Update wishlist count in header
-                updateWishlistCounter();
-                
-                // Dispatch custom event for other components
-                window.dispatchEvent(new CustomEvent('wishlist-updated', { 
-                    detail: { productId: productId, added: data.added } 
-                }));
-            } else {
-                showToast(data.message || 'Error updating wishlist', 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Fetch error:', error);
-            showToast('Error updating wishlist. Please check console for details.', 'error');
-        })
-        .finally(() => {
-            // Re-enable buttons
-            buttons.forEach(button => button.disabled = false);
-        });
-    @else
-        console.log('User not authenticated, redirecting to login');
-        // Redirect to login if not authenticated
-        window.location.href = '{{ route("login") }}?redirect=' + window.location.pathname;
-    @endauth
-}
-// Updated updateWishlistButton function for better SVG handling
-function updateWishlistButton(productId, isInWishlist) {
-    const buttons = document.querySelectorAll(`[data-product-id="${productId}"]`);
-    
-    buttons.forEach(button => {
-        const svg = button.querySelector('svg');
-        
-        if (svg) {
-            if (isInWishlist) {
-                // Added to wishlist - fill the heart
-                svg.classList.add('text-pink-500', 'fill-current');
-                svg.classList.remove('text-gray-500');
-                svg.setAttribute('fill', 'currentColor');
-                button.setAttribute('title', 'Remove from wishlist');
-                button.classList.add('in-wishlist');
-            } else {
-                // Removed from wishlist - outline only
-                svg.classList.remove('text-pink-500', 'fill-current');
-                svg.classList.add('text-gray-500');
-                svg.setAttribute('fill', 'none');
-                button.setAttribute('title', 'Add to wishlist');
-                button.classList.remove('in-wishlist');
-            }
-        } else {
-            // Fallback for icon fonts or other implementations
-            if (isInWishlist) {
-                button.classList.add('in-wishlist', 'text-pink-500');
-                button.classList.remove('text-gray-500');
-                const icon = button.querySelector('i');
-                if (icon) {
-                    icon.classList.remove('far');
-                    icon.classList.add('fas');
-                }
-            } else {
-                button.classList.remove('in-wishlist', 'text-pink-500');
-                button.classList.add('text-gray-500');
-                const icon = button.querySelector('i');
-                if (icon) {
-                    icon.classList.remove('fas');
-                    icon.classList.add('far');
-                }
-            }
-        }
-    });
-}
-
-// Keep the existing addToWishlist and removeFromWishlist functions for backward compatibility
-// but update them to use the toggle endpoint internally
-function addToWishlist(productId) {
-    toggleWishlist(productId);
-}
-
-function removeFromWishlist(productId) {
-    toggleWishlist(productId);
-}
-
 </script>
 </body>
 </html>

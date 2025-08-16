@@ -26,7 +26,7 @@
             <div class="absolute top-2 right-2 z-10 flex gap-2">
                 <!-- Wishlist Button -->
                 @php
-                    $isInWishlist = $product->isInWishlist();
+                    $isInWishlist = auth()->check() ? $product->isInWishlist() : false;
                 @endphp
                 <button type="button"
                         onclick="event.preventDefault(); event.stopPropagation(); window.toggleWishlist({{ $product->id }})" 
