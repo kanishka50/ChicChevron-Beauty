@@ -151,16 +151,23 @@ Route::middleware('auth:web')->group(function () {
 
 
 // Cart routes
-Route::prefix('cart')->name('cart.')->group(function () {
-    Route::get('/', [CartController::class, 'index'])->name('index');
-    Route::post('/add', [CartController::class, 'addToCart'])->name('add');
-    Route::post('/update-quantity', [CartController::class, 'updateQuantity'])->name('update-quantity');
-    Route::post('/remove', [CartController::class, 'removeItem'])->name('remove');
-    Route::post('/clear', [CartController::class, 'clearCart'])->name('clear');
-    Route::get('/count', [CartController::class, 'getCartCount'])->name('count');
-    Route::get('/summary', [CartController::class, 'getCartSummary'])->name('summary');
-    Route::post('/apply-promotion', [CartController::class, 'applyPromotion'])->name('apply-promotion');
-    Route::post('/remove-promotion', [CartController::class, 'removePromotion'])->name('remove-promotion');
+Route::prefix('cart')->group(function () {
+    Route::get('/', [CartController::class, 'index'])->name('cart.index');
+    Route::post('/add', [CartController::class, 'addToCart'])->name('cart.add');
+    
+    // Unified update endpoints - both routes point to same method
+    Route::post('/update', [CartController::class, 'updateQuantity'])->name('cart.update');
+    Route::post('/update-quantity', [CartController::class, 'updateQuantity'])->name('cart.update-quantity');
+    
+    Route::post('/remove', [CartController::class, 'removeItem'])->name('cart.remove');
+    Route::post('/clear', [CartController::class, 'clearCart'])->name('cart.clear');
+    Route::get('/count', [CartController::class, 'getCartCount'])->name('cart.count');
+    Route::get('/summary', [CartController::class, 'getCartSummary'])->name('cart.summary');
+    Route::post('/quick-add', [CartController::class, 'quickAdd'])->name('cart.quick-add');
+    
+    // Promotion routes
+    Route::post('/apply-promotion', [CartController::class, 'applyPromotion'])->name('cart.apply-promotion');
+    Route::post('/remove-promotion', [CartController::class, 'removePromotion'])->name('cart.remove-promotion');
 });
 
 // Checkout routes

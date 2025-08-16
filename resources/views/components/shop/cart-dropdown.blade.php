@@ -1,4 +1,4 @@
-<!-- Cart Dropdown Component -->
+<!-- Cart Dropdown Component - Optimized -->
 <div class="relative" x-data="cartDropdown()" @click.away="closeDropdown()">
     <!-- Cart Button -->
     <button @click="toggleDropdown()" 
@@ -13,7 +13,7 @@
               x-transition:enter="transition ease-out duration-200"
               x-transition:enter-start="opacity-0 scale-0"
               x-transition:enter-end="opacity-100 scale-100"
-              class="absolute -top-1 -right-1 bg-primary-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium animate-bounce">
+              class="absolute -top-1 -right-1 bg-primary-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
         </span>
     </button>
 
@@ -47,8 +47,8 @@
 
         <!-- Cart Items -->
         <div class="max-h-[400px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300">
-            <!-- Loading State -->
-            <div x-show="isLoading" class="p-8 text-center">
+            <!-- Loading State - Only show when actually loading -->
+            <div x-show="isLoading && cartItems.length === 0" class="p-8 text-center">
                 <div class="inline-flex items-center justify-center w-12 h-12 bg-primary-100 rounded-full mb-3">
                     <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-600"></div>
                 </div>
@@ -99,7 +99,7 @@
                                         <!-- Quantity Controls -->
                                         <div class="flex items-center border border-gray-200 rounded-lg">
                                             <button @click="updateQuantity(item.id, item.quantity - 1)" 
-                                                    :disabled="item.quantity <= 1"
+                                                    :disabled="item.quantity <= 1 || updatingItems[item.id]"
                                                     class="p-1 hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
@@ -107,11 +107,16 @@
                                             </button>
                                             <span class="px-3 text-sm font-medium" x-text="item.quantity"></span>
                                             <button @click="updateQuantity(item.id, item.quantity + 1)" 
-                                                    class="p-1 hover:bg-gray-100 transition-colors">
+                                                    :disabled="updatingItems[item.id]"
+                                                    class="p-1 hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                                                 </svg>
                                             </button>
+                                        </div>
+                                        <!-- Loading indicator for this item -->
+                                        <div x-show="updatingItems[item.id]" class="ml-2">
+                                            <div class="animate-spin h-4 w-4 border-2 border-primary-600 border-t-transparent rounded-full"></div>
                                         </div>
                                     </div>
                                     <span class="text-sm font-semibold text-gray-900" x-text="item.total_price"></span>
@@ -120,7 +125,8 @@
 
                             <!-- Remove Button -->
                             <button @click="removeItem(item.id)" 
-                                    class="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100">
+                                    :disabled="updatingItems[item.id]"
+                                    class="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100 disabled:opacity-50">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                                 </svg>
@@ -169,13 +175,11 @@
 
             <!-- Free Shipping Notice -->
             <div class="mt-3 text-center">
-                <p class="text-xs text-gray-500">
-                    @if($cartSummary.total < 5000)
-                        Add Rs. {{ number_format(5000 - $cartSummary.total, 2) }} more for free shipping!
-                    @else
-                        ✓ You qualify for free shipping!
-                    @endif
-                </p>
+                <p class="text-xs text-gray-500" x-html="
+                    cartSummary.total < 5000 
+                        ? `Add Rs. ${(5000 - cartSummary.total).toFixed(2)} more for free shipping!`
+                        : '✓ You qualify for free shipping!'
+                "></p>
             </div>
         </div>
     </div>
@@ -203,22 +207,6 @@
 .scrollbar-thin::-webkit-scrollbar-thumb:hover {
     background: #9ca3af;
 }
-
-/* Animation for badge */
-@keyframes bounce {
-    0%, 100% {
-        transform: translateY(-25%);
-        animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
-    }
-    50% {
-        transform: translateY(0);
-        animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
-    }
-}
-
-.animate-bounce {
-    animation: bounce 1s infinite;
-}
 </style>
 
 <script>
@@ -229,6 +217,7 @@ function cartDropdown() {
         cartItems: [],
         cartCount: 0,
         cartSummary: {},
+        updatingItems: {}, // Track which items are being updated
 
         init() {
             this.loadCartData();
@@ -236,6 +225,14 @@ function cartDropdown() {
             // Listen for cart updates
             window.addEventListener('cart-updated', () => {
                 this.loadCartData();
+            });
+
+            // Listen for cart dropdown updates
+            window.addEventListener('cart-dropdown-update', (e) => {
+                if (e.detail && e.detail.summary) {
+                    this.cartSummary = e.detail.summary;
+                    this.cartCount = e.detail.summary.total_items;
+                }
             });
         },
 
@@ -251,7 +248,10 @@ function cartDropdown() {
         },
 
         async loadCartData() {
-            this.isLoading = true;
+            // Only show loading if cart is empty
+            if (this.cartItems.length === 0) {
+                this.isLoading = true;
+            }
             
             try {
                 const response = await fetch('/cart/summary');
@@ -270,7 +270,10 @@ function cartDropdown() {
         },
 
         async updateQuantity(itemId, newQuantity) {
-            if (newQuantity < 1) return;
+            if (newQuantity < 1 || this.updatingItems[itemId]) return;
+            
+            // Set loading state for this specific item
+            this.updatingItems[itemId] = true;
             
             try {
                 const response = await fetch('/cart/update', {
@@ -288,18 +291,43 @@ function cartDropdown() {
                 const data = await response.json();
                 
                 if (data.success) {
-                    this.loadCartData();
+                    // Update local data immediately
+                    const item = this.cartItems.find(i => i.id === itemId);
+                    if (item) {
+                        item.quantity = newQuantity;
+                        item.total_price = data.item_total;
+                    }
+                    
+                    // Update summary
+                    if (data.summary) {
+                        this.cartSummary = data.summary;
+                        this.cartCount = data.summary.total_items;
+                    }
+                    
+                    // Dispatch events
                     window.dispatchEvent(new CustomEvent('cart-updated'));
+                    window.dispatchEvent(new CustomEvent('cart-dropdown-update', { 
+                        detail: { summary: data.summary } 
+                    }));
+                    
                     window.showToast(data.message);
                 } else {
                     window.showToast(data.message, 'error');
                 }
             } catch (error) {
                 window.showToast('Error updating quantity. Please try again.', 'error');
+            } finally {
+                // Clear loading state for this item
+                delete this.updatingItems[itemId];
             }
         },
 
         async removeItem(itemId) {
+            if (this.updatingItems[itemId]) return;
+            
+            // Set loading state for this specific item
+            this.updatingItems[itemId] = true;
+            
             try {
                 const response = await fetch('/cart/remove', {
                     method: 'POST',
@@ -315,14 +343,30 @@ function cartDropdown() {
                 const data = await response.json();
                 
                 if (data.success) {
-                    this.loadCartData();
+                    // Remove item from local array
+                    this.cartItems = this.cartItems.filter(item => item.id !== itemId);
+                    
+                    // Update summary
+                    if (data.summary) {
+                        this.cartSummary = data.summary;
+                        this.cartCount = data.summary.total_items;
+                    }
+                    
+                    // Dispatch events
                     window.dispatchEvent(new CustomEvent('cart-updated'));
+                    window.dispatchEvent(new CustomEvent('cart-dropdown-update', { 
+                        detail: { summary: data.summary } 
+                    }));
+                    
                     window.showToast(data.message);
                 } else {
                     window.showToast(data.message, 'error');
                 }
             } catch (error) {
                 window.showToast('Error removing item. Please try again.', 'error');
+            } finally {
+                // Clear loading state
+                delete this.updatingItems[itemId];
             }
         }
     }

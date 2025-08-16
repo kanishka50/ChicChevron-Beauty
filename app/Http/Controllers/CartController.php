@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class CartController extends Controller
 {
@@ -110,11 +111,12 @@ class CartController extends Controller
                 'success' => true,
                 'message' => 'Item added to cart successfully!',
                 'cart_count' => $cartSummary['total_items'],
-                'cart_total' => $cartSummary['subtotal_formatted'],
+                'cart_total' => $cartSummary['total_formatted'],
                 'item_total' => $cartItem->total_price_formatted
             ]);
 
         } catch (\Exception $e) {
+            Log::error('Error adding to cart: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Error adding item to cart. Please try again.'
@@ -123,7 +125,8 @@ class CartController extends Controller
     }
 
     /**
-     * Update cart item quantity
+     * Update cart item quantity - UNIFIED ENDPOINT
+     * This handles both /cart/update and /cart/update-quantity routes
      */
     public function updateQuantity(Request $request)
     {
@@ -154,7 +157,8 @@ class CartController extends Controller
                     'message' => $availableStock > 0 
                         ? "Only {$availableStock} items available in stock."
                         : 'This item is out of stock.',
-                    'max_quantity' => $availableStock
+                    'max_quantity' => $availableStock,
+                    'previous_quantity' => $cartItem->quantity
                 ], 400);
             }
 
@@ -162,15 +166,22 @@ class CartController extends Controller
             $updatedItem = $this->cartService->updateQuantity($cartItem->id, $request->quantity);
             $cartSummary = $this->cartService->getCartSummary();
 
+            // Return consistent response structure for all frontends
             return response()->json([
                 'success' => true,
                 'message' => 'Cart updated successfully!',
                 'item_total' => $updatedItem->total_price_formatted,
                 'cart_count' => $cartSummary['total_items'],
-                'cart_subtotal' => $cartSummary['subtotal_formatted']
+                'cart_subtotal' => $cartSummary['subtotal_formatted'],
+                'cart_total' => $cartSummary['total_formatted'],
+                'cart_shipping' => $cartSummary['shipping_formatted'],
+                'cart_discount' => $cartSummary['discount_formatted'],
+                // Include summary object for dropdown
+                'summary' => $cartSummary
             ]);
 
         } catch (\Exception $e) {
+            Log::error('Error updating cart: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Error updating cart. Please try again.'
@@ -204,10 +215,16 @@ class CartController extends Controller
                 'success' => true,
                 'message' => 'Item removed from cart.',
                 'cart_count' => $cartSummary['total_items'],
-                'cart_subtotal' => $cartSummary['subtotal_formatted']
+                'cart_subtotal' => $cartSummary['subtotal_formatted'],
+                'cart_total' => $cartSummary['total_formatted'],
+                'cart_shipping' => $cartSummary['shipping_formatted'],
+                'cart_discount' => $cartSummary['discount_formatted'],
+                // Include summary object for dropdown
+                'summary' => $cartSummary
             ]);
 
         } catch (\Exception $e) {
+            Log::error('Error removing item: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Error removing item. Please try again.'
@@ -229,6 +246,7 @@ class CartController extends Controller
             ]);
 
         } catch (\Exception $e) {
+            Log::error('Error clearing cart: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Error clearing cart. Please try again.'
@@ -241,11 +259,18 @@ class CartController extends Controller
      */
     public function getCartCount()
     {
-        $cartSummary = $this->cartService->getCartSummary();
-        
-        return response()->json([
-            'count' => $cartSummary['total_items']
-        ]);
+        try {
+            $cartSummary = $this->cartService->getCartSummary();
+            
+            return response()->json([
+                'count' => $cartSummary['total_items']
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error getting cart count: ' . $e->getMessage());
+            return response()->json([
+                'count' => 0
+            ]);
+        }
     }
 
     /**
@@ -253,28 +278,34 @@ class CartController extends Controller
      */
     public function getCartSummary()
     {
-        $cartItems = $this->cartService->getCartItems();
-        $cartSummary = $this->cartService->getCartSummary();
+        try {
+            $cartItems = $this->cartService->getCartItems();
+            $cartSummary = $this->cartService->getCartSummary();
 
-        return response()->json([
-            'success' => true,
-            'items' => $cartItems->map(function ($item) {
-                return [
-                    'id' => $item->id,
-                    'product_name' => $item->product->name,
-                    'variant_details' => $item->variant_details_formatted,
-                    'quantity' => $item->quantity,
-                    'unit_price' => $item->unit_price_formatted,
-                    'total_price' => $item->total_price_formatted,
-                    'product_image' => $item->product->main_image 
-                        ? asset('storage/' . $item->product->main_image) 
-                        : '/placeholder.jpg',
-                    'product_url' => route('products.show', $item->product->slug),
-                    'is_available' => $item->is_available
-                ];
-            }),
-            'summary' => $cartSummary
-        ]);
+            return response()->json([
+                'success' => true,
+                'items' => $cartItems->map(function ($item) {
+                    return [
+                        'id' => $item->id,
+                        'product_name' => $item->product->name,
+                        'variant_details' => $item->variant_details_formatted,
+                        'quantity' => $item->quantity,
+                        'unit_price' => $item->unit_price_formatted,
+                        'total_price' => $item->total_price_formatted,
+                        'product_image' => $item->product_image,
+                        'product_url' => route('products.show', $item->product->slug),
+                        'is_available' => $item->is_available
+                    ];
+                }),
+                'summary' => $cartSummary
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error getting cart summary: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error loading cart data.'
+            ], 500);
+        }
     }
 
     /**
@@ -306,6 +337,7 @@ class CartController extends Controller
             }
 
         } catch (\Exception $e) {
+            Log::error('Error applying promotion: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Error applying promotion. Please try again.'
@@ -329,6 +361,7 @@ class CartController extends Controller
             ]);
 
         } catch (\Exception $e) {
+            Log::error('Error removing promotion: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Error removing promotion.'
@@ -396,10 +429,11 @@ class CartController extends Controller
                 'success' => true,
                 'message' => 'Added to cart!',
                 'cart_count' => $cartSummary['total_items'],
-                'cart_total' => $cartSummary['subtotal_formatted']
+                'cart_total' => $cartSummary['total_formatted']
             ]);
 
         } catch (\Exception $e) {
+            Log::error('Error in quick add: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Error adding to cart.'

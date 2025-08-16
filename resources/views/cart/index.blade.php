@@ -118,26 +118,27 @@
                                     <!-- Quantity Controls -->
                                     <div class="flex items-center bg-gray-100 rounded-lg">
                                         <button type="button" 
-                                                onclick="updateQuantity({{ $item->id }}, {{ $item->quantity - 1 }})"
-                                                class="p-1.5 md:p-2 hover:bg-gray-200 transition-colors rounded-l-lg"
-                                                {{ $item->quantity <= 1 ? 'disabled' : '' }}>
+                                                onclick="changeQuantity({{ $item->id }}, -1)"
+                                                class="p-1.5 md:p-2 hover:bg-gray-200 transition-colors rounded-l-lg quantity-btn"
+                                                data-item-id="{{ $item->id }}">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
                                             </svg>
                                         </button>
                                         
                                         <input type="number" 
-                                               id="quantity-{{ $item->id }}"
-                                               value="{{ $item->quantity }}" 
-                                               min="1" 
-                                               max="{{ $item->available_stock }}"
-                                               class="w-10 md:w-12 text-center bg-transparent border-0 font-medium text-sm"
-                                               onchange="updateQuantity({{ $item->id }}, this.value)">
+                                            id="quantity-{{ $item->id }}"
+                                            value="{{ $item->quantity }}" 
+                                            min="1" 
+                                            max="{{ $item->available_stock }}"
+                                            class="w-10 md:w-12 text-center bg-transparent border-0 font-medium text-sm"
+                                            onchange="updateQuantityFromInput({{ $item->id }}, this.value)"
+                                            data-item-id="{{ $item->id }}">
                                         
                                         <button type="button" 
-                                                onclick="updateQuantity({{ $item->id }}, {{ $item->quantity + 1 }})"
-                                                class="p-2 hover:bg-gray-200 transition-colors rounded-r-lg"
-                                                {{ $item->quantity >= $item->available_stock ? 'disabled' : '' }}>
+                                                onclick="changeQuantity({{ $item->id }}, 1)"
+                                                class="p-2 hover:bg-gray-200 transition-colors rounded-r-lg quantity-btn"
+                                                data-item-id="{{ $item->id }}">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                                             </svg>
@@ -243,35 +244,33 @@
                                         </div>
 
                                         <!-- Quantity Controls -->
-                                        <div class="flex items-center justify-end gap-3">
-                                            <span class="text-sm text-gray-600">Qty:</span>
-                                            <div class="flex items-center bg-gray-100 rounded-lg">
-                                                <button type="button" 
-                                                        onclick="updateQuantity({{ $item->id }}, {{ $item->quantity - 1 }})"
-                                                        class="px-2 py-1.5 md:px-3 md:py-2  hover:bg-gray-200 transition-colors rounded-l-lg"
-                                                        {{ $item->quantity <= 1 ? 'disabled' : '' }}>
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
-                                                    </svg>
-                                                </button>
-                                                
-                                                <input type="number" 
-                                                       id="quantity-desktop-{{ $item->id }}"
-                                                       value="{{ $item->quantity }}" 
-                                                       min="1" 
-                                                       max="{{ $item->available_stock }}"
-                                                       class="w-12 md:w-16 text-center bg-transparent border-0 font-medium"
-                                                       onchange="updateQuantity({{ $item->id }}, this.value)">
-                                                
-                                                <button type="button" 
-                                                        onclick="updateQuantity({{ $item->id }}, {{ $item->quantity + 1 }})"
-                                                        class="px-3 py-2 hover:bg-gray-200 transition-colors rounded-r-lg"
-                                                        {{ $item->quantity >= $item->available_stock ? 'disabled' : '' }}>
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                                                    </svg>
-                                                </button>
-                                            </div>
+                                        <div class="flex items-center bg-gray-100 rounded-lg">
+                                            <button type="button" 
+                                                    onclick="changeQuantity({{ $item->id }}, -1)"
+                                                    class="px-2 py-1.5 md:px-3 md:py-2 hover:bg-gray-200 transition-colors rounded-l-lg quantity-btn"
+                                                    data-item-id="{{ $item->id }}">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
+                                                </svg>
+                                            </button>
+                                            
+                                            <input type="number" 
+                                                id="quantity-desktop-{{ $item->id }}"
+                                                value="{{ $item->quantity }}" 
+                                                min="1" 
+                                                max="{{ $item->available_stock }}"
+                                                class="w-12 md:w-16 text-center bg-transparent border-0 font-medium"
+                                                onchange="updateQuantityFromInput({{ $item->id }}, this.value)"
+                                                data-item-id="{{ $item->id }}">
+                                            
+                                            <button type="button" 
+                                                    onclick="changeQuantity({{ $item->id }}, 1)"
+                                                    class="px-3 py-2 hover:bg-gray-200 transition-colors rounded-r-lg quantity-btn"
+                                                    data-item-id="{{ $item->id }}">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                                </svg>
+                                            </button>
                                         </div>
 
                                         <!-- Item Total -->
@@ -431,10 +430,15 @@
 
 @endsection
 
+<!-- Add this script section to your cart/index.blade.php -->
 @push('scripts')
 <script>
+// State management for loading
+let updateQueue = new Map(); // Track ongoing updates by item ID
+
 // Enhanced Cart Functions
 function showLoading() {
+    // Only show full-page loading for major operations (clear cart, etc.)
     document.getElementById('loading-overlay').classList.remove('hidden');
     document.body.style.overflow = 'hidden';
 }
@@ -442,6 +446,21 @@ function showLoading() {
 function hideLoading() {
     document.getElementById('loading-overlay').classList.add('hidden');
     document.body.style.overflow = 'auto';
+}
+
+// Item-specific loading indicator
+function showItemLoading(itemId) {
+    const item = document.getElementById(`cart-item-${itemId}`);
+    if (item) {
+        item.classList.add('opacity-75', 'pointer-events-none');
+    }
+}
+
+function hideItemLoading(itemId) {
+    const item = document.getElementById(`cart-item-${itemId}`);
+    if (item) {
+        item.classList.remove('opacity-75', 'pointer-events-none');
+    }
 }
 
 // Use the global showToast function from app.blade.php
@@ -454,18 +473,69 @@ function showMessage(message, type = 'success') {
     }
 }
 
+function changeQuantity(itemId, change) {
+    // Get current quantity from the input field
+    const mobileInput = document.getElementById(`quantity-${itemId}`);
+    const desktopInput = document.getElementById(`quantity-desktop-${itemId}`);
+    
+    // Use whichever input is visible/available
+    const currentInput = mobileInput || desktopInput;
+    if (!currentInput) return;
+    
+    const currentQuantity = parseInt(currentInput.value) || 1;
+    const maxStock = parseInt(currentInput.getAttribute('max')) || 999;
+    const newQuantity = currentQuantity + change;
+    
+    // Validate the new quantity
+    if (newQuantity < 1 || newQuantity > maxStock) {
+        if (newQuantity > maxStock) {
+            showMessage(`Only ${maxStock} items available in stock.`, 'error');
+        }
+        return;
+    }
+    
+    // Update the quantity
+    updateQuantity(itemId, newQuantity);
+}
+
+// Function to handle direct input changes
+function updateQuantityFromInput(itemId, value) {
+    const quantity = parseInt(value);
+    if (quantity && quantity > 0) {
+        updateQuantity(itemId, quantity);
+    }
+}
+
+// Modified updateQuantity function to disable/enable buttons during update
 async function updateQuantity(itemId, quantity) {
     quantity = parseInt(quantity);
     if (quantity < 1 || isNaN(quantity)) return;
+    
+    // Check if this item is already being updated
+    if (updateQueue.has(itemId)) {
+        console.log('Update already in progress for item:', itemId);
+        return;
+    }
+    
+    // Add to update queue
+    updateQueue.set(itemId, true);
+    
+    // Disable all buttons for this item
+    const buttons = document.querySelectorAll(`.quantity-btn[data-item-id="${itemId}"]`);
+    const inputs = document.querySelectorAll(`input[data-item-id="${itemId}"]`);
+    
+    buttons.forEach(btn => btn.disabled = true);
+    inputs.forEach(input => input.disabled = true);
     
     // Update both mobile and desktop quantity inputs
     const mobileInput = document.getElementById(`quantity-${itemId}`);
     const desktopInput = document.getElementById(`quantity-desktop-${itemId}`);
     
-    showLoading();
+    // Show item-specific loading
+    showItemLoading(itemId);
     
     try {
-        const response = await fetch('/cart/update-quantity', {
+        const response = await fetch('/cart/update', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -487,7 +557,7 @@ async function updateQuantity(itemId, quantity) {
             if (mobileTotal) mobileTotal.textContent = data.item_total;
             if (desktopTotal) desktopTotal.textContent = data.item_total;
             
-            // Update quantity inputs
+            // Update quantity inputs with the new value
             if (mobileInput) mobileInput.value = quantity;
             if (desktopInput) desktopInput.value = quantity;
             
@@ -497,18 +567,26 @@ async function updateQuantity(itemId, quantity) {
             showMessage(data.message);
             
             // Update cart counter
-            window.dispatchEvent(new Event('cart-updated'));
+            window.dispatchEvent(new CustomEvent('cart-updated', { 
+                detail: { count: data.cart_count } 
+            }));
         } else {
             showMessage(data.message || 'Unable to update quantity', 'error');
             // Reset quantity inputs to previous value
-            if (mobileInput) mobileInput.value = data.previous_quantity || quantity;
-            if (desktopInput) desktopInput.value = data.previous_quantity || quantity;
+            const previousQty = data.previous_quantity || quantity;
+            if (mobileInput) mobileInput.value = previousQty;
+            if (desktopInput) desktopInput.value = previousQty;
         }
     } catch (error) {
         console.error('Error:', error);
         showMessage('Error updating cart. Please try again.', 'error');
     } finally {
-        hideLoading();
+        // Re-enable all buttons and inputs
+        buttons.forEach(btn => btn.disabled = false);
+        inputs.forEach(input => input.disabled = false);
+        
+        hideItemLoading(itemId);
+        updateQueue.delete(itemId);
     }
 }
 
@@ -517,7 +595,13 @@ async function removeItem(itemId) {
         return;
     }
     
-    showLoading();
+    // Check if already processing
+    if (updateQueue.has(itemId)) {
+        return;
+    }
+    
+    updateQueue.set(itemId, true);
+    showItemLoading(itemId);
     
     try {
         const response = await fetch('/cart/remove', {
@@ -545,7 +629,9 @@ async function removeItem(itemId) {
             showMessage(data.message);
             
             // Update cart counter
-            window.dispatchEvent(new Event('cart-updated'));
+            window.dispatchEvent(new CustomEvent('cart-updated', { 
+                detail: { count: data.cart_count } 
+            }));
             
             // Refresh page if cart is empty
             if (data.cart_count === 0) {
@@ -561,7 +647,7 @@ async function removeItem(itemId) {
         console.error('Error:', error);
         showMessage('Error removing item. Please try again.', 'error');
     } finally {
-        hideLoading();
+        updateQueue.delete(itemId);
     }
 }
 
@@ -570,6 +656,7 @@ async function clearCart() {
         return;
     }
     
+    // Use full page loading for this major operation
     showLoading();
     
     try {
@@ -596,7 +683,9 @@ async function clearCart() {
             });
             
             // Update cart counter
-            window.dispatchEvent(new Event('cart-updated'));
+            window.dispatchEvent(new CustomEvent('cart-updated', { 
+                detail: { count: 0 } 
+            }));
             
             setTimeout(() => window.location.reload(), 500);
         } else {
@@ -609,7 +698,6 @@ async function clearCart() {
         hideLoading();
     }
 }
-
 
 // Helper function to update cart summary with animation
 function updateCartSummary(data) {
@@ -625,11 +713,41 @@ function updateCartSummary(data) {
         animateValue(totalEl, data.cart_total);
     }
     
-    // Update discount if present
-    // const discountEl = document.getElementById('cart-discount');
-    // if (discountEl && data.cart_discount) {
-    //     animateValue(discountEl, data.cart_discount);
-    // }
+    // Update shipping
+    const shippingEl = document.getElementById('cart-shipping');
+    if (shippingEl && data.cart_shipping) {
+        shippingEl.textContent = data.cart_shipping;
+    }
+    
+    // Update free shipping progress bar
+    updateFreeShippingProgress(data);
+}
+
+// Update free shipping progress
+function updateFreeShippingProgress(data) {
+    const progressBar = document.querySelector('.free-shipping-progress');
+    if (!progressBar || !data.summary) return;
+    
+    const threshold = 5000;
+    const subtotal = parseFloat(data.summary.subtotal) || 0;
+    const remaining = Math.max(0, threshold - subtotal);
+    const percentage = Math.min(100, (subtotal / threshold) * 100);
+    
+    // Update progress bar
+    const progressFill = progressBar.querySelector('.progress-fill');
+    if (progressFill) {
+        progressFill.style.width = percentage + '%';
+    }
+    
+    // Update message
+    const messageEl = progressBar.querySelector('.progress-message');
+    if (messageEl) {
+        if (remaining > 0) {
+            messageEl.textContent = `Add Rs. ${remaining.toFixed(2)} more for FREE shipping!`;
+        } else {
+            messageEl.innerHTML = '<span class="text-green-600">✓ You qualify for free shipping!</span>';
+        }
+    }
 }
 
 // Animate value change
@@ -643,6 +761,22 @@ function animateValue(element, newValue) {
     }, 200);
 }
 
+// Debounce function for input changes
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+// Create debounced update function
+const debouncedUpdate = debounce(updateQuantity, 500);
+
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
     // Add smooth scroll behavior
@@ -655,13 +789,41 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
+    
+    // Add input event listeners for quantity fields
+    document.querySelectorAll('input[type="number"][id^="quantity-"]').forEach(input => {
+        input.addEventListener('change', function() {
+            const match = this.id.match(/quantity-(?:desktop-)?(\d+)/);
+            if (match) {
+                const itemId = match[1];
+                const value = parseInt(this.value);
+                if (value && value > 0) {
+                    debouncedUpdate(itemId, value);
+                }
+            }
+        });
+    });
 });
 </script>
 
 <style>
 /* Smooth transitions */
-#cart-item-* {
+[id^="cart-item-"] {
     transition: all 0.3s ease;
+}
+
+/* Loading state for items */
+.opacity-75 {
+    opacity: 0.75;
+}
+
+.pointer-events-none {
+    pointer-events: none;
+}
+
+/* Progress bar animation */
+.progress-fill {
+    transition: width 0.5s ease-out;
 }
 
 /* Loading animation */
