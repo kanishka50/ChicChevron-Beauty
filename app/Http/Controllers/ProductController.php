@@ -18,43 +18,71 @@ class ProductController extends Controller
     /**
      * Display product catalog with filtering and sorting
      */
-    public function index(Request $request)
-    {
-        $query = Product::active()
-            ->with(['brand', 'category', 'images', 'variants.inventory', 'colors', 'texture']);
+   /**
+ * Display product catalog with filtering and sorting
+ * Also handles search functionality
+ */
+public function index(Request $request)
+{
+    $query = Product::active()
+        ->with(['brand', 'category', 'images', 'variants.inventory', 'colors', 'texture']);
 
-        // Apply filters
-        $this->applyFilters($query, $request);
-
-        // Apply sorting
-        $this->applySorting($query, $request);
-
-        // Paginate results FIRST
-        $products = $query->paginate(20)->withQueryString();
-
-        // THEN load reviews with proper aggregation
-        $products->getCollection()->load([
-            'reviews' => function($query) {
-                $query->where('is_approved', true);
-            }
-        ]);
-
-        // Calculate averages manually to avoid GROUP BY issues
-        $products->getCollection()->each(function ($product) {
-            $product->reviews_avg_rating = $product->reviews->avg('rating') ?: 0;
-            $product->reviews_count = $product->reviews->count();
+    // Check if this is a search request
+    $searchQuery = $request->get('q', '');
+    $isSearchResult = !empty($searchQuery);
+    
+    if ($isSearchResult) {
+        // Apply search logic
+        $query->where(function ($q) use ($searchQuery) {
+            $q->where('name', 'LIKE', "%{$searchQuery}%")
+              ->orWhere('description', 'LIKE', "%{$searchQuery}%")
+              ->orWhere('sku', 'LIKE', "%{$searchQuery}%")
+              ->orWhereHas('brand', function ($brandQuery) use ($searchQuery) {
+                  $brandQuery->where('name', 'LIKE', "%{$searchQuery}%");
+              })
+              ->orWhereHas('category', function ($categoryQuery) use ($searchQuery) {
+                  $categoryQuery->where('name', 'LIKE', "%{$searchQuery}%");
+              })
+              ->orWhereHas('ingredients', function ($ingredientQuery) use ($searchQuery) {
+                  $ingredientQuery->where('ingredient_name', 'LIKE', "%{$searchQuery}%");
+              });
         });
-
-        // Get filter data
-        $filterData = $this->getFilterData($request);
-
-        return view('products.index', [
-            'products' => $products,
-            'filters' => $filterData,
-            'currentFilters' => $request->all(),
-            'totalProducts' => $products->total(),
-        ]);
     }
+
+    // Apply filters
+    $this->applyFilters($query, $request);
+
+    // Apply sorting
+    $this->applySorting($query, $request);
+
+    // Paginate results FIRST
+    $products = $query->paginate(20)->withQueryString();
+
+    // THEN load reviews with proper aggregation
+    $products->getCollection()->load([
+        'reviews' => function($query) {
+            $query->where('is_approved', true);
+        }
+    ]);
+
+    // Calculate averages manually to avoid GROUP BY issues
+    $products->getCollection()->each(function ($product) {
+        $product->reviews_avg_rating = $product->reviews->avg('rating') ?: 0;
+        $product->reviews_count = $product->reviews->count();
+    });
+
+    // Get filter data
+    $filterData = $this->getFilterData($request);
+
+    return view('products.index', [
+        'products' => $products,
+        'filters' => $filterData,
+        'currentFilters' => $request->all(),
+        'totalProducts' => $products->total(),
+        'searchQuery' => $searchQuery,        // ADD THIS
+        'isSearchResult' => $isSearchResult   // ADD THIS
+    ]);
+}
 
     /**
      * Display the specified product
@@ -327,45 +355,55 @@ public function categoryProducts(Request $request, Category $category)
     /**
      * Apply sorting to the product query
      */
-    private function applySorting($query, Request $request)
-    {
-        $sortBy = $request->get('sort', 'newest');
+    /**
+ * Apply sorting to the product query
+ */
+private function applySorting($query, Request $request)
+{
+    $sortBy = $request->get('sort', 'newest');
 
-        switch ($sortBy) {
-            case 'price_low':
-                // Sort by minimum variant price
-                $query->leftJoin('product_variants', 'products.id', '=', 'product_variants.product_id')
-                    ->select('products.*')
-                    ->selectRaw('MIN(product_variants.price) as min_price')
-                    ->groupBy('products.id')
-                    ->orderBy('min_price', 'asc');
-                break;
-            case 'price_high':
-                // Sort by maximum variant price
-                $query->leftJoin('product_variants', 'products.id', '=', 'product_variants.product_id')
-                    ->select('products.*')
-                    ->selectRaw('MAX(product_variants.price) as max_price')
-                    ->groupBy('products.id')
-                    ->orderBy('max_price', 'desc');
-                break;
-            case 'name_asc':
-                $query->orderBy('name', 'asc');
-                break;
-            case 'name_desc':
-                $query->orderBy('name', 'desc');
-                break;
-            case 'rating':
-                $query->orderBy('average_rating', 'desc');
-                break;
-            case 'popular':
-                $query->orderBy('views_count', 'desc');
-                break;
-            case 'newest':
-            default:
-                $query->latest('created_at');
-                break;
-        }
+    // Import ProductVariant at the top of your controller
+    // use App\Models\ProductVariant;
+
+    switch ($sortBy) {
+        case 'price_low':
+            // Sort by minimum variant price using subquery
+            $query->addSelect(['min_variant_price' => \App\Models\ProductVariant::selectRaw('COALESCE(MIN(NULLIF(discount_price, 0)), MIN(price))')
+                ->whereColumn('product_id', 'products.id')
+                ->where('is_active', true)
+            ])->orderBy('min_variant_price', 'asc');
+            break;
+            
+        case 'price_high':
+            // Sort by maximum variant price using subquery
+            $query->addSelect(['max_variant_price' => \App\Models\ProductVariant::selectRaw('COALESCE(MAX(NULLIF(discount_price, 0)), MAX(price))')
+                ->whereColumn('product_id', 'products.id')
+                ->where('is_active', true)
+            ])->orderBy('max_variant_price', 'desc');
+            break;
+            
+        case 'name_asc':
+            $query->orderBy('name', 'asc');
+            break;
+            
+        case 'name_desc':
+            $query->orderBy('name', 'desc');
+            break;
+            
+        case 'rating':
+            $query->orderBy('average_rating', 'desc');
+            break;
+            
+        case 'popular':
+            $query->orderBy('views_count', 'desc');
+            break;
+            
+        case 'newest':
+        default:
+            $query->latest('created_at');
+            break;
     }
+}
 
     /**
      * Get filter data for the sidebar
