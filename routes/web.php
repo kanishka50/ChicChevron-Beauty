@@ -183,15 +183,9 @@ Route::prefix('checkout/payment')->name('checkout.payment.')->group(function () 
     Route::get('/{order}/success', [PaymentController::class, 'success'])->name('success');
     Route::get('/{order}/cancel', [PaymentController::class, 'cancel'])->name('cancel');
     Route::get('/{order}/status', [PaymentController::class, 'checkStatus'])->name('status');
-    Route::post('/{order}/confirm', [PaymentController::class, 'confirmPayment'])->name('confirm')->middleware('auth');
+    // REMOVE THIS LINE: Route::post('/{order}/confirm', [PaymentController::class, 'confirmPayment'])->name('confirm')->middleware('auth');
 });
 
-// Webhook routes (no auth required)
-Route::post('/webhooks/payhere', [PaymentController::class, 'webhook'])->name('webhooks.payhere');
-Route::match(['GET', 'POST'], '/webhooks/payhere/debug', [PaymentController::class, 'webhookDebug'])->name('webhooks.payhere.debug');
-Route::get('/webhooks/payhere/test', function() {
-    return response()->json(['status' => 'Webhook endpoint is accessible']);
-});
 
 // Wishlist routes
 Route::middleware('auth')->prefix('wishlist')->name('wishlist.')->group(function () {
@@ -355,6 +349,9 @@ Route::middleware(['auth', 'verified'])->prefix('complaints')->name('user.compla
     Route::post('/{complaint}/respond', [ComplaintController::class, 'respond'])->name('respond');
     
 });
+
+// Webhook routes (no auth required)
+Route::post('/webhooks/payhere', [PaymentController::class, 'webhook'])->name('webhooks.payhere');
 
 
 

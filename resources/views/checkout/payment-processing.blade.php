@@ -26,7 +26,7 @@
                     </div>
                     
                     <h2 class="text-2xl md:text-3xl font-bold text-gray-900 mb-3">Processing Your Payment</h2>
-                    <p class="text-gray-600 mb-6">Please wait while we confirm your payment. This may take a few moments.</p>
+                    <p class="text-gray-600 mb-6">Please wait while we confirm your payment with PayHere.</p>
                     
                     <!-- Order Info -->
                     <div class="bg-gray-50 rounded-xl p-4 inline-block">
@@ -40,112 +40,37 @@
                         <div class="w-2 h-2 bg-primary-600 rounded-full animate-bounce" style="animation-delay: 150ms"></div>
                         <div class="w-2 h-2 bg-primary-600 rounded-full animate-bounce" style="animation-delay: 300ms"></div>
                     </div>
+
+                    <p class="text-sm text-gray-500 mt-6">This usually takes less than 30 seconds...</p>
                 </div>
             </div>
 
-            <!-- Success State -->
-            <div id="success" class="hidden p-8 md:p-12">
+            <!-- Timeout State (hidden by default) -->
+            <div id="timeout-message" class="hidden p-8 md:p-12">
                 <div class="text-center">
-                    <!-- Success Animation -->
-                    <div class="mb-8">
-                        <div class="w-24 h-24 mx-auto relative">
-                            <div class="absolute inset-0 bg-green-100 rounded-full animate-ping"></div>
-                            <div class="relative bg-green-100 rounded-full w-24 h-24 flex items-center justify-center">
-                                <svg class="w-12 h-12 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 0016 0zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                                </svg>
-                            </div>
+                    <div class="text-yellow-500 mb-6 flex justify-center">
+                        <div class="bg-yellow-100 rounded-full p-4">
+                            <svg class="h-16 w-16" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                            </svg>
                         </div>
                     </div>
+                    <h2 class="text-2xl font-bold text-gray-900 mb-3">Payment Processing Taking Longer</h2>
+                    <p class="text-gray-600 mb-6">Your payment is still being processed. This sometimes takes a bit longer.</p>
                     
-                    <h2 class="text-2xl md:text-3xl font-bold text-gray-900 mb-3">Payment Successful!</h2>
-                    <p class="text-gray-600 mb-6">Thank you for your order. We've sent a confirmation email to your address.</p>
-                    
-                    <!-- Order Total -->
-                    <div class="bg-green-50 rounded-xl p-4 mb-8">
-                        <p class="text-sm text-gray-600 mb-1">Order Total</p>
-                        <p class="text-2xl font-bold text-green-600">Rs. {{ number_format($order->total_amount, 2) }}</p>
-                    </div>
-                    
-                    <!-- Action Buttons -->
-                    <div class="space-y-3">
-                        <a href="{{ route('user.orders.show', $order) }}" 
-                           class="w-full inline-flex items-center justify-center gap-2 bg-gradient-to-r from-primary-600 to-primary-700 text-white py-3 px-6 rounded-lg hover:from-primary-700 hover:to-primary-800 font-medium transform hover:scale-[1.02] transition-all duration-200 shadow-lg">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
-                            </svg>
-                            View Order Details
-                        </a>
-                        <a href="{{ route('home') }}" 
-                           class="w-full inline-flex items-center justify-center gap-2 bg-gray-100 text-gray-800 py-3 px-6 rounded-lg hover:bg-gray-200 font-medium transition-all duration-200">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
-                            </svg>
-                            Continue Shopping
-                        </a>
-                    </div>
-                </div>
-            </div>
+                    <p class="text-sm text-gray-500 mb-8">
+                        If you completed the payment on PayHere, please wait a moment longer. 
+                        The payment confirmation should arrive shortly.
+                    </p>
 
-            <!-- Failed State -->
-            <div id="failed" class="hidden p-8 md:p-12">
-                <div class="text-center">
-                    <!-- Error Animation -->
-                    <div class="mb-8">
-                        <div class="w-24 h-24 mx-auto relative">
-                            <div class="absolute inset-0 bg-red-100 rounded-full animate-ping"></div>
-                            <div class="relative bg-red-100 rounded-full w-24 h-24 flex items-center justify-center">
-                                <svg class="w-12 h-12 text-red-600" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 0016 0zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
-                                </svg>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <h2 class="text-2xl md:text-3xl font-bold text-gray-900 mb-3">Payment Failed</h2>
-                    <p class="text-gray-600 mb-6">We couldn't process your payment. Don't worry, you can try again.</p>
-                    
-                    <!-- Error Info -->
-                    <div class="bg-red-50 rounded-xl p-4 mb-8">
-                        <p class="text-sm text-red-800">Please check your payment details and try again. If the problem persists, contact your bank.</p>
-                    </div>
-                    
-                    <!-- Action Buttons -->
                     <div class="space-y-3">
-                        <a href="{{ route('checkout.index') }}" 
-                           class="w-full inline-flex items-center justify-center gap-2 bg-gradient-to-r from-primary-600 to-primary-700 text-white py-3 px-6 rounded-lg hover:from-primary-700 hover:to-primary-800 font-medium transform hover:scale-[1.02] transition-all duration-200 shadow-lg">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                            </svg>
-                            Try Again
+                        <a href="{{ route('user.orders.index') }}" class="inline-block bg-primary-600 text-white px-6 py-3 rounded-lg hover:bg-primary-700 transition-colors">
+                            Check Order Status
                         </a>
-                        <a href="{{ route('home') }}" 
-                           class="w-full inline-flex items-center justify-center gap-2 bg-gray-100 text-gray-800 py-3 px-6 rounded-lg hover:bg-gray-200 font-medium transition-all duration-200">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
-                            </svg>
-                            Back to Shop
-                        </a>
+                        <p class="text-xs text-gray-500">You can check your order status in your account</p>
                     </div>
                 </div>
             </div>
-            
-            @if(config('app.debug'))
-            <!-- Development Mode: Manual Confirmation -->
-            <div id="manual-confirm" class="p-4 bg-yellow-50 border-t border-yellow-200">
-                <div class="text-center">
-                    <p class="text-xs text-gray-700 mb-2">Development Mode</p>
-                    <p class="text-sm text-gray-700 mb-3">If payment was successful in PayHere but not updating here:</p>
-                    <button onclick="manualConfirm()" 
-                            class="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm font-medium transition-colors duration-200">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                        Manually Confirm Payment
-                    </button>
-                </div>
-            </div>
-            @endif
         </div>
         
         <!-- Help Text -->
@@ -160,13 +85,11 @@
 
 <script>
 let checkCount = 0;
-const maxChecks = 30;
+const maxChecks = 60; // Check for up to 2 minutes
+let checkInterval;
 
 function checkPaymentStatus() {
-    // Force HTTPS
-    const statusUrl = '{{ route("checkout.payment.status", $order) }}'.replace('http://', 'https://');
-    
-    fetch(statusUrl, {
+    fetch('{{ route("checkout.payment.status", $order) }}', {
         headers: {
             'Accept': 'application/json',
             'X-Requested-With': 'XMLHttpRequest'
@@ -174,106 +97,45 @@ function checkPaymentStatus() {
     })
     .then(response => response.json())
     .then(data => {
-        console.log('Payment status:', data);
+        console.log('Payment status check:', data);
         
         if (data.payment_status === 'completed') {
-            // Show success state
-            document.getElementById('processing').classList.add('hidden');
-            document.getElementById('success').classList.remove('hidden');
-            if (document.getElementById('manual-confirm')) {
-                document.getElementById('manual-confirm').classList.add('hidden');
-            }
-            
-            // Trigger confetti or celebration animation (optional)
-            if (typeof confetti !== 'undefined') {
-                confetti({
-                    particleCount: 100,
-                    spread: 70,
-                    origin: { y: 0.6 }
-                });
-            }
+            // Payment successful - redirect to success page
+            window.location.href = '{{ route("checkout.success", $order) }}';
         } else if (data.payment_status === 'failed' || data.payment_status === 'cancelled') {
-            // Show failed state
-            document.getElementById('processing').classList.add('hidden');
-            document.getElementById('failed').classList.remove('hidden');
-            if (document.getElementById('manual-confirm')) {
-                document.getElementById('manual-confirm').classList.add('hidden');
-            }
+            // Payment failed - redirect to checkout with error
+            window.location.href = '{{ route("checkout.index") }}?error=payment_failed';
         } else {
-            // Continue checking
             checkCount++;
-            if (checkCount < maxChecks) {
-                setTimeout(checkPaymentStatus, 2000);
-            } else {
-                // Timeout - show manual confirm option
-                if (document.getElementById('manual-confirm')) {
-                    document.getElementById('manual-confirm').classList.remove('bg-yellow-50');
-                    document.getElementById('manual-confirm').classList.add('bg-orange-50', 'border-orange-200');
-                }
+            if (checkCount >= maxChecks) {
+                // Show timeout message
+                document.getElementById('processing').classList.add('hidden');
+                document.getElementById('timeout-message').classList.remove('hidden');
+                clearInterval(checkInterval);
             }
         }
     })
     .catch(error => {
         console.error('Error checking payment status:', error);
         checkCount++;
-        if (checkCount < maxChecks) {
-            setTimeout(checkPaymentStatus, 2000);
+        if (checkCount >= maxChecks) {
+            clearInterval(checkInterval);
+            document.getElementById('processing').classList.add('hidden');
+            document.getElementById('timeout-message').classList.remove('hidden');
         }
     });
-}
-
-// Manual confirmation function
-function manualConfirm() {
-    if (confirm('Confirm that payment was successful in PayHere?')) {
-        // Force HTTPS
-        const confirmUrl = '{{ route("checkout.payment.confirm", $order) }}'.replace('http://', 'https://');
-        
-        // Show loading state on button
-        const button = event.target;
-        const originalText = button.innerHTML;
-        button.disabled = true;
-        button.innerHTML = '<span class="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></span> Confirming...';
-        
-        fetch(confirmUrl, {
-            method: 'POST',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: JSON.stringify({
-                payment_id: 'MANUAL-CONFIRM'
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                location.reload();
-            } else {
-                // Restore button
-                button.disabled = false;
-                button.innerHTML = originalText;
-                alert('Error confirming payment. Please try again.');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            // Restore button
-            button.disabled = false;
-            button.innerHTML = originalText;
-            alert('Error confirming payment. Please try again.');
-        });
-    }
 }
 
 // Start checking immediately
 checkPaymentStatus();
 
-// Also check on page visibility change (in case user switches tabs)
+// Then check every 2 seconds
+checkInterval = setInterval(checkPaymentStatus, 2000);
+
+// Clear interval when page is hidden/closed
 document.addEventListener('visibilitychange', function() {
-    if (!document.hidden && checkCount < maxChecks) {
-        checkPaymentStatus();
+    if (document.hidden) {
+        clearInterval(checkInterval);
     }
 });
 </script>
