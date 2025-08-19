@@ -88,30 +88,39 @@ let checkCount = 0;
 const maxChecks = 60; // Check for up to 2 minutes
 let checkInterval;
 
+// Update the checkPaymentStatus function
 function checkPaymentStatus() {
     fetch('{{ route("checkout.payment.status", $order) }}', {
         headers: {
             'Accept': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest'
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}'  // ADD THIS
         }
     })
     .then(response => response.json())
     .then(data => {
         console.log('Payment status check:', data);
         
-        if (data.payment_status === 'completed') {
+        // Check if max attempts reached
+        if (data.attempts >= data.max_attempts) {
+            clearInterval(checkInterval);
+            showError('Maximum verification attempts reached.');
+            return;
+        }
+        
+        if (data.payment_status === 'completed' || data.webhook_received) {
             // Payment successful - redirect to success page
             window.location.href = '{{ route("checkout.success", $order) }}';
         } else if (data.payment_status === 'failed' || data.payment_status === 'cancelled') {
-            // Payment failed - redirect to checkout with error
-            window.location.href = '{{ route("checkout.index") }}?error=payment_failed';
+            // Payment failed
+            clearInterval(checkInterval);
+            showError('Payment failed or was cancelled.');
         } else {
             checkCount++;
             if (checkCount >= maxChecks) {
                 // Show timeout message
-                document.getElementById('processing').classList.add('hidden');
-                document.getElementById('timeout-message').classList.remove('hidden');
                 clearInterval(checkInterval);
+                showTimeout();
             }
         }
     })
@@ -120,10 +129,19 @@ function checkPaymentStatus() {
         checkCount++;
         if (checkCount >= maxChecks) {
             clearInterval(checkInterval);
-            document.getElementById('processing').classList.add('hidden');
-            document.getElementById('timeout-message').classList.remove('hidden');
+            showTimeout();
         }
     });
+}
+
+function showTimeout() {
+    document.getElementById('processing').classList.add('hidden');
+    document.getElementById('timeout-message').classList.remove('hidden');
+}
+
+function showError(message) {
+    document.getElementById('processing').classList.add('hidden');
+    // Create or update error message div if needed
 }
 
 // Start checking immediately

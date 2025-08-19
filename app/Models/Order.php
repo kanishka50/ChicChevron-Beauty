@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class Order extends Model
 {
@@ -21,6 +22,11 @@ class Order extends Model
         'payment_method',
         'payment_status',
         'payment_reference',
+        'payment_token',           // ADD THIS
+        'payment_initiated_at',    // ADD THIS
+        'webhook_received_at',     // ADD THIS
+        'payment_verified',        // ADD THIS
+        'verification_attempts',   // ADD THIS
         'shipping_name',
         'shipping_phone',
         'shipping_address_line_1',
@@ -40,6 +46,9 @@ class Order extends Model
         'total_amount' => 'decimal:2',
         'shipped_at' => 'datetime',
         'completed_at' => 'datetime',
+        'payment_initiated_at' => 'datetime',    // ADD THIS
+        'webhook_received_at' => 'datetime',     // ADD THIS
+        'payment_verified' => 'boolean',         // ADD THIS
     ];
 
     /**
@@ -228,5 +237,79 @@ public function addStatusHistory($status, $comment = null, $adminId = null, $tim
     public function scopeRecent($query)
     {
         return $query->orderBy('created_at', 'desc');
+    }
+
+    /**
+     * Generate a unique payment token
+     */
+    public function generatePaymentToken()
+    {
+        $token = Str::random(32);
+        
+        // Ensure uniqueness
+        while (self::where('payment_token', $token)->exists()) {
+            $token = Str::random(32);
+        }
+        
+        $this->payment_token = $token;
+        $this->payment_initiated_at = now();
+        $this->save();
+        
+        return $token;
+    }
+
+    /**
+     * Check if payment token is valid
+     */
+    public function isPaymentTokenValid($token = null)
+    {
+        if ($token && !hash_equals($this->payment_token, $token)) {
+            return false;
+        }
+
+        if (!$this->payment_token) {
+            return false;
+        }
+
+        if ($this->payment_verified) {
+            return false;
+        }
+
+        // Check expiry (30 minutes)
+        if ($this->payment_initiated_at && $this->payment_initiated_at->addMinutes(30)->isPast()) {
+            return false;
+        }
+
+        if ($this->verification_attempts >= 3) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Mark payment as verified
+     */
+    public function markPaymentAsVerified()
+    {
+        $this->payment_verified = true;
+        $this->webhook_received_at = now();
+        $this->save();
+    }
+
+    /**
+     * Check if webhook was received
+     */
+    public function isWebhookReceived()
+    {
+        return $this->webhook_received_at !== null && $this->payment_verified;
+    }
+
+    /**
+     * Increment verification attempts
+     */
+    public function incrementVerificationAttempts()
+    {
+        $this->increment('verification_attempts');
     }
 }

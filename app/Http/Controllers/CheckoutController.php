@@ -192,29 +192,37 @@ class CheckoutController extends Controller
     /**
      * Display payment page for online payments
      */
-    public function payment(Order $order)
-    {
-        // Ensure user can access this order
-        if (Auth::id() !== $order->user_id) {
-            abort(403, 'Unauthorized access to order');
-        }
-
-        // Only allow payment for pending orders
-        if ($order->payment_status !== 'pending') {
-            return redirect()->route('checkout.success', $order)
-                ->with('info', 'This order has already been processed.');
-        }
-
-        // For COD orders, no payment needed
-        if ($order->payment_method === 'cod') {
-            return redirect()->route('checkout.success', $order);
-        }
-
-        // Load relationships for display - UPDATED FOR NEW VARIANT SYSTEM
-        $order->load(['items.product', 'items.productVariant']);
-
-        return view('checkout.payment', compact('order'));
+    /**
+ * Display payment page for online payments
+ */
+public function payment(Order $order)
+{
+    // Ensure user can access this order
+    if (Auth::id() !== $order->user_id) {
+        abort(403, 'Unauthorized access to order');
     }
+
+    // Only allow payment for pending orders
+    if ($order->payment_status !== 'pending') {
+        return redirect()->route('checkout.success', $order)
+            ->with('info', 'This order has already been processed.');
+    }
+
+    // For COD orders, no payment needed
+    if ($order->payment_method === 'cod') {
+        return redirect()->route('checkout.success', $order);
+    }
+
+    // IMPORTANT: Generate payment token before showing payment page
+    if (!$order->payment_token) {
+        $order->generatePaymentToken();
+    }
+
+    // Load relationships for display
+    $order->load(['items.product', 'items.productVariant']);
+
+    return view('checkout.payment', compact('order'));
+}
 
     /**
      * Display order success page

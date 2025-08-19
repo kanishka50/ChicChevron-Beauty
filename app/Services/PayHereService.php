@@ -26,6 +26,11 @@ class PayHereService
      */
     public function createPayment(Order $order)
     {
+        // Generate payment token if not exists
+        if (!$order->payment_token) {
+            $order->generatePaymentToken();
+        }
+        
         $hash = $this->generateHash($order);
         
         $paymentData = [
@@ -49,8 +54,10 @@ class PayHereService
             'city' => $order->shipping_city,
             'country' => 'Sri Lanka',
             
-            // Hash
+            // Security fields
             'hash' => $hash,
+            'custom_1' => $order->payment_token,  // CRITICAL: Add payment token
+            'custom_2' => encrypt($order->id),     // Encrypted order ID for extra security
         ];
 
         return [
@@ -80,6 +87,12 @@ class PayHereService
                 strtoupper(md5($merchantSecret))
             )
         );
+        
+        Log::debug('Generated payment hash', [
+            'order_id' => $orderId,
+            'amount' => $amount,
+            'hash' => $hash
+        ]);
         
         return $hash;
     }

@@ -178,12 +178,19 @@ Route::middleware('auth')->prefix('checkout')->name('checkout.')->group(function
     Route::get('/{order}/success', [CheckoutController::class, 'success'])->name('success');
 });
 
-// Payment routes
+// Payment routes with enhanced security
 Route::prefix('checkout/payment')->name('checkout.payment.')->group(function () {
-    Route::get('/{order}/success', [PaymentController::class, 'success'])->name('success');
-    Route::get('/{order}/cancel', [PaymentController::class, 'cancel'])->name('cancel');
-    Route::get('/{order}/status', [PaymentController::class, 'checkStatus'])->name('status');
-    // REMOVE THIS LINE: Route::post('/{order}/confirm', [PaymentController::class, 'confirmPayment'])->name('confirm')->middleware('auth');
+    Route::get('/{order}/success', [PaymentController::class, 'success'])
+        ->name('success')
+        ->middleware(['auth', 'verify.payment.session']); // ADD MIDDLEWARE
+        
+    Route::get('/{order}/cancel', [PaymentController::class, 'cancel'])
+        ->name('cancel')
+        ->middleware(['auth', 'verify.payment.session']); // ADD MIDDLEWARE
+        
+    Route::get('/{order}/status', [PaymentController::class, 'checkStatus'])
+        ->name('status')
+        ->middleware('auth');
 });
 
 
@@ -350,8 +357,10 @@ Route::middleware(['auth', 'verified'])->prefix('complaints')->name('user.compla
     
 });
 
-// Webhook routes (no auth required)
-Route::post('/webhooks/payhere', [PaymentController::class, 'webhook'])->name('webhooks.payhere');
+// Webhook route with rate limiting
+Route::post('/webhooks/payhere', [PaymentController::class, 'webhook'])
+    ->name('webhooks.payhere')
+    ->middleware('throttle:60,1'); 
 
 
 
