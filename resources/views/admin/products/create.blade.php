@@ -109,20 +109,29 @@
 
                     <!-- Texture -->
                     <div>
-                        <label for="texture_id" class="block text-sm font-medium text-gray-700 mb-2">
+                        <label for="texture" class="block text-sm font-medium text-gray-700 mb-2">
                             Texture
                         </label>
-                        <select name="texture_id" 
-                                id="texture_id" 
-                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 @error('texture_id') border-red-500 @enderror">
-                            <option value="">Select Texture (Optional)</option>
-                            @foreach($textures as $texture)
-                                <option value="{{ $texture->id }}" {{ old('texture_id') == $texture->id ? 'selected' : '' }}>
-                                    {{ $texture->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                        @error('texture_id')
+                        <input type="text"
+                               name="texture"
+                               id="texture"
+                               value="{{ old('texture') }}"
+                               placeholder="e.g., Cream, Liquid, Lotion, Gel"
+                               list="texture-suggestions"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 @error('texture') border-red-500 @enderror">
+                        <datalist id="texture-suggestions">
+                            <option value="Cream">
+                            <option value="Liquid">
+                            <option value="Lotion">
+                            <option value="Gel">
+                            <option value="Serum">
+                            <option value="Oil">
+                            <option value="Powder">
+                            <option value="Balm">
+                            <option value="Mousse">
+                            <option value="Spray">
+                        </datalist>
+                        @error('texture')
                             <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
                         @enderror
                     </div>

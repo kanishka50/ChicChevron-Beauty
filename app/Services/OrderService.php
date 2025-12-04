@@ -25,7 +25,7 @@ class OrderService
     /**
      * Create order from cart items
      */
-    public function createFromCart($user, $cartItems, $shippingData, $paymentMethod, $promotionCode = null)
+    public function createFromCart($user, $cartItems, $shippingData, $promotionCode = null)
     {
         DB::beginTransaction();
         
@@ -36,17 +36,17 @@ class OrderService
             // Generate unique order number
             $orderNumber = Order::generateOrderNumber();
             
-            // Create the order
+            // Create the order (COD only - starts as processing)
             $order = Order::create([
                 'order_number' => $orderNumber,
                 'user_id' => $user->id,
-                'status' => 'payment_completed',
+                'status' => 'processing',
                 'subtotal' => $totals['subtotal'],
                 'discount_amount' => $totals['discount_amount'],
                 'shipping_amount' => $totals['shipping_amount'],
                 'total_amount' => $totals['total_amount'],
-                'payment_method' => $paymentMethod,
-                'payment_status' => $paymentMethod === 'cod' ? 'pending' : 'completed',
+                'payment_method' => 'cod',
+                'payment_status' => 'pending',
                 'shipping_name' => $shippingData['name'],
                 'shipping_phone' => $shippingData['phone'],
                 'shipping_address_line_1' => $shippingData['address_line_1'],
@@ -66,7 +66,7 @@ class OrderService
             $this->reserveStockForOrder($order);
 
             // Add initial status history
-            $order->addStatusHistory('payment_completed', 'Order created and payment completed');
+            $order->addStatusHistory('processing', 'Order created - Cash on Delivery');
 
             // Handle promotion usage if applicable
             if ($promotionCode && $totals['promotion']) {
@@ -401,8 +401,8 @@ class OrderService
      */
     public function updateOrderStatus($order, $newStatus, $comment = null, $adminId = null)
     {
+        // COD-only status transitions
         $validTransitions = [
-            'payment_completed' => ['processing', 'cancelled'],
             'processing' => ['shipping', 'cancelled'],
             'shipping' => ['completed'],
             'completed' => [], // Final state
@@ -419,16 +419,11 @@ class OrderService
         DB::beginTransaction();
         
         try {
-            // Handle COD payment completion BEFORE updating order status
-            if ($newStatus === 'completed' && $order->payment_method === 'cod' && $order->payment_status === 'pending') {
-                $paymentTimestamp = now()->subSecond();
-                
+            // Handle COD payment completion when order is marked as completed
+            if ($newStatus === 'completed' && $order->payment_status === 'pending') {
                 $order->payment_status = 'completed';
                 $order->payment_reference = 'COD-' . now()->timestamp;
                 $order->save();
-                
-                // Add payment status history with earlier timestamp
-                $order->addStatusHistory('payment_completed', 'Payment received via Cash on Delivery', $adminId, $paymentTimestamp);
             }
 
             // Handle inventory changes based on status
@@ -566,7 +561,7 @@ class OrderService
             'today_sales' => Order::whereDate('created_at', $date)
                                  ->where('status', '!=', 'cancelled')
                                  ->sum('total_amount'),
-            'pending_orders' => Order::whereIn('status', ['payment_completed', 'processing'])->count(),
+            'pending_orders' => Order::where('status', 'processing')->count(),
             'shipping_orders' => Order::where('status', 'shipping')->count(),
         ];
     }

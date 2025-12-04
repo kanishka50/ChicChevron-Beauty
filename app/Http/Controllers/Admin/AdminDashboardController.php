@@ -37,20 +37,20 @@ class AdminDashboardController extends Controller
 
         return [
             'today_sales' => Order::whereDate('created_at', $today)
-                ->where('payment_status', 'completed')
+                ->where('status', '!=', 'cancelled')
                 ->sum('total_amount'),
-            
+
             'today_orders' => Order::whereDate('created_at', $today)->count(),
-            
+
             'low_stock' => Inventory::whereRaw('current_stock <= low_stock_threshold')
                 ->where('current_stock', '>', 0)
                 ->count(),
-            
+
             'out_of_stock' => Inventory::where('current_stock', 0)->count(),
-            
+
             'new_customers' => User::whereDate('created_at', $today)->count(),
-            
-            'pending_orders' => Order::where('status', 'payment_completed')->count(),
+
+            'pending_orders' => Order::where('status', 'processing')->count(),
         ];
     }
 

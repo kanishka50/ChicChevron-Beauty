@@ -20,7 +20,7 @@ class SearchController extends Controller
     public function index(Request $request)
 {
     $query = Product::active()
-        ->with(['brand', 'category', 'images', 'variants.inventory', 'colors', 'texture']);
+        ->with(['brand', 'category', 'images', 'variants.inventory']);
 
     // Check if this is a search request
     $searchQuery = $request->get('q');
@@ -350,20 +350,6 @@ private function applySearch($query, $searchTerm)
                     });
                 }
             });
-        }
-
-        // Color filter (from product_colors table)
-        if ($request->filled('colors')) {
-            $colors = is_array($request->colors) ? $request->colors : [$request->colors];
-            $query->whereHas('colors', function ($colorQuery) use ($colors) {
-                $colorQuery->whereIn('colors.id', $colors);
-            });
-        }
-
-        // Texture filter
-        if ($request->filled('textures')) {
-            $textures = is_array($request->textures) ? $request->textures : [$request->textures];
-            $query->whereIn('texture_id', $textures);
         }
 
         // Rating filter

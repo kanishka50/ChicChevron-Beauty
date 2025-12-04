@@ -109,9 +109,6 @@
 <!-- Scripts -->
 @stack('scripts')
 
-// Add this complete script section at the bottom of your app.blade.php file
-// Replace everything between <script> and </script> tags with this:
-
 <script>
     // Global flag for checkout
     window._isCheckoutInProgress = false;

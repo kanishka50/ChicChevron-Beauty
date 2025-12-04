@@ -31,22 +31,16 @@
     <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
         <div class="border-b border-gray-200">
             <nav class="-mb-px flex space-x-8 px-6">
-                <a href="{{ route('admin.orders.index') }}" 
+                <a href="{{ route('admin.orders.index') }}"
                    class="py-4 px-1 border-b-2 font-medium text-sm {{ !request('status') ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }} transition-colors">
                     All Orders
                     <span class="ml-2 bg-gray-100 text-gray-600 py-0.5 px-2.5 rounded-full text-xs">{{ $statusCounts['all'] }}</span>
                 </a>
-                
-                <a href="{{ route('admin.orders.index', ['status' => 'payment_completed']) }}" 
-                   class="py-4 px-1 border-b-2 font-medium text-sm {{ request('status') === 'payment_completed' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }} transition-colors">
-                    Payment Completed
-                    <span class="ml-2 bg-blue-100 text-blue-600 py-0.5 px-2.5 rounded-full text-xs">{{ $statusCounts['payment_completed'] }}</span>
-                </a>
-                
-                <a href="{{ route('admin.orders.index', ['status' => 'processing']) }}" 
-                   class="py-4 px-1 border-b-2 font-medium text-sm {{ request('status') === 'processing' ? 'border-yellow-500 text-yellow-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }} transition-colors">
+
+                <a href="{{ route('admin.orders.index', ['status' => 'processing']) }}"
+                   class="py-4 px-1 border-b-2 font-medium text-sm {{ request('status') === 'processing' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }} transition-colors">
                     Processing
-                    <span class="ml-2 bg-yellow-100 text-yellow-600 py-0.5 px-2.5 rounded-full text-xs">{{ $statusCounts['processing'] }}</span>
+                    <span class="ml-2 bg-blue-100 text-blue-600 py-0.5 px-2.5 rounded-full text-xs">{{ $statusCounts['processing'] }}</span>
                 </a>
                 
                 <a href="{{ route('admin.orders.index', ['status' => 'shipping']) }}" 
@@ -223,13 +217,10 @@
                             </td>
                             
                             <td class="px-4 py-3 text-center">
-                                <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full 
+                                <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full
                                     @switch($order->status)
-                                        @case('payment_completed')
-                                            bg-blue-100 text-blue-700
-                                            @break
                                         @case('processing')
-                                            bg-yellow-100 text-yellow-700
+                                            bg-blue-100 text-blue-700
                                             @break
                                         @case('shipping')
                                             bg-indigo-100 text-indigo-700
@@ -465,9 +456,8 @@ function showStatusModal(orderId, currentStatus) {
         option.disabled = false;
     });
     
-    // Define valid transitions
+    // Define valid transitions (COD only)
     const validTransitions = {
-        'payment_completed': ['processing', 'cancelled'],
         'processing': ['shipping', 'cancelled'],
         'shipping': ['completed'],
         'completed': [],

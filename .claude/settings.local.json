@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(php artisan tinker:*)",
+      "Bash(del \"config\\payhere.php\")",
+      "Bash(del \"app\\Services\\PayHereService.php\")",
+      "Bash(del \"app\\Services\\PaymentService.php\")",
+      "Bash(del \"app\\Http\\Controllers\\PaymentController.php\")",
+      "Bash(del \"app\\Http\\Middleware\\VerifyPaymentSession.php\")",
+      "Bash(del \"resources\\views\\checkout\\payment.blade.php\")",
+      "Bash(del \"resources\\views\\checkout\\payment-processing.blade.php\")",
+      "Bash(rm:*)",
+      "Bash(php artisan:*)",
+      "Bash(cat:*)",
+      "Bash(php -r:*)",
+      "Bash(mysql:*)",
+      "Bash(\"C:/xampp/mysql/bin/mysql.exe\" -u root -p2001kkkK@@ chicchevron_beauty -e \"DESCRIBE products;\")",
+      "Bash(findstr:*)",
+      "Bash(\"C:/xampp/mysql/bin/mysql.exe\" -u root -p2001kkkK@@ chicchevron_beauty -e \"SHOW TABLES;\")"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

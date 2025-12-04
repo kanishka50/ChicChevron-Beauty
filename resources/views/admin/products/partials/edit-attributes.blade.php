@@ -81,42 +81,6 @@
     </div>
 </div>
 
-<!-- Colors -->
-<div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-    <h2 class="text-lg font-semibold text-gray-800 mb-6">Available Colors</h2>
-    
-    @php
-        $selectedColors = old('colors', $product->colors->pluck('id')->toArray());
-    @endphp
-    
-    <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
-        @foreach($colors as $color)
-            <label class="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors">
-                <input type="checkbox" 
-                       name="colors[]" 
-                       value="{{ $color->id }}"
-                       {{ in_array($color->id, $selectedColors) ? 'checked' : '' }}
-                       class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
-                <span class="flex items-center space-x-2">
-                    <span class="w-4 h-4 rounded-full border border-gray-300 shadow-sm" 
-                          style="background-color: {{ $color->hex_code }}"></span>
-                    <span class="text-sm text-gray-700">{{ $color->name }}</span>
-                </span>
-            </label>
-        @endforeach
-    </div>
-    
-    @if($colors->isEmpty())
-        <p class="text-gray-500 text-sm">No colors available. Please add colors first.</p>
-    @endif
-
-    <div class="mt-6 bg-gray-50 border border-gray-200 rounded-lg p-4">
-        <p class="text-sm text-gray-600">
-            <strong>Note:</strong> Selected colors will be available as filtering options for customers shopping for this product.
-        </p>
-    </div>
-</div>
-
 <!-- Product Status -->
 <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
     <div class="flex items-center justify-between mb-6">

@@ -66,7 +66,6 @@ class ReportController extends Controller
             'daily_sales' => $this->reportService->getDailySalesChart($filters),
             'top_products' => $this->reportService->getTopProductsChart($filters),
             'sales_by_category' => $this->reportService->getSalesByCategoryChart($filters),
-            'payment_methods' => $this->reportService->getPaymentMethodsChart($filters),
         ];
 
         // Get filters data
@@ -265,7 +264,6 @@ public function exportCustomers(Request $request)
             'daily_sales' => $this->reportService->getDailySalesChart($filters),
             'top_products' => $this->reportService->getTopProductsChart($filters),
             'sales_by_category' => $this->reportService->getSalesByCategoryChart($filters),
-            'payment_methods' => $this->reportService->getPaymentMethodsChart($filters),
             default => []
         };
 

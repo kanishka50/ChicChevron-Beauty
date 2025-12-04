@@ -6,13 +6,10 @@ use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\BrandController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ProductVariantController;
-use App\Http\Controllers\Admin\TextureController;
-use App\Http\Controllers\Admin\ColorController;
 use App\Http\Controllers\Admin\InventoryController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\Admin\ComplaintController;
-use App\Http\Controllers\Admin\BannerController;
 use App\Http\Controllers\Admin\ReportController;
 
 // All routes in this file are prefixed with 'admin' and use 'admin.' name prefix
@@ -119,26 +116,6 @@ Route::middleware('admin')->group(function () {
         Route::post('/{brand}/toggle-status', [BrandController::class, 'toggleStatus'])->name('toggle-status');
     });
     
-    // Texture management
-    Route::prefix('textures')->name('textures.')->group(function () {
-        Route::get('/', [TextureController::class, 'index'])->name('index');
-        Route::post('/', [TextureController::class, 'store'])->name('store');
-        Route::put('/{texture}', [TextureController::class, 'update'])->name('update');
-        Route::delete('/{texture}', [TextureController::class, 'destroy'])->name('destroy');
-    });
-
-    // Color management
-    Route::prefix('colors')->name('colors.')->group(function () {
-        Route::get('/', [ColorController::class, 'index'])->name('index');
-        Route::post('/', [ColorController::class, 'store'])->name('store');
-        Route::put('/{color}', [ColorController::class, 'update'])->name('update');
-        Route::delete('/{color}', [ColorController::class, 'destroy'])->name('destroy');
-    });
-    
-    
-    
-
-
 // Reports
 Route::prefix('reports')->name('reports.')->group(function () {
     Route::get('/', [ReportController::class, 'index'])->name('index');
@@ -154,11 +131,6 @@ Route::prefix('reports')->name('reports.')->group(function () {
     // AJAX endpoints for dynamic chart updates
     Route::get('/sales/data', [ReportController::class, 'getSalesData'])->name('sales.data');
 });
-    
-    // Banner Management
-Route::resource('banners', BannerController::class);
-Route::post('banners/{banner}/toggle-status', [BannerController::class, 'toggleStatus'])->name('banners.toggle-status');
-Route::post('banners/update-order', [BannerController::class, 'updateOrder'])->name('banners.update-order');
     
     // Complaints management
 Route::prefix('complaints')->name('complaints.')->group(function () {

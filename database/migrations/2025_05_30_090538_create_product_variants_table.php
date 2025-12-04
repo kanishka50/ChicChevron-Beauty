@@ -6,23 +6,41 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    /**
+     * Product variants table - stores individual SKUs with pricing
+     *
+     * Each variant represents a specific combination of size/color/scent
+     * with its own price, cost, and inventory tracking.
+     */
     public function up(): void
     {
         Schema::create('product_variants', function (Blueprint $table) {
             $table->id();
             $table->foreignId('product_id')->constrained()->onDelete('cascade');
-            $table->enum('variant_type', ['size', 'color', 'scent']);
-            $table->string('variant_value', 100);
-            $table->string('sku_suffix', 50);
+
+            // Variant attributes - all nullable (free text)
+            $table->string('size', 50)->nullable();
+            $table->string('color', 50)->nullable();
+            $table->string('scent', 50)->nullable();
+
+            // Complete variant information
+            $table->string('sku', 150)->unique();
+            $table->string('name', 255); // e.g., "50ml - Rose" or "Large - Red"
+
+            // Pricing - directly on variant
             $table->decimal('price', 10, 2);
             $table->decimal('cost_price', 10, 2);
+            $table->decimal('discount_price', 10, 2)->nullable();
+
+            // Status
             $table->boolean('is_active')->default(true);
+
             $table->timestamps();
-            
+
+            // Indexes
             $table->index('product_id');
-            $table->index('variant_type');
+            $table->index('sku');
             $table->index('is_active');
-            $table->unique(['product_id', 'variant_type', 'variant_value']);
         });
     }
 

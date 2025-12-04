@@ -24,19 +24,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin' => \App\Http\Middleware\AdminAuth::class,
             'verified' => \App\Http\Middleware\EnsureEmailIsVerified::class,
             'guest.or.auth' => \App\Http\Middleware\GuestOrAuth::class,
-            'verify.payment.session' => \App\Http\Middleware\VerifyPaymentSession::class,
         ]);
-        
+
         // Configure where to redirect guests
         $middleware->redirectGuestsTo(fn () => route('login'));
-
-        // CSRF Token Exceptions for webhooks
-        $middleware->validateCsrfTokens(except: [
-            'webhooks/payhere',
-            'webhooks/payhere/*',
-            'webhooks/*'
-        ]);
-        
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

@@ -106,7 +106,7 @@
             <!-- Price Section -->
             <div class="flex items-baseline gap-2">
                 @if($product->has_discount)
-                    <span class="text-lg sm:text-xl font-bold text-gray-900">
+                    <span class="text-lg sm:text-xl  text-gray-900">
                         Rs. {{ number_format($product->starting_discount_price ?? $product->starting_price, 0) }}
                     </span>
                     @if($product->starting_discount_price)

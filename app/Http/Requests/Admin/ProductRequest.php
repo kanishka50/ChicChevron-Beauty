@@ -60,7 +60,6 @@ class ProductRequest extends FormRequest
             'brand_id.exists' => 'The selected brand is invalid.',
             'category_id.required' => 'Please select a category.',
             'category_id.exists' => 'The selected category is invalid.',
-            'product_type_id.required' => 'Please select a product type.',
             'main_image.required' => 'The main product image is required.',
             'main_image.image' => 'The file must be an image.',
             'main_image.max' => 'The image may not be greater than 2MB.',

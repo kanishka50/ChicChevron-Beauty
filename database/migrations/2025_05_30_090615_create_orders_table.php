@@ -12,15 +12,15 @@ return new class extends Migration
             $table->id();
             $table->string('order_number', 50)->unique();
             $table->foreignId('user_id')->constrained()->onDelete('restrict');
-            $table->enum('status', ['payment_completed', 'processing', 'shipping', 'completed', 'cancelled']);
+            $table->enum('status', ['processing', 'shipping', 'completed', 'cancelled'])->default('processing');
             $table->decimal('subtotal', 10, 2);
             $table->decimal('discount_amount', 10, 2)->default(0);
             $table->decimal('shipping_amount', 10, 2)->default(0);
             $table->decimal('total_amount', 10, 2);
-            $table->enum('payment_method', ['payhere', 'cod']);
-            $table->enum('payment_status', ['pending', 'completed', 'failed', 'refunded']);
+            $table->enum('payment_method', ['cod'])->default('cod'); // Cash on Delivery only
+            $table->enum('payment_status', ['pending', 'completed', 'failed', 'refunded'])->default('pending');
             $table->string('payment_reference')->nullable();
-            
+
             // Shipping Information
             $table->string('shipping_name');
             $table->string('shipping_phone', 20);
@@ -29,12 +29,12 @@ return new class extends Migration
             $table->string('shipping_city', 100);
             $table->string('shipping_district', 100);
             $table->string('shipping_postal_code', 20)->nullable();
-            
+
             $table->text('notes')->nullable();
             $table->timestamp('shipped_at')->nullable();
             $table->timestamp('completed_at')->nullable();
             $table->timestamps();
-            
+
             $table->index('order_number');
             $table->index('user_id');
             $table->index('status');

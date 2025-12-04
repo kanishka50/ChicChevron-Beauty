@@ -139,16 +139,6 @@
                 </script>
             </div>
 
-            <!-- Payment Methods -->
-            <div class="bg-white p-6 rounded-lg shadow">
-                <h3 class="text-lg font-medium text-gray-900 mb-4">Payment Methods</h3>
-                <div style="height: 300px;">
-                    <canvas id="paymentMethodsChart"></canvas>
-                </div>
-                <script type="application/json" id="paymentMethodsChartData">
-                    {!! json_encode($chartData['payment_methods']) !!}
-                </script>
-            </div>
         </div>
 
         <!-- Product Sales Table -->

@@ -95,7 +95,7 @@
                         <!-- REMOVED Product Type -->
                         <div>
                             <p class="text-sm text-gray-600">Texture</p>
-                            <p class="font-medium">{{ $product->texture->name ?? 'N/A' }}</p>
+                            <p class="font-medium">{{ $product->texture ?? 'N/A' }}</p>
                         </div>
                         <div>
                             <p class="text-sm text-gray-600">Status</p>

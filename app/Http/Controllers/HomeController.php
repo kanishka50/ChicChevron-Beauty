@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
-use App\Models\Banner;
 use App\Models\Category;
 use App\Models\Brand;
 use Illuminate\Http\Request;
@@ -13,7 +12,7 @@ use Illuminate\Support\Facades\Cache;
 class HomeController extends Controller
 {
     /**
-     * Display the homepage with banners, featured products, and categories.
+     * Display the homepage with featured products and categories.
      */
     public function index()
     {
@@ -69,10 +68,6 @@ class HomeController extends Controller
             $bestSellers = $bestSellers->sortByDesc('order_items_count')->take(8);
             
             return [
-                'banners' => Banner::active()
-                    ->orderBy('sort_order')
-                    ->get(),
-                
                 'featuredProducts' => $featuredProducts,
                 'newArrivals' => $newArrivals,
                 'bestSellers' => $bestSellers,

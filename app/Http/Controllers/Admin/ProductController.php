@@ -7,8 +7,6 @@ use App\Http\Requests\Admin\ProductRequest;
 use App\Models\Product;
 use App\Models\Brand;
 use App\Models\Category;
-use App\Models\Texture;
-use App\Models\Color;
 use App\Models\ProductImage;
 use App\Models\ProductIngredient;
 use App\Models\Inventory;
@@ -87,14 +85,10 @@ class ProductController extends Controller
     {
         $brands = Brand::active()->orderBy('name')->get();
         $categories = Category::active()->ordered()->get();
-        $textures = Texture::orderBy('name')->get();
-        $colors = Color::all();
-        
+
         return view('admin.products.create', compact(
-            'brands', 
-            'categories', 
-            'textures',
-            'colors'
+            'brands',
+            'categories'
         ));
     }
 
@@ -149,11 +143,6 @@ class ProductController extends Controller
                 }
             }
             
-            // Handle colors if provided
-            if ($request->filled('colors')) {
-                $product->colors()->sync($request->colors);
-            }
-            
             // Only create default variant if product doesn't have variants
         if (!$product->has_variants) {
             $variant = $product->variants()->create([
@@ -196,10 +185,8 @@ class ProductController extends Controller
         $product->load([
             'brand',
             'category.mainCategory',
-            'texture',
             'images',
             'ingredients',
-            'colors',
             'variants.inventory',
             'reviews.user'
         ]);
@@ -219,17 +206,13 @@ class ProductController extends Controller
     {
         $brands = Brand::active()->orderBy('name')->get();
         $categories = Category::active()->ordered()->get();
-        $textures = Texture::orderBy('name')->get();
-        $colors = Color::all();
-        
-        $product->load(['images', 'ingredients', 'colors']);
-        
+
+        $product->load(['images', 'ingredients']);
+
         return view('admin.products.edit', compact(
             'product',
-            'brands', 
-            'categories', 
-            'textures',
-            'colors'
+            'brands',
+            'categories'
         ));
     }
 
@@ -282,11 +265,6 @@ class ProductController extends Controller
                         ]);
                     }
                 }
-            }
-            
-            // Handle colors
-            if ($request->has('colors')) {
-                $product->colors()->sync($request->colors);
             }
             
             DB::commit();
@@ -406,9 +384,6 @@ class ProductController extends Controller
                     'ingredient_name' => $ingredient->ingredient_name
                 ]);
             }
-            
-            // Clone colors
-            $newProduct->colors()->sync($product->colors->pluck('id'));
             
             // Clone variants
             foreach ($product->variants as $variant) {

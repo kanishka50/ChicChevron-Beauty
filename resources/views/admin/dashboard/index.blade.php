@@ -78,7 +78,7 @@
             <p class="text-2xl font-bold text-gray-900">{{ $stats['new_customers'] }}</p>
         </div>
 
-        <!-- Pending Orders -->
+        <!-- Processing Orders -->
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200">
             <div class="flex items-center justify-between mb-4">
                 <div class="p-2 bg-purple-100 rounded-lg">
@@ -87,10 +87,10 @@
                     </svg>
                 </div>
             </div>
-            <h3 class="text-sm font-medium text-gray-600 mb-1">Pending Orders</h3>
+            <h3 class="text-sm font-medium text-gray-600 mb-1">Processing Orders</h3>
             <p class="text-2xl font-bold text-gray-900 mb-2">{{ $stats['pending_orders'] }}</p>
-            <a href="{{ route('admin.orders.index') }}?status=payment_completed" class="text-xs font-medium text-purple-600 hover:text-purple-700 transition-colors">
-                Process orders →
+            <a href="{{ route('admin.orders.index') }}?status=processing" class="text-xs font-medium text-purple-600 hover:text-purple-700 transition-colors">
+                View orders →
             </a>
         </div>
     </div>

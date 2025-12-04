@@ -8,14 +8,12 @@ use App\Http\Controllers\Auth\VerificationController;
 use App\Http\Controllers\OrderController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProductController;
 
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
-use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\UserAccountController;
 use App\Http\Controllers\ComplaintController;
 use App\Http\Controllers\ReviewController;
@@ -170,27 +168,11 @@ Route::prefix('cart')->group(function () {
     Route::post('/remove-promotion', [CartController::class, 'removePromotion'])->name('cart.remove-promotion');
 });
 
-// Checkout routes
+// Checkout routes (COD only)
 Route::middleware('auth')->prefix('checkout')->name('checkout.')->group(function () {
     Route::get('/', [CheckoutController::class, 'index'])->name('index');
     Route::post('/', [CheckoutController::class, 'store'])->name('store');
-    Route::get('/{order}/payment', [CheckoutController::class, 'payment'])->name('payment');
     Route::get('/{order}/success', [CheckoutController::class, 'success'])->name('success');
-});
-
-// Payment routes with enhanced security
-Route::prefix('checkout/payment')->name('checkout.payment.')->group(function () {
-    Route::get('/{order}/success', [PaymentController::class, 'success'])
-        ->name('success')
-        ->middleware(['auth', 'verify.payment.session']); // ADD MIDDLEWARE
-        
-    Route::get('/{order}/cancel', [PaymentController::class, 'cancel'])
-        ->name('cancel')
-        ->middleware(['auth', 'verify.payment.session']); // ADD MIDDLEWARE
-        
-    Route::get('/{order}/status', [PaymentController::class, 'checkStatus'])
-        ->name('status')
-        ->middleware('auth');
 });
 
 
@@ -253,19 +235,6 @@ Route::prefix('api/v1')->group(function () {
     });
 });
 
-// TEST ROUTE FOR MANUAL ORDER UPDATE (REMOVE IN PRODUCTION)
-Route::get('/test-payment-update/{orderNumber}', function($orderNumber) {
-    $order = \App\Models\Order::where('order_number', $orderNumber)->first();
-    if ($order) {
-        $order->payment_status = 'completed';
-        $order->status = 'payment_completed';
-        $order->payment_reference = 'TEST-' . now()->timestamp;
-        $order->save();
-        
-        return 'Order updated successfully. <a href="' . route('checkout.success', $order) . '">Go to success page</a>';
-    }
-    return 'Order not found';
-})->middleware('auth');
 
 // Route model binding customizations
 Route::bind('order', function ($value) {
@@ -357,10 +326,7 @@ Route::middleware(['auth', 'verified'])->prefix('complaints')->name('user.compla
     
 });
 
-// Webhook route with rate limiting
-Route::post('/webhooks/payhere', [PaymentController::class, 'webhook'])
-    ->name('webhooks.payhere')
-    ->middleware('throttle:60,1'); 
+ 
 
 
 

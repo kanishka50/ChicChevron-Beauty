@@ -1,8 +1,36 @@
+{{--
+    HARDCODED BANNER SLIDER
+
+    To update banners, edit the $banners array below.
+    Each banner can have:
+    - image: Path to image in public folder (e.g., 'images/banners/banner1.jpg')
+    - image_mobile: Optional mobile-specific image
+    - title: Optional title text
+    - description: Optional description text
+    - link: Optional URL to link to
+--}}
+
 @php
-    $banners = \App\Models\Banner::active()->ordered()->get();
+    $banners = [
+        [
+            'image' => 'images/banners/banner1.jpg',
+            'image_mobile' => null,
+            'title' => 'Welcome to ChicChevron Beauty',
+            'description' => 'Discover premium beauty products for every skin type',
+            'link' => route('products.index'),
+        ],
+        // Add more banners as needed:
+        // [
+        //     'image' => 'images/banners/banner2.jpg',
+        //     'image_mobile' => 'images/banners/banner2-mobile.jpg',
+        //     'title' => 'New Arrivals',
+        //     'description' => 'Check out our latest products',
+        //     'link' => route('products.index', ['sort' => 'newest']),
+        // ],
+    ];
 @endphp
 
-@if($banners->isNotEmpty())
+@if(count($banners) > 0)
     <!-- Responsive Banner Section -->
     <section class="container-responsive mt-4 lg:mt-6">
         <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
@@ -12,47 +40,47 @@
                 <div class="carousel-wrapper relative h-full">
                     @foreach($banners as $index => $banner)
                         <div class="carousel-item absolute inset-0 w-full h-full transition-transform duration-700 ease-in-out
-                                    {{ $index === 0 ? 'translate-x-0' : 'translate-x-full' }}" 
+                                    {{ $index === 0 ? 'translate-x-0' : 'translate-x-full' }}"
                              data-index="{{ $index }}">
-                            @if($banner->link_type !== 'none' && $banner->link_value)
-                                <a href="{{ $banner->full_url }}" class="block relative h-full">
+                            @if(!empty($banner['link']))
+                                <a href="{{ $banner['link'] }}" class="block relative h-full">
                             @else
                                 <div class="relative h-full">
                             @endif
-                                
+
                                 <!-- Responsive Images -->
                                 <picture class="absolute inset-0">
                                     <!-- Mobile Image (if exists) -->
-                                    @if($banner->image_mobile)
-                                        <source media="(max-width: 640px)" srcset="{{ asset('storage/' . $banner->image_mobile) }}">
+                                    @if(!empty($banner['image_mobile']))
+                                        <source media="(max-width: 640px)" srcset="{{ asset($banner['image_mobile']) }}">
                                     @endif
                                     <!-- Desktop Image (default) -->
-                                    <img src="{{ asset('storage/' . $banner->image_desktop) }}" 
-                                         alt="{{ $banner->title }}" 
+                                    <img src="{{ asset($banner['image']) }}"
+                                         alt="{{ $banner['title'] ?? 'Banner' }}"
                                          class="w-full h-full object-cover">
                                 </picture>
-                                
+
                                 <!-- Responsive Text Overlay -->
-                                @if($banner->title || $banner->description)
-                                    <div class="absolute bottom-0 left-0 right-0 p-4 sm:p-8 md:p-12">
+                                @if(!empty($banner['title']) || !empty($banner['description']))
+                                    <div class="absolute bottom-0 left-0 right-0 p-4 sm:p-8 md:p-12 bg-gradient-to-t from-black/50 to-transparent">
                                         <div class="max-w-4xl mx-auto text-center">
-                                            @if($banner->title)
-                                                <h1 class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-black text-gray-900 mb-2 sm:mb-3" 
+                                            @if(!empty($banner['title']))
+                                                <h1 class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-black text-white mb-2 sm:mb-3"
                                                     style="font-family: 'Playfair Display', serif; letter-spacing: -0.02em;">
-                                                    {{ $banner->title }}
+                                                    {{ $banner['title'] }}
                                                 </h1>
                                             @endif
-                                            
-                                            @if($banner->description)
-                                                <p class="text-gray-800 text-base sm:text-lg md:text-xl max-w-2xl mx-auto font-medium">
-                                                    {{ $banner->description }}
+
+                                            @if(!empty($banner['description']))
+                                                <p class="text-white/90 text-base sm:text-lg md:text-xl max-w-2xl mx-auto font-medium">
+                                                    {{ $banner['description'] }}
                                                 </p>
                                             @endif
                                         </div>
                                     </div>
                                 @endif
-                                
-                            @if($banner->link_type !== 'none' && $banner->link_value)
+
+                            @if(!empty($banner['link']))
                                 </a>
                             @else
                                 </div>
@@ -60,21 +88,21 @@
                         </div>
                     @endforeach
                 </div>
-                
+
                 <!-- Pagination Dots (only if multiple banners) -->
-                @if($banners->count() > 1)
+                @if(count($banners) > 1)
                     <div class="absolute z-30 flex -translate-x-1/2 bottom-5 left-1/2 space-x-3 rtl:space-x-reverse">
                         @foreach($banners as $index => $banner)
-                            <button type="button" 
-                                    class="pagination-dot w-3 h-3 rounded-full bg-white/50 hover:bg-white/75 transition-all duration-300 {{ $index === 0 ? 'bg-white' : '' }}" 
+                            <button type="button"
+                                    class="pagination-dot w-3 h-3 rounded-full bg-white/50 hover:bg-white/75 transition-all duration-300 {{ $index === 0 ? 'bg-white' : '' }}"
                                     aria-current="{{ $index === 0 ? 'true' : 'false' }}"
                                     aria-label="Slide {{ $index + 1 }}"
                                     data-slide-to="{{ $index }}"></button>
                         @endforeach
                     </div>
-                    
-                    <!-- Previous/Next Controls (Optional - Hidden on Mobile) -->
-                    <button type="button" 
+
+                    <!-- Previous/Next Controls (Hidden on Mobile) -->
+                    <button type="button"
                             class="hidden md:flex absolute top-0 left-0 z-30 items-center justify-center h-full px-4 cursor-pointer group focus:outline-none"
                             id="carousel-prev">
                         <span class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-white/30 group-hover:bg-white/50 transition-colors duration-300">
@@ -84,8 +112,8 @@
                             <span class="sr-only">Previous</span>
                         </span>
                     </button>
-                    
-                    <button type="button" 
+
+                    <button type="button"
                             class="hidden md:flex absolute top-0 right-0 z-30 items-center justify-center h-full px-4 cursor-pointer group focus:outline-none"
                             id="carousel-next">
                         <span class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-white/30 group-hover:bg-white/50 transition-colors duration-300">
@@ -100,11 +128,10 @@
         </div>
     </section>
 @else
-    <!-- Default Banner Section - No Banners -->
+    <!-- Default Banner Section - No Banners Configured -->
     <section class="container-responsive mt-4 lg:mt-6">
         <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
             <div class="relative h-[250px] sm:h-[350px] md:h-[400px] lg:h-[450px] xl:h-[500px] bg-gradient-to-br from-primary-100 to-pink-100">
-                <!-- Default Content -->
                 <div class="absolute inset-0 flex items-center justify-center p-6 sm:p-8">
                     <div class="text-center max-w-2xl">
                         <h1 class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-3 sm:mb-4">
@@ -126,7 +153,6 @@
     will-change: transform;
 }
 
-/* Positioning classes for sliding effect */
 .translate-x-0 {
     transform: translateX(0);
 }
@@ -139,7 +165,6 @@
     transform: translateX(-100%);
 }
 
-/* Line clamp utilities for text truncation */
 .line-clamp-2 {
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -154,14 +179,11 @@
     overflow: hidden;
 }
 
-/* Ensure images maintain aspect ratio */
 img {
     object-fit: cover;
     object-position: center;
 }
 
-
-/* Prevent layout shift during transitions */
 .carousel-wrapper {
     position: relative;
     width: 100%;
@@ -169,6 +191,7 @@ img {
 }
 </style>
 
+@if(count($banners) > 1)
 @push('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -176,14 +199,13 @@ img {
             const dots = document.querySelectorAll('.pagination-dot');
             const prevButton = document.getElementById('carousel-prev');
             const nextButton = document.getElementById('carousel-next');
-            
-            if (slides.length <= 1) return; // No carousel needed
-            
+
+            if (slides.length <= 1) return;
+
             let currentIndex = 0;
             let slideInterval;
             let isTransitioning = false;
-            
-            // Position slides initially
+
             function initializeSlides() {
                 slides.forEach((slide, index) => {
                     if (index === 0) {
@@ -195,16 +217,14 @@ img {
                     }
                 });
             }
-            
-            // Show specific slide with sliding animation
+
             function showSlide(newIndex, direction = 'next') {
                 if (isTransitioning || newIndex === currentIndex) return;
-                
+
                 isTransitioning = true;
                 const currentSlide = slides[currentIndex];
                 const newSlide = slides[newIndex];
-                
-                // Prepare new slide position
+
                 if (direction === 'next') {
                     newSlide.classList.add('translate-x-full');
                     newSlide.classList.remove('translate-x-0', '-translate-x-full');
@@ -212,13 +232,10 @@ img {
                     newSlide.classList.add('-translate-x-full');
                     newSlide.classList.remove('translate-x-0', 'translate-x-full');
                 }
-                
-                // Force browser to calculate positions
+
                 newSlide.offsetHeight;
-                
-                // Start transition
+
                 requestAnimationFrame(() => {
-                    // Move current slide out
                     if (direction === 'next') {
                         currentSlide.classList.add('-translate-x-full');
                         currentSlide.classList.remove('translate-x-0', 'translate-x-full');
@@ -226,13 +243,11 @@ img {
                         currentSlide.classList.add('translate-x-full');
                         currentSlide.classList.remove('translate-x-0', '-translate-x-full');
                     }
-                    
-                    // Move new slide in
+
                     newSlide.classList.add('translate-x-0');
                     newSlide.classList.remove('translate-x-full', '-translate-x-full');
                 });
-                
-                // Update dots
+
                 dots.forEach((dot, index) => {
                     if (index === newIndex) {
                         dot.classList.add('bg-white');
@@ -244,41 +259,35 @@ img {
                         dot.setAttribute('aria-current', 'false');
                     }
                 });
-                
+
                 currentIndex = newIndex;
-                
-                // Reset transition flag after animation completes
+
                 setTimeout(() => {
                     isTransitioning = false;
                 }, 700);
             }
-            
-            // Navigate to next slide
+
             function nextSlide() {
                 const nextIndex = (currentIndex + 1) % slides.length;
                 showSlide(nextIndex, 'next');
             }
-            
-            // Navigate to previous slide
+
             function prevSlide() {
                 const prevIndex = (currentIndex - 1 + slides.length) % slides.length;
                 showSlide(prevIndex, 'prev');
             }
-            
-            // Auto-play functionality
+
             function startSlideshow() {
                 slideInterval = setInterval(nextSlide, 5000);
             }
-            
+
             function stopSlideshow() {
                 clearInterval(slideInterval);
             }
-            
-            // Initialize
+
             initializeSlides();
             startSlideshow();
-            
-            // Event listeners for dots
+
             dots.forEach((dot, index) => {
                 dot.addEventListener('click', () => {
                     stopSlideshow();
@@ -287,8 +296,7 @@ img {
                     startSlideshow();
                 });
             });
-            
-            // Event listeners for prev/next buttons
+
             if (prevButton) {
                 prevButton.addEventListener('click', () => {
                     stopSlideshow();
@@ -296,7 +304,7 @@ img {
                     startSlideshow();
                 });
             }
-            
+
             if (nextButton) {
                 nextButton.addEventListener('click', () => {
                     stopSlideshow();
@@ -304,15 +312,13 @@ img {
                     startSlideshow();
                 });
             }
-            
-            // Pause on hover (desktop only)
+
             const container = document.getElementById('banner-container');
             if (container && window.innerWidth >= 768) {
                 container.addEventListener('mouseenter', stopSlideshow);
                 container.addEventListener('mouseleave', startSlideshow);
             }
-            
-            // Handle visibility change
+
             document.addEventListener('visibilitychange', () => {
                 if (document.hidden) {
                     stopSlideshow();
@@ -323,3 +329,4 @@ img {
         });
     </script>
 @endpush
+@endif

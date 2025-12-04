@@ -37,7 +37,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
                 </svg>
                 <span class="font-medium">Filters</span>
-                @if(request()->hasAny(['category', 'brands', 'colors', 'textures', 'min_price', 'max_price', 'min_rating']))
+                @if(request()->hasAny(['category', 'brands', 'min_price', 'max_price', 'min_rating']))
                     <span class="bg-primary-600 text-white text-xs px-2 py-0.5 rounded-full">
                         {{ count(array_filter(request()->all())) }}
                     </span>
@@ -56,7 +56,7 @@
                             </svg>
                             Filters
                         </h3>
-                        @if(request()->hasAny(['category', 'brands', 'colors', 'textures', 'min_price', 'max_price', 'min_rating']))
+                        @if(request()->hasAny(['category', 'brands', 'min_price', 'max_price', 'min_rating']))
                             <a href="{{ route('products.index') }}" class="text-sm text-primary-600 hover:text-primary-700 font-medium transition-colors">
                                 Clear All
                             </a>
@@ -166,34 +166,6 @@
                             </div>
                         </div>
 
-                        <!-- Color Filter -->
-                        @if($filters['colors']->isNotEmpty())
-                            <div class="border-b border-gray-200 pb-6 mb-6">
-                                <h4 class="font-semibold text-gray-900 mb-4">Colors</h4>
-                                <div class="grid grid-cols-5 gap-3">
-                                    @foreach($filters['colors'] as $color)
-                                        <label class="relative cursor-pointer group">
-                                            <input 
-                                                type="checkbox" 
-                                                name="colors[]" 
-                                                value="{{ $color->id }}"
-                                                {{ in_array($color->id, (array)request('colors', [])) ? 'checked' : '' }}
-                                                class="sr-only peer"
-                                                onchange="document.getElementById('filter-form').submit()"
-                                            >
-                                            <div class="w-10 h-10 rounded-full border-2 peer-checked:border-primary-600 peer-checked:ring-2 peer-checked:ring-primary-200 group-hover:scale-110 transition-all duration-200 shadow-sm"
-                                                 style="background-color: {{ $color->color_code }}"
-                                                 title="{{ $color->name }}">
-                                            </div>
-                                            <span class="absolute -bottom-5 left-1/2 -translate-x-1/2 text-xs text-gray-600 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
-                                                {{ $color->name }}
-                                            </span>
-                                        </label>
-                                    @endforeach
-                                </div>
-                            </div>
-                        @endif
-
                         <!-- Rating Filter -->
                         <div class="pb-6">
                             <h4 class="font-semibold text-gray-900 mb-4">Minimum Rating</h4>
@@ -278,7 +250,7 @@
                 </div>
 
                 <!-- Active Filters -->
-                @if(request()->hasAny(['category', 'brands', 'colors', 'textures', 'min_price', 'max_price', 'min_rating', 'stock_status']))
+                @if(request()->hasAny(['category', 'brands', 'min_price', 'max_price', 'min_rating', 'stock_status']))
                     <div class="bg-gray-50 rounded-xl p-4 mb-6">
                         <div class="flex items-center justify-between mb-3">
                             <h3 class="text-sm font-semibold text-gray-900">Active Filters</h3>
@@ -496,31 +468,6 @@
                     </button>
                 </div>
             </div>
-
-            <!-- Color Filter -->
-            @if($filters['colors']->isNotEmpty())
-                <div class="border-b border-gray-200 pb-6 mb-6">
-                    <h4 class="font-semibold text-gray-900 mb-4">Colors</h4>
-                    <div class="grid grid-cols-5 gap-3">
-                        @foreach($filters['colors'] as $color)
-                            <label class="relative cursor-pointer group">
-                                <input 
-                                    type="checkbox" 
-                                    name="colors[]" 
-                                    value="{{ $color->id }}"
-                                    {{ in_array($color->id, (array)request('colors', [])) ? 'checked' : '' }}
-                                    class="sr-only peer"
-                                    onchange="document.getElementById('mobile-filter-form').submit()"
-                                >
-                                <div class="w-10 h-10 rounded-full border-2 peer-checked:border-primary-600 peer-checked:ring-2 peer-checked:ring-primary-200 group-hover:scale-110 transition-all duration-200 shadow-sm"
-                                     style="background-color: {{ $color->color_code }}"
-                                     title="{{ $color->name }}">
-                                </div>
-                            </label>
-                        @endforeach
-                    </div>
-                </div>
-            @endif
 
             <!-- Rating Filter -->
             <div class="pb-6 mb-6">

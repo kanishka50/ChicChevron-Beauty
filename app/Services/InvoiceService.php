@@ -238,20 +238,17 @@ class InvoiceService
     protected function getInvoiceNotes(Order $order)
     {
         $notes = [];
-        
-        if ($order->payment_method === 'cod') {
-            $notes[] = 'Payment Method: Cash on Delivery';
-        } else {
-            $notes[] = 'Payment Method: Online Payment (PayHere)';
-            if ($order->payment_reference) {
-                $notes[] = "Payment Reference: {$order->payment_reference}";
-            }
+
+        $notes[] = 'Payment Method: Cash on Delivery';
+
+        if ($order->payment_reference) {
+            $notes[] = "Payment Reference: {$order->payment_reference}";
         }
-        
+
         if ($order->notes) {
             $notes[] = "Order Notes: {$order->notes}";
         }
-        
+
         return $notes;
     }
 

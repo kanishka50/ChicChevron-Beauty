@@ -14,13 +14,10 @@
                     </svg>
                 </a>
                 <h1 class="text-2xl font-semibold text-gray-800">Order {{ $order->order_number }}</h1>
-                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium 
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium
                     @switch($order->status)
-                        @case('payment_completed')
-                            bg-blue-100 text-blue-700
-                            @break
                         @case('processing')
-                            bg-yellow-100 text-yellow-700
+                            bg-blue-100 text-blue-700
                             @break
                         @case('shipping')
                             bg-indigo-100 text-indigo-700
@@ -170,11 +167,8 @@
                                             <div>
                                                 <span class="h-8 w-8 rounded-full flex items-center justify-center ring-8 ring-white
                                                     @switch($history->status)
-                                                        @case('payment_completed')
-                                                            bg-blue-500
-                                                            @break
                                                         @case('processing')
-                                                            bg-yellow-500
+                                                            bg-blue-500
                                                             @break
                                                         @case('shipping')
                                                             bg-indigo-500
@@ -327,7 +321,7 @@
                 </div>
                 <div class="p-4 space-y-2">
                     @if($order->can_be_cancelled)
-                        <button onclick="updateStatus('cancelled')" 
+                        <button onclick="updateStatus('cancelled')"
                                 class="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 rounded-md transition-colors">
                             <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -335,18 +329,7 @@
                             Cancel Order
                         </button>
                     @endif
-                    
-                    @if($order->status === 'payment_completed')
-                        <button onclick="updateStatus('processing')" 
-                                class="w-full text-left px-4 py-3 text-sm text-yellow-600 hover:bg-yellow-50 rounded-md transition-colors">
-                            <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                            </svg>
-                            Start Processing
-                        </button>
-                    @endif
-                    
+
                     @if($order->status === 'processing')
                         <button onclick="updateStatus('shipping')" 
                                 class="w-full text-left px-4 py-3 text-sm text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors">
@@ -393,10 +376,6 @@
                     <select id="newStatus" name="status" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500" required>
                         <option value="">Select Status</option>
                         @switch($order->status)
-                            @case('payment_completed')
-                                <option value="processing">Processing</option>
-                                <option value="cancelled">Cancelled</option>
-                                @break
                             @case('processing')
                                 <option value="shipping">Shipping</option>
                                 <option value="cancelled">Cancelled</option>

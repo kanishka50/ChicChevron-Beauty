@@ -309,7 +309,7 @@
                         </div>
                     </div>
 
-                    <!-- Payment Method - Enhanced Mobile Design -->
+                    <!-- Payment Method - Cash on Delivery Only -->
                     <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                         <div class="bg-gradient-to-r from-primary-50 to-pink-50 px-4 md:px-6 py-4">
                             <h2 class="text-base md:text-lg font-semibold text-gray-900 flex items-center gap-2">
@@ -317,43 +317,25 @@
                                 Payment Method
                             </h2>
                         </div>
-                        
-                        <div class="p-4 md:p-6">
-                            <div class="space-y-3">
-                                <!-- Cash on Delivery -->
-                                <label class="flex items-start space-x-3 p-3 md:p-4 border-2 border-gray-200 rounded-xl hover:border-primary-200 hover:bg-primary-50/30 cursor-pointer transition-all duration-200 group">
-                                    <input type="radio" 
-                                           name="payment_method" 
-                                           value="cod" 
-                                           class="mt-1 text-primary-600 focus:ring-primary-500 w-4 h-4"
-                                           checked>
-                                    <div class="flex-1">
-                                        <div class="flex items-center gap-2">
-                                            <span class="font-medium text-gray-900 group-hover:text-primary-700 text-sm md:text-base">Cash on Delivery</span>
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                                Recommended
-                                            </span>
-                                        </div>
-                                        <div class="text-xs md:text-sm text-gray-600 mt-1">Pay when you receive your order (Max: Rs. 10,000)</div>
-                                    </div>
-                                </label>
 
-                                <!-- PayHere -->
-                                <label class="flex items-start space-x-3 p-3 md:p-4 border-2 border-gray-200 rounded-xl hover:border-primary-200 hover:bg-primary-50/30 cursor-pointer transition-all duration-200 group">
-                                    <input type="radio" 
-                                           name="payment_method" 
-                                           value="payhere" 
-                                           class="mt-1 text-primary-600 focus:ring-primary-500 w-4 h-4">
-                                    <div class="flex-1">
-                                        <div class="flex items-center gap-2">
-                                            <span class="font-medium text-gray-900 group-hover:text-primary-700 text-sm md:text-base">Online Payment (PayHere)</span>
-                                            <svg class="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-                                            </svg>
-                                        </div>
-                                        <div class="text-xs md:text-sm text-gray-600 mt-1">Pay securely with credit/debit cards</div>
+                        <div class="p-4 md:p-6">
+                            <!-- Cash on Delivery - Only Option -->
+                            <div class="flex items-start space-x-3 p-3 md:p-4 border-2 border-primary-200 bg-primary-50/30 rounded-xl">
+                                <input type="hidden" name="payment_method" value="cod">
+                                <div class="mt-1">
+                                    <svg class="w-5 h-5 text-primary-600" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                                    </svg>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-2">
+                                        <span class="font-medium text-gray-900 text-sm md:text-base">Cash on Delivery</span>
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                            Available
+                                        </span>
                                     </div>
-                                </label>
+                                    <div class="text-xs md:text-sm text-gray-600 mt-1">Pay when you receive your order</div>
+                                </div>
                             </div>
                         </div>
                     </div>

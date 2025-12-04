@@ -20,8 +20,7 @@ class Product extends Model
         'sku',
         'brand_id',
         'category_id',
-        'product_type_id',
-        'texture_id',
+        'texture',
         'main_image',
         'how_to_use',
         'suitable_for',
@@ -72,14 +71,6 @@ class Product extends Model
 
 
     /**
-     * Get the texture.
-     */
-    public function texture()
-    {
-        return $this->belongsTo(Texture::class);
-    }
-
-    /**
      * Get the product images.
      */
     public function images()
@@ -93,14 +84,6 @@ class Product extends Model
     public function ingredients()
     {
         return $this->hasMany(ProductIngredient::class);
-    }
-
-    /**
-     * Get the product colors.
-     */
-    public function colors()
-    {
-        return $this->belongsToMany(Color::class, 'product_colors');
     }
 
     /**

@@ -38,7 +38,6 @@ class OrderController extends Controller
         // Get status counts for filter badges
         $statusCounts = [
             'all' => Order::count(),
-            'payment_completed' => Order::where('status', 'payment_completed')->count(),
             'processing' => Order::where('status', 'processing')->count(),
             'shipping' => Order::where('status', 'shipping')->count(),
             'completed' => Order::where('status', 'completed')->count(),
@@ -111,7 +110,7 @@ class OrderController extends Controller
                         'status' => $order->fresh()->status,
                         'status_label' => ucfirst(str_replace('_', ' ', $order->fresh()->status)),
                         'status_color' => $this->getStatusColor($order->fresh()->status),
-                        'can_be_cancelled' => in_array($order->fresh()->status, ['payment_completed', 'processing']),
+                        'can_be_cancelled' => in_array($order->fresh()->status, ['processing']),
                         'can_be_completed' => $order->fresh()->status === 'shipping'
                     ]
                 ]);
@@ -148,8 +147,7 @@ class OrderController extends Controller
     private function getStatusColor($status)
     {
         $colors = [
-            'payment_completed' => 'bg-blue-100 text-blue-800',
-            'processing' => 'bg-yellow-100 text-yellow-800',
+            'processing' => 'bg-blue-100 text-blue-800',
             'shipping' => 'bg-purple-100 text-purple-800',
             'completed' => 'bg-green-100 text-green-800',
             'cancelled' => 'bg-red-100 text-red-800',

@@ -6,8 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\Category;
 use App\Models\Brand;
-use App\Models\Color;
-use App\Models\Texture;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -25,7 +23,7 @@ class ProductController extends Controller
 public function index(Request $request)
 {
     $query = Product::active()
-        ->with(['brand', 'category', 'images', 'variants.inventory', 'colors', 'texture']);
+        ->with(['brand', 'category', 'images', 'variants.inventory']);
 
     // Check if this is a search request
     $searchQuery = $request->get('q', '');
@@ -89,16 +87,14 @@ public function index(Request $request)
      */
     public function show(Product $product)
 {
-    // Load necessary relationships 
+    // Load necessary relationships
     $product->load([
         'brand',
         'category.mainCategory',  // Include main category
-        'texture',
         'images' => function ($query) {
             $query->orderBy('sort_order');
         },
         'ingredients',
-        'colors',
         'variants' => function ($query) {
             $query->where('is_active', true)->with('inventory');
         },
@@ -132,7 +128,7 @@ public function categoryProducts(Request $request, Category $category)
 {
     $query = Product::active()
         ->where('category_id', $category->id)
-        ->with(['brand', 'images', 'variants.inventory', 'colors', 'texture']);
+        ->with(['brand', 'images', 'variants.inventory']);
 
     // Apply other filters
     $this->applyFilters($query, $request);
@@ -314,22 +310,6 @@ public function categoryProducts(Request $request, Category $category)
         });
     }
 
-    // Color filter
-    if ($request->filled('colors')) {
-        $colors = is_array($request->colors) ? $request->colors : [$request->colors];
-        $query->whereHas('colors', function ($colorQuery) use ($colors) {
-            $colorQuery->whereIn('colors.id', $colors);
-        });
-    }
-
-    // Texture filter
-    if ($request->filled('textures')) {
-        $textures = is_array($request->textures) ? $request->textures : [$request->textures];
-        $query->whereIn('texture_id', $textures);
-    }
-
-    // REMOVE product_type_id filter since we're removing product types
-
     // Rating filter
     if ($request->filled('min_rating')) {
         $query->whereHas('reviews', function ($reviewQuery) use ($request) {
@@ -447,20 +427,6 @@ private function applySorting($query, Request $request)
                         ->count();
                     return $brand;
                 }),
-
-            'colors' => Color::whereHas('products', function ($query) {
-                    $query->active();
-                })
-                ->orderBy('name')
-                ->get(),
-
-            'textures' => Texture::whereHas('products', function ($query) {
-                    $query->active();
-                })
-                ->orderBy('name')
-                ->get(),
-
-            
 
             'priceRange' => [
                 'min' => DB::table('product_variants')

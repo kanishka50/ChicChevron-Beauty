@@ -272,7 +272,7 @@
                                 </div>
                                 <div>
                                     <p class="text-sm font-medium text-gray-700">Texture</p>
-                                    <p class="text-sm text-gray-900">{{ $product->texture->name }}</p>
+                                    <p class="text-sm text-gray-900">{{ $product->texture }}</p>
                                 </div>
                             </div>
                         @endif
@@ -672,8 +672,8 @@
             });
 
             const data = await response.json();
-            
-            if (data.success) {
+
+            if (response.ok && data.success) {
                 button.innerHTML = `
                     <span class="flex items-center justify-center gap-2">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -683,17 +683,24 @@
                     </span>`;
                 button.classList.add('from-green-600', 'to-green-700');
                 showToast(data.message, 'success');
-                
+
                 // Dispatch event to update cart counter
                 window.dispatchEvent(new Event('cart-updated'));
-                
+
                 setTimeout(() => {
                     button.innerHTML = originalContent;
                     button.classList.remove('from-green-600', 'to-green-700');
                     button.disabled = false;
                 }, 2000);
             } else {
-                throw new Error(data.message);
+                // Handle validation errors (422) and other errors
+                let errorMessage = data.message || 'Error adding to cart';
+                if (data.errors) {
+                    // Laravel validation errors
+                    const firstError = Object.values(data.errors)[0];
+                    errorMessage = Array.isArray(firstError) ? firstError[0] : firstError;
+                }
+                throw new Error(errorMessage);
             }
         } catch (error) {
             button.innerHTML = originalContent;

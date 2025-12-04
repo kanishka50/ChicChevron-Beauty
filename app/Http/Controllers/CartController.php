@@ -40,7 +40,7 @@ class CartController extends Controller
         $request->validate([
             'product_id' => 'required|exists:products,id',
             'product_variant_id' => 'nullable|exists:product_variants,id',
-            'quantity' => 'required|integer|min:1|max:10'
+            'quantity' => 'required|integer|min:1|max:100'
         ]);
 
         try {
@@ -132,7 +132,7 @@ class CartController extends Controller
     {
         $request->validate([
             'cart_item_id' => 'required|integer',
-            'quantity' => 'required|integer|min:1|max:10'
+            'quantity' => 'required|integer|min:1|max:100'
         ]);
 
         try {
