@@ -12,9 +12,9 @@
                     </span>
                 @endif
                 
-                @if($product->discount_price && $product->discount_price < $product->selling_price)
+                @if($product->has_discount && $product->starting_discount_price && $product->starting_price > 0)
                     @php
-                        $discountPercent = round((($product->selling_price - $product->discount_price) / $product->selling_price) * 100);
+                        $discountPercent = round((($product->starting_price - $product->starting_discount_price) / $product->starting_price) * 100);
                     @endphp
                     <span class="inline-flex items-center px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded">
                         -{{ $discountPercent }}%

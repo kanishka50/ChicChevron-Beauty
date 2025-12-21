@@ -25,17 +25,17 @@ class OrderService
     /**
      * Create order from cart items
      */
-    public function createFromCart($user, $cartItems, $shippingData, $promotionCode = null)
+    public function createFromCart($user, $cartItems, $shippingData)
     {
         DB::beginTransaction();
-        
+
         try {
             // Calculate order totals
-            $totals = $this->calculateOrderTotals($cartItems, $promotionCode);
-            
+            $totals = $this->calculateOrderTotals($cartItems);
+
             // Generate unique order number
             $orderNumber = Order::generateOrderNumber();
-            
+
             // Create the order (COD only - starts as processing)
             $order = Order::create([
                 'order_number' => $orderNumber,
@@ -59,7 +59,7 @@ class OrderService
 
             // Create order items and process inventory
             foreach ($cartItems as $cartItem) {
-                $this->createOrderItem($order, $cartItem, $totals['promotion_discount_per_item'][$cartItem->id] ?? 0);
+                $this->createOrderItem($order, $cartItem);
             }
 
             // Reserve stock for the order
@@ -67,11 +67,6 @@ class OrderService
 
             // Add initial status history
             $order->addStatusHistory('processing', 'Order created - Cash on Delivery');
-
-            // Handle promotion usage if applicable
-            if ($promotionCode && $totals['promotion']) {
-                $this->recordPromotionUsage($order, $totals['promotion'], $user);
-            }
 
             DB::commit();
 
@@ -88,7 +83,7 @@ class OrderService
                 'cart_items' => $cartItems->count(),
                 'error' => $e->getMessage()
             ]);
-            
+
             throw $e;
         }
     }
@@ -256,15 +251,15 @@ class OrderService
     /**
      * Create individual order item with inventory cost tracking
      */
-    protected function createOrderItem($order, $cartItem, $discountPerItem = 0)
+    protected function createOrderItem($order, $cartItem)
     {
         $product = $cartItem->product;
         $productVariant = $cartItem->productVariant;
-        
+
         if (!$productVariant) {
             throw new \Exception('Invalid order item - missing variant information.');
         }
-        
+
         $unitPrice = $productVariant->effective_price;
 
         // Get FIFO cost price from inventory
@@ -289,50 +284,29 @@ class OrderService
             'quantity' => $cartItem->quantity,
             'unit_price' => $unitPrice,
             'cost_price' => $costPrice,
-            'discount_amount' => $discountPerItem,
-            'total_price' => ($unitPrice * $cartItem->quantity) - $discountPerItem,
+            'discount_amount' => 0,
+            'total_price' => $unitPrice * $cartItem->quantity,
         ]);
     }
 
     /**
-     * Calculate order totals including promotions
+     * Calculate order totals
      */
-    public function calculateOrderTotals($cartItems, $promotionCode = null)
+    public function calculateOrderTotals($cartItems)
     {
         $subtotal = 0;
-        $itemPrices = [];
-        $promotion = null;
-        $promotionDiscountPerItem = [];
 
         // Calculate subtotal
         foreach ($cartItems as $cartItem) {
             $product = $cartItem->product;
             $productVariant = $cartItem->productVariant;
-            
+
             if (!$productVariant) {
                 throw new \Exception('Invalid cart item - missing variant information.');
             }
-            
-            $unitPrice = $productVariant->effective_price;
-            
-            $itemTotal = $unitPrice * $cartItem->quantity;
-            $subtotal += $itemTotal;
-            $itemPrices[$cartItem->id] = $itemTotal;
-        }
 
-        // Apply promotion if provided
-        $discountAmount = 0;
-        if ($promotionCode) {
-            $promotion = $this->validateAndGetPromotion($promotionCode);
-            if ($promotion) {
-                $discountAmount = ($subtotal * $promotion->discount_percentage) / 100;
-                
-                // Calculate discount per item (proportional)
-                foreach ($cartItems as $cartItem) {
-                    $itemDiscount = ($itemPrices[$cartItem->id] / $subtotal) * $discountAmount;
-                    $promotionDiscountPerItem[$cartItem->id] = $itemDiscount;
-                }
-            }
+            $unitPrice = $productVariant->effective_price;
+            $subtotal += $unitPrice * $cartItem->quantity;
         }
 
         // Calculate shipping
@@ -340,11 +314,9 @@ class OrderService
 
         return [
             'subtotal' => $subtotal,
-            'discount_amount' => $discountAmount,
+            'discount_amount' => 0,
             'shipping_amount' => $shippingAmount,
-            'total_amount' => $subtotal - $discountAmount + $shippingAmount,
-            'promotion' => $promotion,
-            'promotion_discount_per_item' => $promotionDiscountPerItem
+            'total_amount' => $subtotal + $shippingAmount,
         ];
     }
 
@@ -528,25 +500,6 @@ class OrderService
             ]);
             return 0;
         }
-    }
-
-    /**
-     * Validate and get promotion details
-     */
-    protected function validateAndGetPromotion($promotionCode)
-    {
-        // This will be implemented when promotion system is ready
-        // For now, return null
-        return null;
-    }
-
-    /**
-     * Record promotion usage
-     */
-    protected function recordPromotionUsage($order, $promotion, $user)
-    {
-        // This will be implemented when promotion system is ready
-        // For now, do nothing
     }
 
     /**

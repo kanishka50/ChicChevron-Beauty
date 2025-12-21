@@ -309,67 +309,6 @@ class CartController extends Controller
     }
 
     /**
-     * Apply promotion code
-     */
-    public function applyPromotion(Request $request)
-    {
-        $request->validate([
-            'promotion_code' => 'required|string'
-        ]);
-
-        try {
-            $result = $this->cartService->applyPromotion($request->promotion_code);
-
-            if ($result['success']) {
-                $cartSummary = $this->cartService->getCartSummary();
-                
-                return response()->json([
-                    'success' => true,
-                    'message' => $result['message'],
-                    'discount_amount' => $result['discount_amount'],
-                    'cart_summary' => $cartSummary
-                ]);
-            } else {
-                return response()->json([
-                    'success' => false,
-                    'message' => $result['message']
-                ], 400);
-            }
-
-        } catch (\Exception $e) {
-            Log::error('Error applying promotion: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'message' => 'Error applying promotion. Please try again.'
-            ], 500);
-        }
-    }
-
-    /**
-     * Remove applied promotion
-     */
-    public function removePromotion()
-    {
-        try {
-            $this->cartService->removePromotion();
-            $cartSummary = $this->cartService->getCartSummary();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Promotion code removed.',
-                'cart_summary' => $cartSummary
-            ]);
-
-        } catch (\Exception $e) {
-            Log::error('Error removing promotion: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'message' => 'Error removing promotion.'
-            ], 500);
-        }
-    }
-
-    /**
      * Quick add to cart (for single variant products or with variant ID)
      */
     public function quickAdd(Request $request)

@@ -1,6 +1,5 @@
 <?php
 
-// ===== Inventory Model =====
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
@@ -10,73 +9,72 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Inventory extends Model
 {
     protected $table = 'inventory';
-    
+
     protected $fillable = [
-        'product_id',
-        'product_variant_id', // CHANGED from variant_combination_id
-        'current_stock',
-        'reserved_stock',
+        'product_variant_id',
+        'stock_quantity',
+        'reserved_quantity',
         'low_stock_threshold',
     ];
-    
+
     protected $casts = [
-        'current_stock' => 'integer',
-        'reserved_stock' => 'integer',
+        'stock_quantity' => 'integer',
+        'reserved_quantity' => 'integer',
         'low_stock_threshold' => 'integer',
     ];
-    
+
     /**
-     * Get the product this inventory belongs to
+     * Get the product variant this inventory belongs to.
      */
-    public function product(): BelongsTo
+    public function variant(): BelongsTo
     {
-        return $this->belongsTo(Product::class);
+        return $this->belongsTo(ProductVariant::class, 'product_variant_id');
     }
-    
+
     /**
-     * Get the product variant this inventory belongs to
+     * Alias for variant() for backwards compatibility.
      */
     public function productVariant(): BelongsTo
     {
-        return $this->belongsTo(ProductVariant::class);
+        return $this->variant();
     }
-    
+
     /**
-     * Get all movements for this inventory
+     * Get all movements for this inventory (via product_variant_id).
      */
     public function movements(): HasMany
     {
-        return $this->hasMany(InventoryMovement::class);
+        return $this->hasMany(InventoryMovement::class, 'product_variant_id', 'product_variant_id');
     }
-    
+
     /**
-     * Get available stock (current - reserved)
+     * Get available stock (stock - reserved).
      */
-    public function getAvailableStockAttribute()
+    public function getAvailableStockAttribute(): int
     {
-        return $this->current_stock - $this->reserved_stock;
+        return $this->stock_quantity - $this->reserved_quantity;
     }
-    
+
     /**
-     * Check if stock is low
+     * Check if stock is low.
      */
-    public function getIsLowStockAttribute()
+    public function getIsLowStockAttribute(): bool
     {
         return $this->available_stock <= $this->low_stock_threshold && $this->available_stock > 0;
     }
-    
+
     /**
-     * Check if out of stock
+     * Check if out of stock.
      */
-    public function getIsOutOfStockAttribute()
+    public function getIsOutOfStockAttribute(): bool
     {
         return $this->available_stock <= 0;
     }
-    
+
     /**
-     * Get stock status for display
+     * Get stock status for display.
      */
-    public function getStockStatusAttribute()
+    public function getStockStatusAttribute(): string
     {
         if ($this->is_out_of_stock) {
             return 'out-of-stock';
@@ -88,105 +86,100 @@ class Inventory extends Model
             return 'good';
         }
     }
-    
+
     /**
-     * Get stock status color for display
+     * Get stock status color for display.
      */
-    public function getStockStatusColorAttribute()
+    public function getStockStatusColorAttribute(): string
     {
-        switch ($this->stock_status) {
-            case 'out-of-stock':
-                return 'red';
-            case 'critical':
-                return 'orange';
-            case 'low':
-                return 'yellow';
-            default:
-                return 'green';
-        }
+        return match ($this->stock_status) {
+            'out-of-stock' => 'red',
+            'critical' => 'orange',
+            'low' => 'yellow',
+            default => 'green',
+        };
     }
-    
+
     /**
-     * Get stock percentage for visual indicators
+     * Get stock percentage for visual indicators.
      */
-    public function getStockPercentageAttribute()
+    public function getStockPercentageAttribute(): int
     {
-        if ($this->current_stock <= 0) {
+        if ($this->stock_quantity <= 0) {
             return 0;
         }
-        
-        // Calculate based on low stock threshold as reference
-        $referenceStock = $this->low_stock_threshold * 3; // Consider "full" as 3x low stock threshold
+
+        $referenceStock = $this->low_stock_threshold * 3;
         $percentage = ($this->available_stock / $referenceStock) * 100;
-        
+
         return min(100, round($percentage));
     }
-    
+
     /**
-     * Scope for low stock items
+     * Scope for low stock items.
      */
     public function scopeLowStock($query)
     {
-        return $query->whereRaw('(current_stock - reserved_stock) <= low_stock_threshold')
-                     ->whereRaw('(current_stock - reserved_stock) > 0');
+        return $query->whereRaw('(stock_quantity - reserved_quantity) <= low_stock_threshold')
+                     ->whereRaw('(stock_quantity - reserved_quantity) > 0');
     }
-    
+
     /**
-     * Scope for out of stock items
+     * Scope for out of stock items.
      */
     public function scopeOutOfStock($query)
     {
-        return $query->whereRaw('(current_stock - reserved_stock) <= 0');
+        return $query->whereRaw('(stock_quantity - reserved_quantity) <= 0');
     }
-    
+
     /**
-     * Scope for in stock items
+     * Scope for in stock items.
      */
     public function scopeInStock($query)
     {
-        return $query->whereRaw('(current_stock - reserved_stock) > 0');
+        return $query->whereRaw('(stock_quantity - reserved_quantity) > 0');
     }
-    
+
     /**
-     * Reserve stock for an order
+     * Reserve stock for an order.
      */
-    public function reserveStock($quantity)
+    public function reserveStock(int $quantity): bool
     {
         if ($this->available_stock < $quantity) {
             return false;
         }
-        
-        $this->reserved_stock += $quantity;
+
+        $this->reserved_quantity += $quantity;
         $this->save();
-        
+
         return true;
     }
-    
+
     /**
-     * Release reserved stock
+     * Release reserved stock.
      */
-    public function releaseStock($quantity)
+    public function releaseStock(int $quantity): void
     {
-        $this->reserved_stock = max(0, $this->reserved_stock - $quantity);
+        $this->reserved_quantity = max(0, $this->reserved_quantity - $quantity);
         $this->save();
     }
-    
+
     /**
-     * Deduct stock (convert reserved to sold)
+     * Deduct stock (convert reserved to sold).
      */
-    public function deductStock($quantity)
+    public function deductStock(int $quantity): void
     {
-        $this->current_stock = max(0, $this->current_stock - $quantity);
-        $this->reserved_stock = max(0, $this->reserved_stock - $quantity);
+        $this->stock_quantity = max(0, $this->stock_quantity - $quantity);
+        $this->reserved_quantity = max(0, $this->reserved_quantity - $quantity);
         $this->save();
     }
-    
+
     /**
-     * Add stock
+     * Add stock.
      */
-    public function addStock($quantity)
+    public function addStock(int $quantity): void
     {
-        $this->current_stock += $quantity;
+        $this->stock_quantity += $quantity;
         $this->save();
     }
 }

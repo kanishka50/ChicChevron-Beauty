@@ -67,14 +67,6 @@ class Order extends Model
     }
 
     /**
-     * Get the promotion usage for this order.
-     */
-    public function promotionUsage()
-    {
-        return $this->hasOne(PromotionUsage::class);
-    }
-
-    /**
      * Get the complaints for this order.
      */
     public function complaints()

@@ -16,7 +16,13 @@
       "Bash(mysql:*)",
       "Bash(\"C:/xampp/mysql/bin/mysql.exe\" -u root -p2001kkkK@@ chicchevron_beauty -e \"DESCRIBE products;\")",
       "Bash(findstr:*)",
-      "Bash(\"C:/xampp/mysql/bin/mysql.exe\" -u root -p2001kkkK@@ chicchevron_beauty -e \"SHOW TABLES;\")"
+      "Bash(\"C:/xampp/mysql/bin/mysql.exe\" -u root -p2001kkkK@@ chicchevron_beauty -e \"SHOW TABLES;\")",
+      "Bash(composer require:*)",
+      "Bash(php check_db.php:*)",
+      "Bash(del \"h:\\ChicChevron 3\\chicchevron-beauty\\check_db.php\")",
+      "Bash(php:*)",
+      "Bash(del:*)",
+      "Bash(composer dump-autoload:*)"
     ],
     "deny": [],
     "ask": []

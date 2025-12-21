@@ -20,7 +20,7 @@ class SearchController extends Controller
     public function index(Request $request)
 {
     $query = Product::active()
-        ->with(['brand', 'category', 'images', 'variants.inventory']);
+        ->with(['brand', 'category', 'variants.inventory']);
 
     // Check if this is a search request
     $searchQuery = $request->get('q');
@@ -88,10 +88,8 @@ private function applySearch($query, $searchTerm)
           ->orWhereHas('category', function ($categoryQuery) use ($searchTerm) {
               $categoryQuery->where('name', 'LIKE', "%{$searchTerm}%");
           })
-          // Search in ingredients
-          ->orWhereHas('ingredients', function ($ingredientQuery) use ($searchTerm) {
-              $ingredientQuery->where('ingredient_name', 'LIKE', "%{$searchTerm}%");
-          })
+          // Search in ingredients (stored as TEXT column)
+          ->orWhere('ingredients', 'LIKE', "%{$searchTerm}%")
           // Search in variant SKUs
           ->orWhereHas('variants', function ($variantQuery) use ($searchTerm) {
               $variantQuery->where('sku', 'LIKE', "%{$searchTerm}%")
@@ -198,30 +196,12 @@ private function applySearch($query, $searchTerm)
                     ];
                 });
 
-            // Ingredient suggestions
-            $ingredientSuggestions = DB::table('product_ingredients')
-                ->join('products', 'product_ingredients.product_id', '=', 'products.id')
-                ->where('products.is_active', true)
-                ->where('ingredient_name', 'like', "%{$query}%")
-                ->distinct()
-                ->select('ingredient_name')
-                ->limit(3)
-                ->get()
-                ->map(function ($ingredient) {
-                    return [
-                        'type' => 'ingredient',
-                        'text' => $ingredient->ingredient_name,
-                        'subtitle' => 'Ingredient',
-                        'url' => route('search', ['q' => $ingredient->ingredient_name, 'ingredient_search' => 'include']),
-                        'image' => null,
-                    ];
-                });
+            // Ingredient suggestions removed - ingredients now stored as TEXT column
 
             return $suggestions
                 ->concat($productSuggestions)
                 ->concat($brandSuggestions)
                 ->concat($categorySuggestions)
-                ->concat($ingredientSuggestions)
                 ->take(12);
         });
 
@@ -255,7 +235,7 @@ private function applySearch($query, $searchTerm)
     private function performSearch($query, Request $request)
     {
         $productQuery = Product::where('is_active', true)
-            ->with(['brand', 'category', 'images', 'inventory', 'reviews'])
+            ->with(['brand', 'category', 'reviews'])
             ->withAvg('reviews', 'rating')
             ->withCount('reviews');
 
@@ -285,9 +265,7 @@ private function applySearch($query, $searchTerm)
               ->orWhereHas('category', function ($categoryQuery) use ($query) {
                   $categoryQuery->where('name', 'like', "%{$query}%");
               })
-              ->orWhereHas('ingredients', function ($ingredientQuery) use ($query) {
-                  $ingredientQuery->where('ingredient_name', 'like', "%{$query}%");
-              });
+              ->orWhere('ingredients', 'like', "%{$query}%");
         });
 
         // Apply filters and sorting
@@ -554,7 +532,7 @@ private function applySearch($query, $searchTerm)
         $searchType = $request->get('search_type', 'include');
 
         $query = Product::where('is_active', true)
-            ->with(['brand', 'category', 'images', 'inventory', 'reviews', 'variants'])
+            ->with(['brand', 'category', 'reviews', 'variants'])
             ->withAvg('reviews', 'rating');
 
         // Add variant price subqueries
@@ -573,14 +551,16 @@ private function applySearch($query, $searchTerm)
         ]);
 
         if ($searchType === 'exclude') {
-            // Find products WITHOUT these ingredients
-            $query->whereDoesntHave('ingredients', function ($ingredientQuery) use ($ingredients) {
-                $ingredientQuery->whereIn('ingredient_name', $ingredients);
-            });
+            // Find products WITHOUT these ingredients (search in TEXT column)
+            foreach ($ingredients as $ingredient) {
+                $query->where('ingredients', 'NOT LIKE', "%{$ingredient}%");
+            }
         } else {
-            // Find products WITH these ingredients
-            $query->whereHas('ingredients', function ($ingredientQuery) use ($ingredients) {
-                $ingredientQuery->whereIn('ingredient_name', $ingredients);
+            // Find products WITH these ingredients (search in TEXT column)
+            $query->where(function ($q) use ($ingredients) {
+                foreach ($ingredients as $ingredient) {
+                    $q->orWhere('ingredients', 'LIKE', "%{$ingredient}%");
+                }
             });
         }
 

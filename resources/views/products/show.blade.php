@@ -41,27 +41,29 @@
                 </div>
 
                 <!-- Thumbnail Images with Better Styling -->
-                @if($product->images->isNotEmpty() || $product->main_image)
+                @if(($product->gallery_images && count($product->gallery_images) > 0) || $product->main_image)
                     <div class="flex gap-2 md:gap-3 overflow-x-auto pb-2 scrollbar-hide">
                         <!-- Main image thumbnail -->
                         @if($product->main_image)
-                            <button class="flex-shrink-0 w-20 h-20 md:w-24 md:h-24 bg-white rounded-xl overflow-hidden border-2 border-primary-500 shadow-md transition-all duration-200 hover:shadow-lg" 
+                            <button class="flex-shrink-0 w-20 h-20 md:w-24 md:h-24 bg-white rounded-xl overflow-hidden border-2 border-primary-500 shadow-md transition-all duration-200 hover:shadow-lg"
                                     onclick="changeMainImage('{{ asset('storage/' . $product->main_image) }}', this)">
-                                <img src="{{ asset('storage/' . $product->main_image) }}" 
-                                     alt="{{ $product->name }}" 
+                                <img src="{{ asset('storage/' . $product->main_image) }}"
+                                     alt="{{ $product->name }}"
                                      class="w-full h-full object-cover">
                             </button>
                         @endif
 
-                        <!-- Additional images -->
-                        @foreach($product->images as $image)
-                            <button class="flex-shrink-0 w-20 h-20 md:w-24 md:h-24 bg-white rounded-xl overflow-hidden border-2 border-transparent hover:border-gray-300 shadow-sm transition-all duration-200 hover:shadow-md" 
-                                    onclick="changeMainImage('{{ asset('storage/' . $image->image_path) }}', this)">
-                                <img src="{{ asset('storage/' . $image->image_path) }}" 
-                                     alt="{{ $product->name }}" 
-                                     class="w-full h-full object-cover">
-                            </button>
-                        @endforeach
+                        <!-- Additional images from gallery_images JSON column -->
+                        @if($product->gallery_images)
+                            @foreach($product->gallery_images as $imagePath)
+                                <button class="flex-shrink-0 w-20 h-20 md:w-24 md:h-24 bg-white rounded-xl overflow-hidden border-2 border-transparent hover:border-gray-300 shadow-sm transition-all duration-200 hover:shadow-md"
+                                        onclick="changeMainImage('{{ asset('storage/' . $imagePath) }}', this)">
+                                    <img src="{{ asset('storage/' . $imagePath) }}"
+                                         alt="{{ $product->name }}"
+                                         class="w-full h-full object-cover">
+                                </button>
+                            @endforeach
+                        @endif
                     </div>
                 @endif
             </div>
@@ -135,47 +137,72 @@
                 </div>
 
                 <!-- Modern Variant Selection -->
-                <!-- Modern Variant Selection -->
-@if($product->has_variants && $product->variants->isNotEmpty())
-    <div class="space-y-3" id="variant-selection">
-        <label class="block text-sm font-medium text-gray-900">Choose Your Option</label>
-        <div class="space-y-2">
-            @foreach($product->variants as $variant)
-                <div class="variant-option relative bg-white border border-gray-200 rounded-lg hover:border-gray-300 focus-within:border-primary-500 focus-within:ring-1 focus-within:ring-primary-500 transition-all cursor-pointer"
-                     data-variant-id="{{ $variant->id }}"
-                     data-price="{{ $variant->price }}"
-                     data-stock="{{ $variant->available_stock }}"
-                     data-sku="{{ $variant->sku }}"
-                     onclick="selectProductVariant(this)">
-                    
-                    <div class="flex items-center p-4">
-                        <!-- Radio Button -->
-                        <div class="flex-shrink-0">
-                            <div class="radio-button w-4 h-4 border-2 border-gray-300 rounded-full relative transition-colors">
-                                <div class="radio-dot w-2 h-2 bg-primary-600 rounded-full absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 opacity-0 scale-0 transition-all"></div>
-                            </div>
+                @if($product->variants->count() > 0)
+                    <div class="space-y-3" id="variant-selection">
+                        <label class="block text-sm font-medium text-gray-900">
+                            @if($product->variants->count() > 1)
+                                Choose Your Option <span class="text-red-500">*</span>
+                            @else
+                                Selected Option
+                            @endif
+                        </label>
+
+                        <!-- Validation message container -->
+                        <div id="variant-error" class="hidden text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-3 flex items-center gap-2">
+                            <svg class="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                            </svg>
+                            <span>Please select a product option before adding to cart</span>
                         </div>
-                        
-                        <!-- Content -->
-                        <div class="ml-3 flex-1 flex items-center justify-between">
-                            <div>
-                                <span class="text-sm font-medium text-gray-900">{{ $variant->display_name }}</span>
-                                @if($variant->available_stock < 5 && $variant->available_stock > 0)
-                                    <p class="text-xs text-orange-600 mt-0.5">Only {{ $variant->available_stock }} left</p>
-                                @elseif($variant->available_stock == 0)
-                                    <p class="text-xs text-red-600 mt-0.5">Out of stock</p>
-                                @endif
-                            </div>
-                            <div class="text-right">
-                                <span class="text-sm font-semibold text-gray-900">Rs. {{ number_format($variant->price, 2) }}</span>
-                            </div>
+
+                        <div class="space-y-2">
+                            @foreach($product->variants as $variant)
+                                @php
+                                    $variantStock = $variant->inventory ? ($variant->inventory->stock_quantity - $variant->inventory->reserved_quantity) : 0;
+                                    $isOutOfStock = $variantStock <= 0;
+                                @endphp
+                                <div class="variant-option relative bg-white border-2 border-gray-200 rounded-xl hover:border-primary-300 focus-within:border-primary-500 focus-within:ring-2 focus-within:ring-primary-200 transition-all {{ $isOutOfStock ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer' }}"
+                                     data-variant-id="{{ $variant->id }}"
+                                     data-price="{{ $variant->effective_price }}"
+                                     data-original-price="{{ $variant->price }}"
+                                     data-discount-price="{{ $variant->discount_price }}"
+                                     data-stock="{{ $variantStock }}"
+                                     data-sku="{{ $variant->sku }}"
+                                     onclick="{{ $isOutOfStock ? '' : 'selectProductVariant(this)' }}">
+
+                                    <div class="flex items-center p-4">
+                                        <!-- Radio Button -->
+                                        <div class="flex-shrink-0">
+                                            <div class="radio-button w-5 h-5 border-2 border-gray-300 rounded-full relative transition-all">
+                                                <div class="radio-dot w-2.5 h-2.5 bg-primary-600 rounded-full absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 opacity-0 scale-0 transition-all"></div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Content -->
+                                        <div class="ml-4 flex-1 flex items-center justify-between">
+                                            <div>
+                                                <span class="text-sm font-medium text-gray-900">{{ $variant->display_name }}</span>
+                                                @if($isOutOfStock)
+                                                    <p class="text-xs text-red-600 mt-0.5 font-medium">Out of stock</p>
+                                                @elseif($variantStock < 5)
+                                                    <p class="text-xs text-orange-600 mt-0.5">Only {{ $variantStock }} left</p>
+                                                @endif
+                                            </div>
+                                            <div class="text-right">
+                                                @if($variant->discount_price && $variant->discount_price < $variant->price)
+                                                    <span class="text-sm font-bold text-primary-600">Rs. {{ number_format($variant->discount_price, 2) }}</span>
+                                                    <span class="text-xs text-gray-400 line-through ml-1">Rs. {{ number_format($variant->price, 2) }}</span>
+                                                @else
+                                                    <span class="text-sm font-semibold text-gray-900">Rs. {{ number_format($variant->price, 2) }}</span>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
                         </div>
                     </div>
-                </div>
-            @endforeach
-        </div>
-    </div>
-@endif
+                @endif
 
                 <!-- Enhanced Quantity and Add to Cart -->
                 <div class="space-y-4">
@@ -329,7 +356,7 @@
                     <button class="tab-button active py-3 px-1 border-b-2 border-primary-600 font-semibold text-sm md:text-base text-primary-600 whitespace-nowrap transition-colors" onclick="showTab('description')">
                         Description
                     </button>
-                    @if($product->ingredients->isNotEmpty())
+                    @if($product->ingredients)
                         <button class="tab-button py-3 px-1 border-b-2 border-transparent font-medium text-sm md:text-base text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap transition-colors" onclick="showTab('ingredients')">
                             Ingredients
                         </button>
@@ -359,16 +386,18 @@
                 </div>
 
                 <!-- Ingredients Tab -->
-                @if($product->ingredients->isNotEmpty())
+                @if($product->ingredients)
                     <div id="ingredients-tab" class="tab-content hidden">
                         <div class="bg-white rounded-2xl p-6 md:p-8 shadow-sm">
                             <h3 class="text-lg font-semibold text-gray-900 mb-6">Full Ingredient List</h3>
                             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                                @foreach($product->ingredients as $ingredient)
-                                    <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                                        <div class="w-2 h-2 bg-primary-500 rounded-full flex-shrink-0"></div>
-                                        <span class="text-gray-700">{{ $ingredient->ingredient_name }}</span>
-                                    </div>
+                                @foreach(explode(',', $product->ingredients) as $ingredient)
+                                    @if(trim($ingredient))
+                                        <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                                            <div class="w-2 h-2 bg-primary-500 rounded-full flex-shrink-0"></div>
+                                            <span class="text-gray-700">{{ trim($ingredient) }}</span>
+                                        </div>
+                                    @endif
                                 @endforeach
                             </div>
                         </div>
@@ -432,7 +461,7 @@
                                 </div>
                             </div>
 
-                            @if($product->has_variants)
+                            @if($product->variants->count() > 1)
                                 <div class="bg-blue-50 border border-blue-200 rounded-xl p-4">
                                     <p class="text-sm text-blue-800 flex items-start gap-2">
                                         <svg class="w-5 h-5 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
@@ -540,11 +569,13 @@
 @push('scripts')
 <script>
     let selectedVariant = null;
+    const hasMultipleVariants = {{ $product->variants->count() > 1 ? 'true' : 'false' }};
+    const variantCount = {{ $product->variants->count() }};
 
     function changeMainImage(src, thumbnail) {
         const mainImage = document.getElementById('main-image');
         mainImage.src = src;
-        
+
         // Update thumbnail borders
         document.querySelectorAll('button[onclick^="changeMainImage"]').forEach(btn => {
             btn.classList.remove('border-primary-500');
@@ -573,46 +604,85 @@
         let value = parseInt(input.value) + delta;
         const max = parseInt(input.max);
         const min = parseInt(input.min);
-        
+
         if (value < min) value = min;
         if (value > max) value = max;
-        
+
         input.value = value;
     }
 
-    function selectProductVariant(button) {
+    function hideVariantError() {
+        const errorEl = document.getElementById('variant-error');
+        if (errorEl) {
+            errorEl.classList.add('hidden');
+        }
+    }
+
+    function showVariantError() {
+        const errorEl = document.getElementById('variant-error');
+        if (errorEl) {
+            errorEl.classList.remove('hidden');
+            // Scroll to variant selection
+            document.getElementById('variant-selection')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }
+
+    function selectProductVariant(element) {
+        // Hide any previous error
+        hideVariantError();
+
         // Remove selected class from all variants
-    document.querySelectorAll('.variant-option').forEach(option => {
-        option.classList.remove('selected');
-    });
-    
-    // Add selected class to clicked variant
-    button.classList.add('selected');
-    
-    // Your existing logic remains the same...
-    selectedVariant = {
-        id: button.dataset.variantId,
-        price: button.dataset.price,
-        stock: parseInt(button.dataset.stock),
-        sku: button.dataset.sku
-    };
+        document.querySelectorAll('.variant-option').forEach(option => {
+            option.classList.remove('selected');
+        });
+
+        // Add selected class to clicked variant
+        element.classList.add('selected');
+
+        // Store selected variant data
+        selectedVariant = {
+            id: element.dataset.variantId,
+            price: parseFloat(element.dataset.price),
+            originalPrice: parseFloat(element.dataset.originalPrice),
+            discountPrice: element.dataset.discountPrice ? parseFloat(element.dataset.discountPrice) : null,
+            stock: parseInt(element.dataset.stock),
+            sku: element.dataset.sku
+        };
 
         // Update price display with animation
         const priceDisplay = document.getElementById('price-display');
         priceDisplay.classList.add('opacity-0');
         setTimeout(() => {
-            priceDisplay.innerHTML = 
-                `<span class="text-3xl md:text-4xl font-bold text-gray-900">Rs. ${parseFloat(selectedVariant.price).toLocaleString('en-US', {minimumFractionDigits: 2})}</span>`;
+            let priceHtml = '';
+            if (selectedVariant.discountPrice && selectedVariant.discountPrice < selectedVariant.originalPrice) {
+                priceHtml = `
+                    <span class="text-2xl md:text-3xl lg:text-4xl font-bold text-primary-600">Rs. ${selectedVariant.discountPrice.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+                    <span class="text-lg text-gray-400 line-through ml-2">Rs. ${selectedVariant.originalPrice.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+                `;
+            } else {
+                priceHtml = `<span class="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900">Rs. ${selectedVariant.price.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>`;
+            }
+            priceDisplay.innerHTML = priceHtml;
             priceDisplay.classList.remove('opacity-0');
         }, 150);
 
         // Update stock status
         const stockStatusEl = document.getElementById('stock-status');
         if (selectedVariant.stock > 0) {
+            let stockClass = 'text-green-700';
+            let dotClass = 'bg-green-500 animate-pulse';
+            let stockText = 'In Stock';
+
+            if (selectedVariant.stock < 5) {
+                stockClass = 'text-orange-600';
+                dotClass = 'bg-orange-500';
+                stockText = 'Low Stock';
+            }
+
             stockStatusEl.innerHTML = `
                 <div class="flex items-center gap-2">
-                    <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                    <p class="text-green-700 font-medium">In Stock</p>
+                    <div class="w-2 h-2 ${dotClass} rounded-full"></div>
+                    <p class="${stockClass} font-medium">${stockText}</p>
                     <span class="text-gray-600">(${selectedVariant.stock} available)</span>
                 </div>`;
             document.getElementById('add-to-cart-btn').disabled = false;
@@ -628,11 +698,11 @@
         // Update SKU
         document.getElementById('product-sku').textContent = selectedVariant.sku;
 
-        // Update max quantity
+        // Update max quantity based on stock
         const quantityInput = document.getElementById('quantity');
-        quantityInput.max = selectedVariant.stock || 1;
+        quantityInput.max = Math.min(selectedVariant.stock, 10);
         if (parseInt(quantityInput.value) > selectedVariant.stock) {
-            quantityInput.value = selectedVariant.stock || 1;
+            quantityInput.value = Math.min(selectedVariant.stock, 1);
         }
     }
 
@@ -640,8 +710,22 @@
         const productId = {{ $product->id }};
         const quantity = parseInt(document.getElementById('quantity').value);
 
-        if ({{ $product->has_variants ? 'true' : 'false' }} && !selectedVariant) {
-            showToast('Please select a variant', 'error');
+        // Validate variant selection - always required when variants exist
+        if (variantCount > 0 && !selectedVariant) {
+            showVariantError();
+            showToast('Please select a product option', 'error');
+            return;
+        }
+
+        // Check if selected variant is out of stock
+        if (selectedVariant && selectedVariant.stock <= 0) {
+            showToast('Selected option is out of stock', 'error');
+            return;
+        }
+
+        // Check quantity against stock
+        if (selectedVariant && quantity > selectedVariant.stock) {
+            showToast(`Only ${selectedVariant.stock} items available`, 'error');
             return;
         }
 
@@ -681,8 +765,9 @@
                         </svg>
                         Added to Cart!
                     </span>`;
+                button.classList.remove('from-primary-600', 'to-primary-700');
                 button.classList.add('from-green-600', 'to-green-700');
-                showToast(data.message, 'success');
+                showToast(data.message || 'Added to cart successfully!', 'success');
 
                 // Dispatch event to update cart counter
                 window.dispatchEvent(new Event('cart-updated'));
@@ -690,6 +775,7 @@
                 setTimeout(() => {
                     button.innerHTML = originalContent;
                     button.classList.remove('from-green-600', 'to-green-700');
+                    button.classList.add('from-primary-600', 'to-primary-700');
                     button.disabled = false;
                 }, 2000);
             } else {
@@ -715,19 +801,19 @@
         document.querySelectorAll('.tab-content').forEach(tab => {
             tab.classList.add('hidden');
         });
-        
+
         // Remove active class from all tab buttons
         document.querySelectorAll('.tab-button').forEach(button => {
             button.classList.remove('active', 'border-primary-600', 'text-primary-600', 'font-semibold');
             button.classList.add('border-transparent', 'text-gray-500', 'font-medium');
         });
-        
+
         // Show selected tab content
         const selectedTab = document.getElementById(tabName + '-tab');
         if (selectedTab) {
             selectedTab.classList.remove('hidden');
         }
-        
+
         // Add active class to clicked button
         event.target.classList.remove('border-transparent', 'text-gray-500', 'font-medium');
         event.target.classList.add('active', 'border-primary-600', 'text-primary-600', 'font-semibold');
@@ -735,10 +821,13 @@
 
     // Initialize on page load
     document.addEventListener('DOMContentLoaded', function() {
-        // Auto-select first variant
-        const firstVariant = document.querySelector('.variant-option');
-        if (firstVariant) {
-            firstVariant.click();
+        // Auto-select first available (in-stock) variant for single variant products
+        // For multiple variants, user must choose
+        if (variantCount === 1) {
+            const firstVariant = document.querySelector('.variant-option:not([data-stock="0"])');
+            if (firstVariant) {
+                selectProductVariant(firstVariant);
+            }
         }
 
         // Keyboard navigation for image modal
@@ -778,26 +867,59 @@
 
 
 
+/* Variant Option Styles */
+.variant-option {
+    transition: all 0.2s ease-in-out;
+}
+
+.variant-option:not(.opacity-60):hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
 .variant-option.selected {
-    border-color: #e11d48;
-    background-color: #fef7f7;
+    border-color: #e11d48 !important;
+    background: linear-gradient(to right, #fef2f2, #fff1f2);
+    box-shadow: 0 0 0 3px rgba(225, 29, 72, 0.1);
 }
 
 .variant-option.selected .radio-button {
     border-color: #e11d48;
+    background-color: #fff;
 }
 
 .variant-option.selected .radio-dot {
     opacity: 1;
     transform: translate(-50%, -50%) scale(1);
+    background-color: #e11d48;
 }
 
-.variant-option[data-stock="0"] {
-    opacity: 0.6;
-    cursor: not-allowed;
+.variant-option .radio-button {
+    transition: all 0.15s ease-in-out;
 }
 
-.variant-option[data-stock="0"]:hover {
-    border-color: #d1d5db;
+.variant-option .radio-dot {
+    transition: all 0.15s ease-in-out;
+}
+
+/* Out of stock variant styling */
+.variant-option.opacity-60 {
+    background-color: #f9fafb;
+}
+
+.variant-option.opacity-60:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+/* Pulse animation for validation error */
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+#variant-error:not(.hidden) {
+    animation: shake 0.4s ease-in-out;
 }
 </style>

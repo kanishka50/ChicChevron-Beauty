@@ -12,20 +12,15 @@ class ProductVariant extends Model
 
     protected $fillable = [
         'product_id',
-        'size',
-        'color', 
-        'scent',
         'sku',
         'name',
         'price',
-        'cost_price',
         'discount_price',
         'is_active',
     ];
 
     protected $casts = [
         'price' => 'decimal:2',
-        'cost_price' => 'decimal:2',
         'discount_price' => 'decimal:2',
         'is_active' => 'boolean',
     ];
@@ -51,6 +46,32 @@ class ProductVariant extends Model
         return $this->hasMany(OrderItem::class);
     }
 
+    /**
+     * Get all attribute values for this variant.
+     */
+    public function attributeValues()
+    {
+        return $this->hasMany(VariantAttributeValue::class);
+    }
+
+    /**
+     * Get all attribute options for this variant (many-to-many through pivot).
+     */
+    public function attributeOptions()
+    {
+        return $this->belongsToMany(AttributeOption::class, 'variant_attribute_values');
+    }
+
+    /**
+     * Get a specific attribute option value by attribute name.
+     */
+    public function getOptionValue(string $attributeName): ?string
+    {
+        return $this->attributeOptions()
+            ->whereHas('productAttribute', fn($q) => $q->where('attribute_name', $attributeName))
+            ->first()?->value;
+    }
+
     // Accessors
     public function getEffectivePriceAttribute()
     {
@@ -64,15 +85,8 @@ class ProductVariant extends Model
     {
         $inventory = $this->inventory;
         if (!$inventory) return 0;
-        
-        return max(0, $inventory->current_stock - $inventory->reserved_stock);
-    }
 
-    public function getProfitMarginAttribute()
-    {
-        if ($this->cost_price <= 0) return 0;
-        
-        return round((($this->price - $this->cost_price) / $this->cost_price) * 100, 2);
+        return max(0, $inventory->stock_quantity - $inventory->reserved_quantity);
     }
 
     // Scopes
@@ -90,14 +104,14 @@ public function getDisplayNameAttribute()
     if ($this->name) {
         return $this->name;
     }
-    
-    $parts = array_filter([
-        $this->size,
-        $this->color,
-        $this->scent
-    ]);
-    
-    return !empty($parts) ? implode(' - ', $parts) : 'Standard';
+
+    // Build from attribute options
+    $options = $this->attributeOptions()->with('productAttribute')->get();
+    if ($options->isEmpty()) {
+        return 'Standard';
+    }
+
+    return $options->pluck('value')->implode(' - ');
 }
 
 /**
@@ -150,7 +164,7 @@ public function getInStockAttribute()
 public function scopeInStock($query)
 {
     return $query->whereHas('inventory', function ($q) {
-        $q->whereRaw('(current_stock - reserved_stock) > 0');
+        $q->whereRaw('(stock_quantity - reserved_quantity) > 0');
     });
 }
 
@@ -162,7 +176,8 @@ public function scopeInStock($query)
  */
 public function getColorHexCodeAttribute()
 {
-    if (!$this->color) {
+    $colorValue = $this->getAttributeValue('color');
+    if (!$colorValue) {
         return null;
     }
 
@@ -199,9 +214,9 @@ public function getColorHexCodeAttribute()
         'transparent' => '#E5E7EB',
     ];
 
-    $colorLower = strtolower(trim($this->color));
+    $colorLower = strtolower(trim($colorValue));
 
-    return $colorMap[$colorLower] ?? '#9CA3AF'; // Default gray if color not found
+    return $colorMap[$colorLower] ?? '#9CA3AF';
 }
 
 /**
@@ -211,19 +226,12 @@ public function getColorHexCodeAttribute()
  */
 public function getFormattedAttributesAttribute()
 {
-    $attributes = [];
+    $options = $this->attributeOptions()->with('productAttribute')->get();
 
-    if ($this->size) {
-        $attributes['Size'] = $this->size;
-    }
-    if ($this->color) {
-        $attributes['Color'] = $this->color;
-    }
-    if ($this->scent) {
-        $attributes['Scent'] = $this->scent;
-    }
-
-    return $attributes;
+    return $options->mapWithKeys(function ($option) {
+        $attrName = $option->productAttribute?->attribute_name ?? 'Unknown';
+        return [ucfirst($attrName) => $option->value];
+    })->toArray();
 }
 
 /**

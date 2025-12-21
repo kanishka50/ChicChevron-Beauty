@@ -17,7 +17,7 @@ class WishlistController extends Controller
     public function index()
     {
         $wishlistItems = Wishlist::where('user_id', Auth::id())
-            ->with(['product.brand', 'product.images'])
+            ->with(['product.brand'])
             ->orderBy('created_at', 'desc')
             ->get();
 

@@ -328,7 +328,7 @@
                     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
                         @foreach(session('recently_viewed_products') as $productId)
                             @php
-                                $recentProduct = \App\Models\Product::with(['brand', 'images', 'reviews'])->find($productId);
+                                $recentProduct = \App\Models\Product::with(['brand', 'variants.inventory', 'reviews'])->find($productId);
                             @endphp
                             @if($recentProduct)
                                 @include('components.shop.product-card', ['product' => $recentProduct])

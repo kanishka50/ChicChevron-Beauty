@@ -162,10 +162,6 @@ Route::prefix('cart')->group(function () {
     Route::get('/count', [CartController::class, 'getCartCount'])->name('cart.count');
     Route::get('/summary', [CartController::class, 'getCartSummary'])->name('cart.summary');
     Route::post('/quick-add', [CartController::class, 'quickAdd'])->name('cart.quick-add');
-    
-    // Promotion routes
-    Route::post('/apply-promotion', [CartController::class, 'applyPromotion'])->name('cart.apply-promotion');
-    Route::post('/remove-promotion', [CartController::class, 'removePromotion'])->name('cart.remove-promotion');
 });
 
 // Checkout routes (COD only)

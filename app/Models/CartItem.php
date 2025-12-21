@@ -121,15 +121,14 @@ class CartItem extends Model
             return false;
         }
 
-        $inventory = Inventory::where('product_id', $this->product_id)
-                             ->where('product_variant_id', $this->product_variant_id)
-                             ->first();
+        // Inventory table only has product_variant_id, not product_id
+        $inventory = Inventory::where('product_variant_id', $this->product_variant_id)->first();
 
         if (!$inventory) {
             return false;
         }
 
-        $availableStock = $inventory->current_stock - $inventory->reserved_stock;
+        $availableStock = $inventory->stock_quantity - $inventory->reserved_quantity;
         return $availableStock >= $this->quantity;
     }
 
@@ -138,15 +137,14 @@ class CartItem extends Model
      */
     public function getAvailableStockAttribute()
     {
-        $inventory = Inventory::where('product_id', $this->product_id)
-                             ->where('product_variant_id', $this->product_variant_id)
-                             ->first();
+        // Inventory table only has product_variant_id, not product_id
+        $inventory = Inventory::where('product_variant_id', $this->product_variant_id)->first();
 
         if (!$inventory) {
             return 0;
         }
 
-        return max(0, $inventory->current_stock - $inventory->reserved_stock);
+        return max(0, $inventory->stock_quantity - $inventory->reserved_quantity);
     }
 
     /**

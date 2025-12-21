@@ -4,13 +4,15 @@ namespace App\Models;
 
 use App\Notifications\ResetPassword;
 use App\Notifications\VerifyEmail;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Notifications\Notification;
 
-class User extends Authenticatable implements MustVerifyEmail
+class User extends Authenticatable implements MustVerifyEmail, FilamentUser
 {
     use HasFactory, Notifiable;
 
@@ -125,34 +127,8 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Get the user's promotion usage.
+     * Get the user's wishlist items
      */
-    public function promotionUsage()
-    {
-        return $this->hasMany(PromotionUsage::class);
-    }
-
-    /**
-     * Check if user has used a specific promotion.
-     */
-    public function hasUsedPromotion($promotionId)
-    {
-        return $this->promotionUsage()->where('promotion_id', $promotionId)->exists();
-    }
-
-    /**
-     * Get count of how many times user used a promotion.
-     */
-    public function getPromotionUsageCount($promotionId)
-    {
-        return $this->promotionUsage()->where('promotion_id', $promotionId)->count();
-    }
-
-
-
-    /**
- * Get the user's wishlist items
- */
 public function wishlists()
 {
     return $this->hasMany(Wishlist::class);
@@ -164,5 +140,15 @@ public function wishlists()
 public function wishlistProducts()
 {
     return $this->belongsToMany(Product::class, 'wishlists');
+}
+
+/**
+ * Determine if the user can access the Filament admin panel.
+ */
+public function canAccessPanel(Panel $panel): bool
+{
+    // For now, allow all verified users to access admin
+    // In production, you might want to add role checking
+    return $this->hasVerifiedEmail();
 }
 }

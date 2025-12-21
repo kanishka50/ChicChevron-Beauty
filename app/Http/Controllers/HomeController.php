@@ -21,7 +21,7 @@ class HomeController extends Controller
             
             // Get featured products without withAvg
             $featuredProducts = Product::active()
-                ->with(['brand', 'category', 'images', 'variants.inventory'])
+                ->with(['brand', 'category', 'variants.inventory'])
                 ->featured()
                 ->inStock()
                 ->limit(8)
@@ -36,7 +36,7 @@ class HomeController extends Controller
             
             // Get new arrivals without withAvg
             $newArrivals = Product::active()
-                ->with(['brand', 'category', 'images', 'variants.inventory'])
+                ->with(['brand', 'category', 'variants.inventory'])
                 ->latest('created_at')
                 ->inStock()
                 ->limit(8)
@@ -51,7 +51,7 @@ class HomeController extends Controller
             
             // Get best sellers without withAvg and withCount
             $bestSellers = Product::active()
-                ->with(['brand', 'category', 'images', 'variants.inventory'])
+                ->with(['brand', 'category', 'variants.inventory'])
                 ->inStock()
                 ->limit(8)
                 ->get();

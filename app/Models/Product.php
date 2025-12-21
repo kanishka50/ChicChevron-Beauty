@@ -17,16 +17,15 @@ class Product extends Model
         'name',
         'slug',
         'description',
-        'sku',
         'brand_id',
         'category_id',
         'texture',
         'main_image',
+        'gallery_images',
         'how_to_use',
         'suitable_for',
-        'fragrance',
+        'ingredients',
         'is_active',
-        'has_variants',
         'views_count',
         'average_rating',
         'reviews_count',
@@ -34,10 +33,10 @@ class Product extends Model
 
     protected $casts = [
         'is_active' => 'boolean',
-        'has_variants' => 'boolean',
         'views_count' => 'integer',
         'average_rating' => 'decimal:2',
         'reviews_count' => 'integer',
+        'gallery_images' => 'array',
     ];
     
     /**
@@ -68,22 +67,12 @@ class Product extends Model
         return $this->belongsTo(Category::class);
     }
 
-
-
     /**
-     * Get the product images.
+     * Get the product attributes (size, color, scent, etc.).
      */
-    public function images()
+    public function attributes()
     {
-        return $this->hasMany(ProductImage::class)->orderBy('sort_order');
-    }
-
-    /**
-     * Get the product ingredients.
-     */
-    public function ingredients()
-    {
-        return $this->hasMany(ProductIngredient::class);
+        return $this->hasMany(ProductAttribute::class)->orderBy('display_order');
     }
 
     /**
@@ -127,19 +116,18 @@ class Product extends Model
     }
 
     /**
-     * Get the promotions.
-     */
-    public function promotions()
-    {
-        return $this->belongsToMany(Promotion::class, 'promotion_products');
-    }
-
-    /**
-     * Get all inventory records (for all variants).
+     * Get all inventory records (through variants).
      */
     public function allInventory()
     {
-        return $this->hasMany(Inventory::class);
+        return $this->hasManyThrough(
+            Inventory::class,
+            ProductVariant::class,
+            'product_id',           // Foreign key on ProductVariant
+            'product_variant_id',   // Foreign key on Inventory
+            'id',                   // Local key on Product
+            'id'                    // Local key on ProductVariant
+        );
     }
 
     /**
@@ -195,7 +183,7 @@ class Product extends Model
     public function scopeInStock($query)
     {
         return $query->whereHas('variants.inventory', function ($inventoryQuery) {
-            $inventoryQuery->whereRaw('(current_stock - reserved_stock) > 0');
+            $inventoryQuery->whereRaw('(stock_quantity - reserved_quantity) > 0');
         });
     }
 
@@ -205,7 +193,7 @@ class Product extends Model
     public function scopeOutOfStock($query)
     {
         return $query->whereDoesntHave('variants.inventory', function ($inventoryQuery) {
-            $inventoryQuery->whereRaw('(current_stock - reserved_stock) > 0');
+            $inventoryQuery->whereRaw('(stock_quantity - reserved_quantity) > 0');
         });
     }
 
@@ -217,15 +205,12 @@ class Product extends Model
         return $query->where(function ($q) use ($keyword) {
             $q->where('name', 'like', "%{$keyword}%")
               ->orWhere('description', 'like', "%{$keyword}%")
-              ->orWhere('sku', 'like', "%{$keyword}%")
+              ->orWhere('ingredients', 'like', "%{$keyword}%")
               ->orWhereHas('brand', function ($brandQuery) use ($keyword) {
                   $brandQuery->where('name', 'like', "%{$keyword}%");
               })
               ->orWhereHas('category', function ($categoryQuery) use ($keyword) {
                   $categoryQuery->where('name', 'like', "%{$keyword}%");
-              })
-              ->orWhereHas('ingredients', function ($ingredientQuery) use ($keyword) {
-                  $ingredientQuery->where('ingredient_name', 'like', "%{$keyword}%");
               });
         });
     }
@@ -516,32 +501,6 @@ public function getStockLevelPercentageAttribute()
     // =====================================================
 
     /**
-     * Check if product has active promotions.
-     */
-    public function hasActivePromotions()
-    {
-        return $this->promotions()
-            ->where('is_active', true)
-            ->where('start_date', '<=', now())
-            ->where('end_date', '>=', now())
-            ->exists();
-    }
-
-    /**
-     * Get active promotion discount.
-     */
-    public function getActivePromotionDiscount()
-    {
-        $promotion = $this->promotions()
-            ->where('is_active', true)
-            ->where('start_date', '<=', now())
-            ->where('end_date', '>=', now())
-            ->first();
-
-        return $promotion ? $promotion->discount_percentage : 0;
-    }
-
-    /**
      * Check if product can be reviewed by user.
      */
     public function canBeReviewedBy($user)
@@ -583,51 +542,63 @@ public function getStockLevelPercentageAttribute()
         return $this->activeVariants()
             ->with('inventory')
             ->whereHas('inventory', function ($query) {
-                $query->whereRaw('(current_stock - reserved_stock) > 0');
+                $query->whereRaw('(stock_quantity - reserved_quantity) > 0');
             })
             ->get();
     }
 
     /**
      * Get variant options grouped by attribute.
+     * Returns structured data for frontend display.
      */
     public function getVariantOptions()
     {
-        $variants = $this->activeVariants()->get();
-        
-        return [
-            'sizes' => $variants->pluck('size')->filter()->unique()->values(),
-            'colors' => $variants->pluck('color')->filter()->unique()->values(),
-            'scents' => $variants->pluck('scent')->filter()->unique()->values(),
-        ];
+        $attributes = $this->attributes()->with('options')->get();
+
+        $result = [];
+        foreach ($attributes as $attribute) {
+            $result[$attribute->attribute_name] = $attribute->options->pluck('value')->values();
+        }
+
+        return $result;
     }
 
     /**
-     * Find variant by attributes.
+     * Get variant options with full data for frontend.
      */
-    public function findVariantByAttributes($size = null, $color = null, $scent = null)
+    public function getVariantOptionsForFrontend()
     {
-        return $this->variants()
-            ->where(function ($query) use ($size, $color, $scent) {
-                if ($size !== null) {
-                    $query->where('size', $size);
-                } else {
-                    $query->whereNull('size');
-                }
-                
-                if ($color !== null) {
-                    $query->where('color', $color);
-                } else {
-                    $query->whereNull('color');
-                }
-                
-                if ($scent !== null) {
-                    $query->where('scent', $scent);
-                } else {
-                    $query->whereNull('scent');
-                }
-            })
-            ->first();
+        $attributes = $this->attributes()->with('options')->get();
+
+        return $attributes->map(function ($attribute) {
+            return [
+                'name' => $attribute->attribute_name,
+                'display_name' => $attribute->display_name,
+                'options' => $attribute->options->pluck('value')->values(),
+            ];
+        });
+    }
+
+    /**
+     * Find variant by selected attribute options.
+     *
+     * @param array $selectedOptions e.g., ['size' => '50ml', 'scent' => 'Rose']
+     * @return ProductVariant|null
+     */
+    public function findVariantByOptions(array $selectedOptions)
+    {
+        $query = $this->variants()->with('attributeOptions.productAttribute');
+
+        foreach ($selectedOptions as $attributeName => $optionValue) {
+            $query->whereHas('attributeOptions', function ($q) use ($attributeName, $optionValue) {
+                $q->where('value', $optionValue)
+                  ->whereHas('productAttribute', function ($q2) use ($attributeName) {
+                      $q2->where('attribute_name', $attributeName);
+                  });
+            });
+        }
+
+        return $query->first();
     }
 
     /**
@@ -639,8 +610,8 @@ public function getStockLevelPercentageAttribute()
             ->with('inventory')
             ->get()
             ->sum(function ($variant) {
-                return $variant->inventory 
-                    ? ($variant->inventory->current_stock - $variant->inventory->reserved_stock)
+                return $variant->inventory
+                    ? ($variant->inventory->stock_quantity - $variant->inventory->reserved_quantity)
                     : 0;
             });
     }
@@ -671,7 +642,7 @@ public function getStockLevelPercentageAttribute()
             return 0;
         }
 
-        return max(0, $inventory->current_stock - $inventory->reserved_stock);
+        return max(0, $inventory->stock_quantity - $inventory->reserved_quantity);
     }
 
     /**
@@ -742,7 +713,7 @@ if ($variant->price <= 0) {
     public static function getFeaturedProducts($limit = 8)
     {
         return static::active()
-            ->with(['brand', 'category', 'images', 'variants.inventory'])
+            ->with(['brand', 'category', 'variants.inventory'])
             ->featured()
             ->inStock()
             ->limit($limit)
@@ -755,7 +726,7 @@ if ($variant->price <= 0) {
     public static function getNewArrivals($limit = 8)
     {
         return static::active()
-            ->with(['brand', 'category', 'images', 'variants.inventory'])
+            ->with(['brand', 'category', 'variants.inventory'])
             ->latest('created_at')
             ->inStock()
             ->limit($limit)
@@ -768,7 +739,7 @@ if ($variant->price <= 0) {
     public static function getBestSellers($limit = 8)
     {
         return static::active()
-            ->with(['brand', 'category', 'images', 'variants.inventory'])
+            ->with(['brand', 'category', 'variants.inventory'])
             ->inStock()
             ->limit($limit)
             ->get();

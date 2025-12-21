@@ -6,7 +6,6 @@ use App\Models\CartItem;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\Inventory;
-use App\Models\Promotion;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\DB;
@@ -36,61 +35,60 @@ class CartService
                       ->first();
     }
 
-
     /**
- * Add product to cart
- */
-public function addToCart(Product $product, ProductVariant $productVariant = null, $quantity = 1)
-{
-    $identifier = $this->getCartIdentifier();
+     * Add product to cart
+     */
+    public function addToCart(Product $product, ProductVariant $productVariant = null, $quantity = 1)
+    {
+        $identifier = $this->getCartIdentifier();
 
-    // For products with variants, variant is required
-    if ($product->has_variants && !$productVariant) {
-        throw new \Exception('Please select product options.');
-    }
-    
-    // For products without variants
-    if (!$product->has_variants && !$productVariant) {
-        // Check if product has any variants at all
-        if ($product->variants()->count() === 0) {
-            // Handle products with no variants (shouldn't happen in normal flow)
-            throw new \Exception('Product configuration error. Please contact support.');
+        // For products with variants, variant is required
+        if ($product->has_variants && !$productVariant) {
+            throw new \Exception('Please select product options.');
         }
-        
-        // Get the default (standard) variant
-        $productVariant = $product->defaultVariant();
-        if (!$productVariant) {
-            throw new \Exception('Product variant not found.');
+
+        // For products without variants
+        if (!$product->has_variants && !$productVariant) {
+            // Check if product has any variants at all
+            if ($product->variants()->count() === 0) {
+                // Handle products with no variants (shouldn't happen in normal flow)
+                throw new \Exception('Product configuration error. Please contact support.');
+            }
+
+            // Get the default (standard) variant
+            $productVariant = $product->defaultVariant();
+            if (!$productVariant) {
+                throw new \Exception('Product variant not found.');
+            }
         }
+
+        // Check if item already exists in cart
+        $existingItem = CartItem::where($identifier)
+                               ->where('product_id', $product->id)
+                               ->where('product_variant_id', $productVariant->id)
+                               ->first();
+
+        if ($existingItem) {
+            // Update quantity of existing item
+            $newQuantity = $existingItem->quantity + $quantity;
+            return $this->updateQuantity($existingItem->id, $newQuantity);
+        }
+
+        // Calculate price from variant
+        $unitPrice = $productVariant->effective_price;
+
+        // Create new cart item
+        $cartItem = CartItem::create([
+            'user_id' => Auth::id(),
+            'session_id' => Auth::guest() ? Session::getId() : null,
+            'product_id' => $product->id,
+            'product_variant_id' => $productVariant->id,
+            'quantity' => $quantity,
+            'unit_price' => $unitPrice,
+        ]);
+
+        return $cartItem->load(['product', 'productVariant']);
     }
-    
-    // Check if item already exists in cart
-    $existingItem = CartItem::where($identifier)
-                           ->where('product_id', $product->id)
-                           ->where('product_variant_id', $productVariant->id)
-                           ->first();
-
-    if ($existingItem) {
-        // Update quantity of existing item
-        $newQuantity = $existingItem->quantity + $quantity;
-        return $this->updateQuantity($existingItem->id, $newQuantity);
-    }
-
-    // Calculate price from variant
-    $unitPrice = $productVariant->effective_price;
-
-    // Create new cart item
-    $cartItem = CartItem::create([
-        'user_id' => Auth::id(),
-        'session_id' => Auth::guest() ? Session::getId() : null,
-        'product_id' => $product->id,
-        'product_variant_id' => $productVariant->id,
-        'quantity' => $quantity,
-        'unit_price' => $unitPrice,
-    ]);
-
-    return $cartItem->load(['product', 'productVariant']);
-}
 
     /**
      * Update cart item quantity
@@ -102,7 +100,7 @@ public function addToCart(Product $product, ProductVariant $productVariant = nul
                            ->firstOrFail();
 
         $cartItem->update(['quantity' => $quantity]);
-        
+
         return $cartItem->load(['product', 'productVariant']);
     }
 
@@ -126,14 +124,14 @@ public function addToCart(Product $product, ProductVariant $productVariant = nul
         if ($silent) {
             Session::put('cart_clearing_silent', true);
         }
-        
+
         $result = CartItem::where($this->getCartIdentifier())->delete();
-        
+
         // Remove the silent flag after clearing
         if ($silent) {
             Session::forget('cart_clearing_silent');
         }
-        
+
         return $result;
     }
 
@@ -146,15 +144,15 @@ public function addToCart(Product $product, ProductVariant $productVariant = nul
             return 0;
         }
 
-        $inventory = Inventory::where('product_id', $productId)
-                             ->where('product_variant_id', $productVariantId)
-                             ->first();
+        // Inventory table only has product_variant_id, not product_id
+        $inventory = Inventory::where('product_variant_id', $productVariantId)->first();
 
         if (!$inventory) {
             return 0;
         }
 
-        return max(0, $inventory->current_stock - $inventory->reserved_stock);
+        // Use correct column names: stock_quantity and reserved_quantity
+        return max(0, $inventory->stock_quantity - $inventory->reserved_quantity);
     }
 
     /**
@@ -163,160 +161,29 @@ public function addToCart(Product $product, ProductVariant $productVariant = nul
     public function getCartSummary()
     {
         $cartItems = $this->getCartItems();
-        
+
         $subtotal = $cartItems->sum(function ($item) {
             return $item->quantity * $item->unit_price;
         });
 
         $totalItems = $cartItems->sum('quantity');
-        
-        // Get applied promotion if any
-        $appliedPromotion = $this->getAppliedPromotion();
-        $discountAmount = 0;
-        
-        if ($appliedPromotion) {
-            $discountAmount = $this->calculatePromotionDiscount($cartItems, $appliedPromotion);
-        }
 
-        // Calculate shipping (you can customize this logic)
+        // Calculate shipping
         $shippingAmount = $this->calculateShipping($subtotal);
-        
-        $total = $subtotal - $discountAmount + $shippingAmount;
+
+        $total = $subtotal + $shippingAmount;
 
         return [
             'total_items' => $totalItems,
             'subtotal' => $subtotal,
             'subtotal_formatted' => 'Rs. ' . number_format($subtotal, 2),
-            'discount_amount' => $discountAmount,
-            'discount_formatted' => 'Rs. ' . number_format($discountAmount, 2),
+            'discount_amount' => 0,
+            'discount_formatted' => 'Rs. 0.00',
             'shipping_amount' => $shippingAmount,
             'shipping_formatted' => 'Rs. ' . number_format($shippingAmount, 2),
             'total' => $total,
             'total_formatted' => 'Rs. ' . number_format($total, 2),
-            'applied_promotion' => $appliedPromotion
         ];
-    }
-
-    /**
-     * Apply promotion code
-     */
-    public function applyPromotion($promotionCode)
-    {
-        $promotion = Promotion::where('code', $promotionCode)
-                             ->where('is_active', true)
-                             ->where('start_date', '<=', now())
-                             ->where('end_date', '>=', now())
-                             ->first();
-
-        if (!$promotion) {
-            return [
-                'success' => false,
-                'message' => 'Invalid or expired promotion code.'
-            ];
-        }
-
-        // Check usage limits
-        if ($promotion->max_uses && $promotion->used_count >= $promotion->max_uses) {
-            return [
-                'success' => false,
-                'message' => 'This promotion code has reached its usage limit.'
-            ];
-        }
-
-        // Check user-specific usage limit
-        if (Auth::check() && $promotion->max_uses_per_user) {
-            $userUsageCount = $promotion->usages()
-                                       ->where('user_id', Auth::id())
-                                       ->count();
-            
-            if ($userUsageCount >= $promotion->max_uses_per_user) {
-                return [
-                    'success' => false,
-                    'message' => 'You have already used this promotion code the maximum number of times.'
-                ];
-            }
-        }
-
-        // Check minimum order amount
-        $cartItems = $this->getCartItems();
-        $subtotal = $cartItems->sum(function ($item) {
-            return $item->quantity * $item->unit_price;
-        });
-
-        if ($promotion->min_order_amount && $subtotal < $promotion->min_order_amount) {
-            return [
-                'success' => false,
-                'message' => 'Minimum order amount of Rs. ' . number_format($promotion->min_order_amount, 2) . ' required for this promotion.'
-            ];
-        }
-
-        // Store promotion in session
-        Session::put('applied_promotion_code', $promotionCode);
-
-        $discountAmount = $this->calculatePromotionDiscount($cartItems, $promotion);
-
-        return [
-            'success' => true,
-            'message' => 'Promotion code applied successfully!',
-            'discount_amount' => $discountAmount
-        ];
-    }
-
-    /**
-     * Remove applied promotion
-     */
-    public function removePromotion()
-    {
-        Session::forget('applied_promotion_code');
-    }
-
-    /**
-     * Get currently applied promotion
-     */
-    protected function getAppliedPromotion()
-    {
-        $promotionCode = Session::get('applied_promotion_code');
-        
-        if (!$promotionCode) {
-            return null;
-        }
-
-        return Promotion::where('code', $promotionCode)
-                       ->where('is_active', true)
-                       ->where('start_date', '<=', now())
-                       ->where('end_date', '>=', now())
-                       ->first();
-    }
-
-    /**
-     * Calculate promotion discount
-     */
-    protected function calculatePromotionDiscount($cartItems, $promotion)
-    {
-        if ($promotion->type !== 'percentage') {
-            return 0; // Only percentage discounts supported for now
-        }
-
-        $discountAmount = 0;
-
-        foreach ($cartItems as $item) {
-            // Check if product is eligible for this promotion
-            $isEligible = $promotion->products->contains('id', $item->product_id);
-            
-            if ($isEligible) {
-                $itemTotal = $item->quantity * $item->unit_price;
-                $itemDiscount = ($itemTotal * $promotion->discount_value) / 100;
-                
-                // Apply maximum discount limit if set
-                if ($promotion->max_discount_amount) {
-                    $itemDiscount = min($itemDiscount, $promotion->max_discount_amount);
-                }
-                
-                $discountAmount += $itemDiscount;
-            }
-        }
-
-        return $discountAmount;
     }
 
     /**
@@ -328,7 +195,7 @@ public function addToCart(Product $product, ProductVariant $productVariant = nul
         if ($subtotal >= 5000) {
             return 0; // Free shipping over Rs. 5000
         }
-        
+
         return 300; // Flat shipping rate
     }
 
@@ -340,7 +207,7 @@ public function addToCart(Product $product, ProductVariant $productVariant = nul
         if (Auth::check()) {
             return ['user_id' => Auth::id()];
         }
-        
+
         return ['session_id' => Session::getId()];
     }
 
@@ -350,7 +217,7 @@ public function addToCart(Product $product, ProductVariant $productVariant = nul
     public function mergeGuestCart($sessionId, $userId)
     {
         $guestCartItems = CartItem::where('session_id', $sessionId)->get();
-        
+
         foreach ($guestCartItems as $guestItem) {
             // Check if user already has this item in cart
             $existingItem = CartItem::where('user_id', $userId)
@@ -402,15 +269,15 @@ public function addToCart(Product $product, ProductVariant $productVariant = nul
 
             // Check stock availability
             $availableStock = $this->getAvailableStock(
-                $item->product_id, 
+                $item->product_id,
                 $item->product_variant_id
             );
 
             if ($availableStock < $item->quantity) {
-                $variantDetails = $item->productVariant 
+                $variantDetails = $item->productVariant
                     ? " ({$item->productVariant->name})"
                     : '';
-                    
+
                 $errors[] = "Only {$availableStock} units available for '{$item->product->name}{$variantDetails}'.";
             }
         }

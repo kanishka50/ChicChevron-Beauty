@@ -23,7 +23,7 @@ class ProductController extends Controller
 public function index(Request $request)
 {
     $query = Product::active()
-        ->with(['brand', 'category', 'images', 'variants.inventory']);
+        ->with(['brand', 'category', 'variants.inventory']);
 
     // Check if this is a search request
     $searchQuery = $request->get('q', '');
@@ -41,9 +41,7 @@ public function index(Request $request)
               ->orWhereHas('category', function ($categoryQuery) use ($searchQuery) {
                   $categoryQuery->where('name', 'LIKE', "%{$searchQuery}%");
               })
-              ->orWhereHas('ingredients', function ($ingredientQuery) use ($searchQuery) {
-                  $ingredientQuery->where('ingredient_name', 'LIKE', "%{$searchQuery}%");
-              });
+              ->orWhere('ingredients', 'LIKE', "%{$searchQuery}%");
         });
     }
 
@@ -91,10 +89,6 @@ public function index(Request $request)
     $product->load([
         'brand',
         'category.mainCategory',  // Include main category
-        'images' => function ($query) {
-            $query->orderBy('sort_order');
-        },
-        'ingredients',
         'variants' => function ($query) {
             $query->where('is_active', true)->with('inventory');
         },
@@ -108,7 +102,7 @@ public function index(Request $request)
     $relatedProducts = Product::where('category_id', $product->category_id)
         ->where('id', '!=', $product->id)
         ->where('is_active', true)
-        ->with(['brand', 'images', 'variants'])
+        ->with(['brand', 'variants.inventory'])
         ->inRandomOrder()
         ->limit(4)
         ->get();
@@ -128,7 +122,7 @@ public function categoryProducts(Request $request, Category $category)
 {
     $query = Product::active()
         ->where('category_id', $category->id)
-        ->with(['brand', 'images', 'variants.inventory']);
+        ->with(['brand', 'variants.inventory']);
 
     // Apply other filters
     $this->applyFilters($query, $request);
@@ -177,7 +171,7 @@ public function categoryProducts(Request $request, Category $category)
         }
 
         $productQuery = Product::active()
-            ->with(['brand', 'category', 'images', 'variants.inventory']);
+            ->with(['brand', 'category', 'variants.inventory']);
 
         // Search in product name, description, and brand
         $productQuery->where(function ($q) use ($query) {
@@ -188,21 +182,23 @@ public function categoryProducts(Request $request, Category $category)
               });
         });
 
-        // Ingredient-based search
+        // Ingredient-based search (ingredients stored as TEXT column)
         if ($request->filled('ingredients')) {
-            $ingredients = is_array($request->ingredients) 
-                ? $request->ingredients 
+            $ingredients = is_array($request->ingredients)
+                ? $request->ingredients
                 : explode(',', $request->ingredients);
 
             if ($ingredientSearch === 'exclude') {
                 // Find products WITHOUT these ingredients
-                $productQuery->whereDoesntHave('ingredients', function ($ingredientQuery) use ($ingredients) {
-                    $ingredientQuery->whereIn('ingredient_name', $ingredients);
-                });
+                foreach ($ingredients as $ingredient) {
+                    $productQuery->where('ingredients', 'NOT LIKE', "%{$ingredient}%");
+                }
             } else {
                 // Find products WITH these ingredients
-                $productQuery->whereHas('ingredients', function ($ingredientQuery) use ($ingredients) {
-                    $ingredientQuery->whereIn('ingredient_name', $ingredients);
+                $productQuery->where(function ($q) use ($ingredients) {
+                    foreach ($ingredients as $ingredient) {
+                        $q->orWhere('ingredients', 'LIKE', "%{$ingredient}%");
+                    }
                 });
             }
         }
@@ -441,13 +437,9 @@ private function applySorting($query, Request $request)
                     ->max('product_variants.price') ?? 10000,
             ],
 
-            'ingredients' => DB::table('product_ingredients')
-                ->join('products', 'product_ingredients.product_id', '=', 'products.id')
-                ->where('products.is_active', true)
-                ->distinct()
-                ->pluck('ingredient_name')
-                ->sort()
-                ->values(),
+            // Ingredients are now stored as TEXT column in products table
+            // Extracting unique ingredients would require parsing the comma-separated text
+            'ingredients' => collect(),
         ];
     });
 }
