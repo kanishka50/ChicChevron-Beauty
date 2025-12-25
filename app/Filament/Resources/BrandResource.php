@@ -39,11 +39,6 @@ class BrandResource extends Resource
                             ->maxLength(255)
                             ->unique(Brand::class, 'slug', ignoreRecord: true),
 
-                        Forms\Components\FileUpload::make('logo')
-                            ->image()
-                            ->directory('brands')
-                            ->imageEditor(),
-
                         Forms\Components\Toggle::make('is_active')
                             ->default(true),
                     ])
@@ -55,9 +50,6 @@ class BrandResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\ImageColumn::make('logo')
-                    ->circular(),
-
                 Tables\Columns\TextColumn::make('name')
                     ->searchable()
                     ->sortable(),

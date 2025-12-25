@@ -40,19 +40,6 @@ class SearchController extends Controller
     // Paginate results
     $products = $query->paginate(20)->withQueryString();
 
-    // Load reviews with proper aggregation
-    $products->getCollection()->load([
-        'reviews' => function($query) {
-            $query->where('is_approved', true);
-        }
-    ]);
-
-    // Calculate averages manually to avoid GROUP BY issues
-    $products->getCollection()->each(function ($product) {
-        $product->reviews_avg_rating = $product->reviews->avg('rating') ?: 0;
-        $product->reviews_count = $product->reviews->count();
-    });
-
     // Get filter data
     $filterData = $this->getFilterData($request);
 
@@ -164,7 +151,7 @@ private function applySearch($query, $searchTerm)
                 ->whereHas('products', function ($q) {
                     $q->where('is_active', true);
                 })
-                ->select('id', 'name', 'logo')
+                ->select('id', 'name')
                 ->limit(3)
                 ->get()
                 ->map(function ($brand) {
@@ -173,7 +160,7 @@ private function applySearch($query, $searchTerm)
                         'text' => $brand->name,
                         'subtitle' => 'Brand',
                         'url' => route('products.index', ['brands' => [$brand->id]]),
-                        'image' => $brand->logo ? asset('storage/' . $brand->logo) : null,
+                        'image' => null,
                     ];
                 });
 
@@ -183,7 +170,7 @@ private function applySearch($query, $searchTerm)
                 ->whereHas('products', function ($q) {
                     $q->where('is_active', true);
                 })
-                ->select('id', 'name', 'image')
+                ->select('id', 'name')
                 ->limit(3)
                 ->get()
                 ->map(function ($category) {
@@ -192,7 +179,7 @@ private function applySearch($query, $searchTerm)
                         'text' => $category->name,
                         'subtitle' => 'Category',
                         'url' => route('products.index', ['category' => $category->id]),
-                        'image' => $category->image ? asset('storage/' . $category->image) : null,
+                        'image' => null,
                     ];
                 });
 
@@ -235,9 +222,7 @@ private function applySearch($query, $searchTerm)
     private function performSearch($query, Request $request)
     {
         $productQuery = Product::where('is_active', true)
-            ->with(['brand', 'category', 'reviews'])
-            ->withAvg('reviews', 'rating')
-            ->withCount('reviews');
+            ->with(['brand', 'category']);
 
         // Add subquery to get minimum variant price for each product
         $productQuery->addSelect([
@@ -330,11 +315,6 @@ private function applySearch($query, $searchTerm)
             });
         }
 
-        // Rating filter
-        if ($request->filled('min_rating')) {
-            $query->having('reviews_avg_rating', '>=', $request->min_rating);
-        }
-
         // Size filter (from variants)
         if ($request->filled('sizes')) {
             $sizes = is_array($request->sizes) ? $request->sizes : [$request->sizes];
@@ -369,9 +349,6 @@ private function applySearch($query, $searchTerm)
             case 'price_high':
                 // Sort by maximum variant price
                 $query->orderByRaw('COALESCE(min_discount_price, min_price) DESC');
-                break;
-            case 'rating':
-                $query->orderBy('reviews_avg_rating', 'desc');
                 break;
             case 'newest':
                 $query->latest('created_at');
@@ -532,8 +509,7 @@ private function applySearch($query, $searchTerm)
         $searchType = $request->get('search_type', 'include');
 
         $query = Product::where('is_active', true)
-            ->with(['brand', 'category', 'reviews', 'variants'])
-            ->withAvg('reviews', 'rating');
+            ->with(['brand', 'category', 'variants']);
 
         // Add variant price subqueries
         $query->addSelect([

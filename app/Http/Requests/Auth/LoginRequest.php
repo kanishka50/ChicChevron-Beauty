@@ -10,8 +10,6 @@ use Illuminate\Validation\ValidationException;
 
 class LoginRequest extends FormRequest
 {
-    protected $guard = null;
-
     public function authorize(): bool
     {
         return true;
@@ -33,33 +31,15 @@ class LoginRequest extends FormRequest
         $remember = $this->boolean('remember');
         $credentials = $this->only('email', 'password');
 
-        // First try admin guard
-        if (Auth::guard('admin')->attempt($credentials, $remember)) {
-            $this->guard = 'admin';
-            RateLimiter::clear($this->throttleKey());
-            session()->forget('url.intended');
-            return;
+        if (!Auth::attempt($credentials, $remember)) {
+            RateLimiter::hit($this->throttleKey());
+
+            throw ValidationException::withMessages([
+                'email' => trans('auth.failed'),
+            ]);
         }
 
-        // Then try web guard
-        if (Auth::guard('web')->attempt($credentials, $remember)) {
-            $this->guard = 'web';
-            RateLimiter::clear($this->throttleKey());
-            session()->forget('url.intended');
-            return;
-        }
-
-        // If both failed
-        RateLimiter::hit($this->throttleKey());
-
-        throw ValidationException::withMessages([
-            'email' => trans('auth.failed'),
-        ]);
-    }
-
-    public function getAuthenticatedGuard(): ?string
-    {
-        return $this->guard;
+        RateLimiter::clear($this->throttleKey());
     }
 
     public function ensureIsNotRateLimited(): void

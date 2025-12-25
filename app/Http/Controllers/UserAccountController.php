@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;  // Change this line - use the correct base controller
 use App\Models\Order;
 use App\Models\UserAddress;
-use App\Models\Review;
 use App\Models\Wishlist;
 use App\Models\Complaint;
 use App\Models\User;
@@ -39,7 +38,6 @@ class UserAccountController extends Controller
                 ->where('payment_status', 'completed')
                 ->sum('total_amount'),
             'wishlist_count' => Wishlist::where('user_id', $user->id)->count(),
-            'reviews_count' => Review::where('user_id', $user->id)->count(),
             'addresses_count' => UserAddress::where('user_id', $user->id)->count(),
             'complaints_count' => Complaint::where('user_id', $user->id)->count(),
         ];

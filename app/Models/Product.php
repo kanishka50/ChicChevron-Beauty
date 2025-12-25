@@ -27,15 +27,11 @@ class Product extends Model
         'ingredients',
         'is_active',
         'views_count',
-        'average_rating',
-        'reviews_count',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
         'views_count' => 'integer',
-        'average_rating' => 'decimal:2',
-        'reviews_count' => 'integer',
         'gallery_images' => 'array',
     ];
     
@@ -100,22 +96,6 @@ class Product extends Model
     }
 
     /**
-     * Get the reviews.
-     */
-    public function reviews()
-    {
-        return $this->hasMany(Review::class);
-    }
-
-    /**
-     * Get approved reviews.
-     */
-    public function approvedReviews()
-    {
-        return $this->hasMany(Review::class)->where('is_approved', true);
-    }
-
-    /**
      * Get all inventory records (through variants).
      */
     public function allInventory()
@@ -171,10 +151,7 @@ class Product extends Model
      */
     public function scopeFeatured($query)
     {
-        return $query->where(function ($q) {
-            $q->whereHas('reviews')
-              ->orWhere('views_count', '>', 100);
-        });
+        return $query->where('views_count', '>', 100);
     }
 
     /**
@@ -376,22 +353,6 @@ class Product extends Model
     }
 
     /**
-     * Get the average rating.
-     */
-    public function getAverageRatingAttribute()
-    {
-        return $this->reviews()->avg('rating') ?: 0;
-    }
-
-    /**
-     * Get the total review count.
-     */
-    public function getReviewCountAttribute()
-    {
-        return $this->reviews()->count();
-    }
-
-    /**
      * Check if product is new (created within last 30 days).
      */
     public function getIsNewAttribute()
@@ -448,14 +409,6 @@ class Product extends Model
             ],
         ];
 
-        if ($this->average_rating > 0) {
-            $data['aggregateRating'] = [
-                '@type' => 'AggregateRating',
-                'ratingValue' => $this->average_rating,
-                'reviewCount' => $this->review_count,
-            ];
-        }
-
         return $data;
     }
 
@@ -499,24 +452,6 @@ public function getStockLevelPercentageAttribute()
     // =====================================================
     // HELPER METHODS
     // =====================================================
-
-    /**
-     * Check if product can be reviewed by user.
-     */
-    public function canBeReviewedBy($user)
-    {
-        if (!$user) {
-            return false;
-        }
-
-        // Check if user has purchased this product
-        return $this->orderItems()
-            ->whereHas('order', function ($query) use ($user) {
-                $query->where('user_id', $user->id)
-                      ->where('status', 'completed');
-            })
-            ->exists();
-    }
 
     /**
      * Get related products.

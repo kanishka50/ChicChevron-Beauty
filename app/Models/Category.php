@@ -13,8 +13,7 @@ class Category extends Model
     protected $fillable = [
         'name',
         'slug',
-        'main_category_id',  // Changed from parent_id
-        'image',
+        'main_category_id',
         'is_active',
         'sort_order',
     ];

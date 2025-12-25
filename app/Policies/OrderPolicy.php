@@ -111,13 +111,4 @@ class OrderPolicy
     {
         return $user->id === $order->user_id;
     }
-
-    /**
-     * Determine whether the user can leave reviews for this order.
-     */
-    public function review(User $user, Order $order)
-    {
-        return $user->id === $order->user_id && 
-               $order->status === 'completed';
-    }
 }

@@ -37,7 +37,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
                 </svg>
                 <span class="font-medium">Filters</span>
-                @if(request()->hasAny(['category', 'brands', 'min_price', 'max_price', 'min_rating']))
+                @if(request()->hasAny(['category', 'brands', 'min_price', 'max_price']))
                     <span class="bg-primary-600 text-white text-xs px-2 py-0.5 rounded-full">
                         {{ count(array_filter(request()->all())) }}
                     </span>
@@ -56,7 +56,7 @@
                             </svg>
                             Filters
                         </h3>
-                        @if(request()->hasAny(['category', 'brands', 'min_price', 'max_price', 'min_rating']))
+                        @if(request()->hasAny(['category', 'brands', 'min_price', 'max_price']))
                             <a href="{{ route('products.index') }}" class="text-sm text-primary-600 hover:text-primary-700 font-medium transition-colors">
                                 Clear All
                             </a>
@@ -166,33 +166,6 @@
                             </div>
                         </div>
 
-                        <!-- Rating Filter -->
-                        <div class="pb-6">
-                            <h4 class="font-semibold text-gray-900 mb-4">Minimum Rating</h4>
-                            <div class="space-y-2.5">
-                                @for($rating = 4; $rating >= 1; $rating--)
-                                    <label class="flex items-center cursor-pointer hover:bg-gray-50 p-2 -m-2 rounded-lg transition-colors">
-                                        <input 
-                                            type="radio" 
-                                            name="min_rating" 
-                                            value="{{ $rating }}"
-                                            {{ request('min_rating') == $rating ? 'checked' : '' }}
-                                            class="w-4 h-4 border-gray-300 text-primary-600 focus:ring-primary-500"
-                                            onchange="document.getElementById('filter-form').submit()"
-                                        >
-                                        <div class="ml-3 flex items-center gap-1">
-                                            @for($i = 1; $i <= 5; $i++)
-                                                <svg class="w-4 h-4 {{ $i <= $rating ? 'text-yellow-400 fill-current' : 'text-gray-300' }}" viewBox="0 0 20 20">
-                                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
-                                                </svg>
-                                            @endfor
-                                            <span class="ml-1 text-sm text-gray-600">& up</span>
-                                        </div>
-                                    </label>
-                                @endfor
-                            </div>
-                        </div>
-
                         <!-- Keep other parameters -->
                         <input type="hidden" name="q" value="{{ request('q') }}">
                         <input type="hidden" name="sort" value="{{ request('sort') }}">
@@ -242,7 +215,6 @@
                                 <option value="price_low" {{ request('sort') == 'price_low' ? 'selected' : '' }}>Price: Low to High</option>
                                 <option value="price_high" {{ request('sort') == 'price_high' ? 'selected' : '' }}>Price: High to Low</option>
                                 <option value="name_asc" {{ request('sort') == 'name_asc' ? 'selected' : '' }}>Name: A to Z</option>
-                                <option value="rating" {{ request('sort') == 'rating' ? 'selected' : '' }}>Highest Rated</option>
                                 <option value="popular" {{ request('sort') == 'popular' ? 'selected' : '' }}>Most Popular</option>
                             </select>
                         </div>
@@ -250,7 +222,7 @@
                 </div>
 
                 <!-- Active Filters -->
-                @if(request()->hasAny(['category', 'brands', 'min_price', 'max_price', 'min_rating', 'stock_status']))
+                @if(request()->hasAny(['category', 'brands', 'min_price', 'max_price', 'stock_status']))
                     <div class="bg-gray-50 rounded-xl p-4 mb-6">
                         <div class="flex items-center justify-between mb-3">
                             <h3 class="text-sm font-semibold text-gray-900">Active Filters</h3>
@@ -466,33 +438,6 @@
                     >
                         Apply Price Filter
                     </button>
-                </div>
-            </div>
-
-            <!-- Rating Filter -->
-            <div class="pb-6 mb-6">
-                <h4 class="font-semibold text-gray-900 mb-4">Minimum Rating</h4>
-                <div class="space-y-2.5">
-                    @for($rating = 4; $rating >= 1; $rating--)
-                        <label class="flex items-center cursor-pointer hover:bg-gray-50 p-2 -m-2 rounded-lg transition-colors">
-                            <input 
-                                type="radio" 
-                                name="min_rating" 
-                                value="{{ $rating }}"
-                                {{ request('min_rating') == $rating ? 'checked' : '' }}
-                                class="w-4 h-4 border-gray-300 text-primary-600 focus:ring-primary-500"
-                                onchange="document.getElementById('mobile-filter-form').submit()"
-                            >
-                            <div class="ml-3 flex items-center gap-1">
-                                @for($i = 1; $i <= 5; $i++)
-                                    <svg class="w-4 h-4 {{ $i <= $rating ? 'text-yellow-400 fill-current' : 'text-gray-300' }}" viewBox="0 0 20 20">
-                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
-                                    </svg>
-                                @endfor
-                                <span class="ml-1 text-sm text-gray-600">& up</span>
-                            </div>
-                        </label>
-                    @endfor
                 </div>
             </div>
 

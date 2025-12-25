@@ -111,14 +111,6 @@ class User extends Authenticatable implements MustVerifyEmail, FilamentUser
     }
 
     /**
-     * Get the user's reviews.
-     */
-    public function reviews()
-    {
-        return $this->hasMany(Review::class);
-    }
-
-    /**
      * Get the user's complaints.
      */
     public function complaints()

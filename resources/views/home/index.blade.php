@@ -4,334 +4,357 @@
 @section('description', 'Discover premium beauty products at ChicChevron Beauty. Shop authentic skincare, cosmetics, and beauty essentials with fast delivery across Sri Lanka.')
 
 @section('content')
-    
-    <!-- Hero Banner Section -->
-    @include('home.banner-slider')
 
-    <
-<!-- Featured Categories - Modern Clean Design -->
-@if($categories->isNotEmpty())
-<section class="py-16 md:py-20 bg-gray-50">
-    <div class="container-responsive">
-        <!-- Section Header -->
-        <div class="text-center mb-10 md:mb-12">
-            <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
-                Shop by Category
-            </h2>
-            <p class="text-gray-600 max-w-2xl mx-auto">
-                Browse our curated collection of beauty essentials
-            </p>
+    <!-- Hero Section - Premium Modern Design -->
+    <section class="relative min-h-[90vh] lg:min-h-screen flex items-center overflow-hidden">
+        <!-- Background Image Slideshow -->
+        <div class="absolute inset-0">
+            <!-- Image 1 -->
+            <div class="hero-slide absolute inset-0" style="animation-delay: 0s;">
+                <img src="https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&w=1920&q=80"
+                     alt="Beauty Background"
+                     class="w-full h-full object-cover object-center">
+            </div>
+            <!-- Image 2 -->
+            <div class="hero-slide absolute inset-0" style="animation-delay: 5s;">
+                <img src="https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=1920&q=80"
+                     alt="Beauty Products"
+                     class="w-full h-full object-cover object-center">
+            </div>
+            <!-- Image 3 -->
+            <div class="hero-slide absolute inset-0" style="animation-delay: 10s;">
+                <img src="https://images.unsplash.com/photo-1512496015851-a90fb38ba796?auto=format&fit=crop&w=1920&q=80"
+                     alt="Skincare Collection"
+                     class="w-full h-full object-cover object-center">
+            </div>
+            <!-- Image 4 -->
+            <div class="hero-slide absolute inset-0" style="animation-delay: 15s;">
+                <img src="https://images.unsplash.com/photo-1571781926291-c477ebfd024b?auto=format&fit=crop&w=1920&q=80"
+                     alt="Makeup Collection"
+                     class="w-full h-full object-cover object-center">
+            </div>
+            <!-- Image 5 -->
+            <div class="hero-slide absolute inset-0" style="animation-delay: 20s;">
+                <img src="https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?auto=format&fit=crop&w=1920&q=80"
+                     alt="Beauty Essentials"
+                     class="w-full h-full object-cover object-center">
+            </div>
         </div>
 
-        <!-- Category Grid -->
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 md:gap-6">
-            @foreach($categories as $category)
-                <a href="{{ route('products.index', ['category' => $category->id]) }}" 
-                   class="group">
-                    <div class="flex flex-col items-center text-center">
-                        <!-- Category Image/Icon Container -->
-                        <div class="w-20 h-20 md:w-24 md:h-24 mb-3 relative overflow-hidden rounded-2xl bg-white border-2 border-gray-100 group-hover:border-primary-200 transition-all duration-300">
-                            @if($category->image)
-                                <img src="{{ asset('storage/' . $category->image) }}" 
-                                     alt="{{ $category->name }}" 
-                                     class="w-full h-full object-cover p-3 group-hover:scale-105 transition-transform duration-300">
-                            @else
-                                <!-- Simple Icon Fallback -->
-                                <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 group-hover:from-primary-50 group-hover:to-primary-100 transition-colors duration-300">
-                                    <span class="text-2xl font-bold text-gray-400 group-hover:text-primary-500 transition-colors">
-                                        {{ substr($category->name, 0, 1) }}
-                                    </span>
-                                </div>
-                            @endif
-                        </div>
-                        
-                        <!-- Category Name -->
-                        <h3 class="font-medium text-gray-700 group-hover:text-primary-600 transition-colors duration-300 text-sm md:text-base">
-                            {{ $category->name }}
-                        </h3>
-                        
-                        <!-- Product Count -->
-                        <p class="text-xs text-gray-500 mt-1">
-                            {{ $category->products_count }} {{ Str::plural('product', $category->products_count) }}
-                        </p>
-                    </div>
-                </a>
-            @endforeach
-        </div>
-    </div>
-</section>
-@endif
+        <!-- Gradient Overlay - Reduced Opacity to Show Images -->
+        <div class="absolute inset-0 bg-gradient-to-r from-plum-950/80 via-plum-900/70 to-plum-900/50"></div>
 
-    <!-- Featured Products - Clean white background for contrast -->
-    @if($featuredProducts->isNotEmpty())
-        <section class="py-16 md:py-24 bg-white relative">
-            <div class="container-responsive">
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 md:mb-16">
-                    <div class="mb-6 md:mb-0">
-                        <h2 class="text-3xl md:text-5xl font-bold text-gray-900 mb-3">Featured Products</h2>
-                        <p class="text-gray-600 text-base md:text-lg">Handpicked favorites that our customers love</p>
-                    </div>
-                    <a href="{{ route('products.index', ['featured' => 1]) }}" 
-                       class="inline-flex items-center gap-2 text-pink-600 hover:text-purple-600 font-semibold group bg-pink-50 hover:bg-purple-50 px-6 py-3 rounded-full transition-all duration-300">
-                        <span>View All</span>
-                        <svg class="w-5 h-5 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <!-- Secondary Gradient for Depth -->
+        <div class="absolute inset-0 bg-gradient-to-t from-plum-950/60 via-transparent to-plum-900/30"></div>
+
+        <!-- Subtle Grain Texture -->
+        <div class="absolute inset-0 opacity-[0.03]" style="background-image: url('data:image/svg+xml,%3Csvg viewBox=%220 0 256 256%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noise%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.9%22 numOctaves=%224%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noise)%22/%3E%3C/svg%3E');"></div>
+
+        <!-- Elegant Accent Lines -->
+        <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-gold-500/50 to-transparent"></div>
+        <div class="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-gold-500/30 to-transparent"></div>
+
+        <!-- Content Container -->
+        <div class="container-responsive relative z-10 py-20 lg:py-0 flex items-center justify-center min-h-[80vh]">
+            <div class="max-w-4xl mx-auto">
+                <!-- Hero Content -->
+                <div class="text-center" data-aos="fade-up">
+                    <h1 class="font-display text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-white mb-6 leading-[1.1]">
+                        Elevate Your
+                        <span class="block mt-2">
+                            <span class="relative inline-block">
+                                <span class="text-transparent bg-clip-text bg-gradient-to-r from-gold-300 via-gold-400 to-gold-500">Beauty</span>
+                                <svg class="absolute -bottom-2 left-0 w-full h-3 text-gold-500/30" viewBox="0 0 100 12" preserveAspectRatio="none">
+                                    <path d="M0,8 Q25,0 50,8 T100,8" stroke="currentColor" stroke-width="3" fill="none"/>
+                                </svg>
+                            </span>
+                            <span class="text-white"> Routine</span>
+                        </span>
+                    </h1>
+
+                    <p class="text-lilac-200/90 text-lg lg:text-xl mb-10 max-w-2xl mx-auto leading-relaxed font-light">
+                        Discover curated skincare and cosmetics from world-renowned brands. Experience luxury beauty, delivered to your doorstep.
+                    </p>
+
+                    <!-- CTA Button -->
+                    <a href="{{ route('products.index') }}"
+                       class="group relative inline-flex items-center justify-center gap-3 px-8 py-4 bg-gradient-to-r from-gold-400 to-gold-500 text-plum-900 font-bold rounded-full overflow-hidden transition-all duration-500 hover:shadow-[0_0_40px_rgba(201,169,98,0.4)] hover:scale-105">
+                        <span class="relative z-10">Shop Collection</span>
+                        <svg class="w-5 h-5 relative z-10 transform group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
                         </svg>
+                        <!-- Shine Effect -->
+                        <div class="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/30 to-transparent"></div>
                     </a>
+
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8">
-                    @foreach($featuredProducts as $product)
-                        @include('components.shop.product-card', ['product' => $product])
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Categories - Compact Section -->
+    @if($mainCategories->isNotEmpty())
+    <section id="categories" class="py-10 lg:py-14 bg-white">
+        <div class="container-responsive">
+            <!-- Section Header - Compact -->
+            <div class="text-center mb-8" data-aos="fade-up">
+                <h2 class="font-display text-2xl md:text-3xl font-bold text-plum-900 mb-2">
+                    Shop by Category
+                </h2>
+                <p class="text-plum-600 text-sm md:text-base">
+                    Explore our beauty collections
+                </p>
+            </div>
+
+            <!-- Category Images -->
+            @php
+                $categoryImages = [
+                    'Skincare' => 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?auto=format&fit=crop&w=400&q=80',
+                    'Makeup' => 'https://images.unsplash.com/photo-1512496015851-a90fb38ba796?auto=format&fit=crop&w=400&q=80',
+                    'Haircare' => 'https://images.unsplash.com/photo-1527799820374-dcf8d9d4a388?auto=format&fit=crop&w=400&q=80',
+                    'Fragrance' => 'https://images.unsplash.com/photo-1541643600914-78b084683601?auto=format&fit=crop&w=400&q=80',
+                    'Body Care' => 'https://images.unsplash.com/photo-1608248597279-f99d160bfcbc?auto=format&fit=crop&w=400&q=80',
+                    'Tools & Accessories' => 'https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&w=400&q=80',
+                ];
+                $defaultImage = 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=400&q=80';
+            @endphp
+
+            <!-- Mobile: Horizontal Swiper -->
+            <div class="swiper categories-swiper md:hidden" data-aos="fade-up">
+                <div class="swiper-wrapper">
+                    @foreach($mainCategories as $mainCategory)
+                        @php
+                            $image = $categoryImages[$mainCategory->name] ?? $defaultImage;
+                            $firstCategory = $mainCategory->categories->first();
+                        @endphp
+                        @if($firstCategory)
+                        <div class="swiper-slide" style="width: 130px;">
+                            <a href="{{ route('products.index', ['main_category' => $mainCategory->id]) }}" class="block">
+                                <div class="relative rounded-xl overflow-hidden aspect-square">
+                                    <img src="{{ $image }}"
+                                         alt="{{ $mainCategory->name }}"
+                                         class="w-full h-full object-cover">
+                                    <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent"></div>
+                                    <div class="absolute bottom-0 left-0 right-0 p-2.5 text-center">
+                                        <span class="text-white text-xs font-medium">{{ $mainCategory->name }}</span>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                        @endif
                     @endforeach
                 </div>
             </div>
-        </section>
+
+            <!-- Desktop: Centered Grid -->
+            <div class="hidden md:flex justify-center" data-aos="fade-up">
+                <div class="inline-flex gap-4">
+                    @foreach($mainCategories as $index => $mainCategory)
+                        @php
+                            $image = $categoryImages[$mainCategory->name] ?? $defaultImage;
+                            $firstCategory = $mainCategory->categories->first();
+                        @endphp
+                        @if($firstCategory)
+                        <a href="{{ route('products.index', ['main_category' => $mainCategory->id]) }}"
+                           class="group block">
+                            <div class="relative rounded-xl overflow-hidden w-32 lg:w-36 aspect-square">
+                                <img src="{{ $image }}"
+                                     alt="{{ $mainCategory->name }}"
+                                     class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105">
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent"></div>
+                                <div class="absolute bottom-0 left-0 right-0 p-3 text-center">
+                                    <span class="text-white text-xs font-medium">{{ $mainCategory->name }}</span>
+                                </div>
+                            </div>
+                        </a>
+                        @endif
+                    @endforeach
+                </div>
+            </div>
+        </div>
+    </section>
     @endif
 
-    <!-- Special Offer Banner - Keep existing gradient but enhance -->
-    {{-- <section class="py-12 md:py-16 bg-gradient-to-r from-pink-600 via-purple-600 to-pink-700 relative overflow-hidden">
-        <!-- Animated background pattern -->
-        <div class="absolute inset-0 opacity-10">
-            <div class="absolute top-0 left-0 w-40 h-40 bg-white rounded-full blur-3xl animate-pulse"></div>
-            <div class="absolute bottom-0 right-0 w-60 h-60 bg-white rounded-full blur-3xl animate-pulse animation-delay-1000"></div>
-        </div>
-        
+    <!-- Featured Products -->
+    @if($featuredProducts->isNotEmpty())
+    <section class="py-20 lg:py-28 bg-gradient-to-b from-lilac-100 to-white relative overflow-hidden">
+        <!-- Decorative Elements -->
+        <div class="absolute top-0 right-0 w-96 h-96 bg-plum-200/30 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+        <div class="absolute bottom-0 left-0 w-80 h-80 bg-gold-200/30 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
+
         <div class="container-responsive relative z-10">
-            <div class="flex flex-col md:flex-row items-center justify-between gap-6">
-                <div class="text-center md:text-left">
-                    <h3 class="text-2xl md:text-3xl font-bold text-white mb-2">Limited Time Offer!</h3>
-                    <p class="text-pink-100 text-base md:text-lg">Get 20% off on selected beauty products</p>
+            <!-- Section Header -->
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-14" data-aos="fade-up">
+                <div class="mb-6 md:mb-0">
+                    <span class="inline-block px-4 py-1 bg-plum-100 text-plum-700 text-sm font-medium rounded-full mb-4">FEATURED</span>
+                    <h2 class="font-display text-3xl md:text-4xl lg:text-5xl font-bold text-plum-900 mb-3">
+                        Our Best Picks
+                    </h2>
+                    <p class="text-plum-600 text-lg">Handpicked favorites that our customers love</p>
                 </div>
-                <a href="{{ route('products.index', ['sale' => 1]) }}" 
-                   class="inline-flex items-center gap-2 bg-white text-pink-700 px-8 py-4 rounded-full font-bold hover:bg-pink-50 transition-all duration-300 hover:shadow-2xl transform hover:scale-105 group">
-                    <span>Shop Sale</span>
+                <a href="{{ route('products.index', ['featured' => 1]) }}"
+                   class="group inline-flex items-center gap-2 px-6 py-3 bg-plum-800 text-white font-semibold rounded-full hover:bg-plum-900 transition-all duration-300 hover:shadow-elegant">
+                    <span>View All</span>
                     <svg class="w-5 h-5 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
                     </svg>
                 </a>
             </div>
+
+            <!-- Products Swiper -->
+            <div class="swiper featured-products-swiper" data-aos="fade-up" data-aos-delay="100">
+                <div class="swiper-wrapper pb-4">
+                    @foreach($featuredProducts as $product)
+                        <div class="swiper-slide">
+                            @include('components.shop.product-card', ['product' => $product])
+                        </div>
+                    @endforeach
+                </div>
+                <!-- Pagination -->
+                <div class="swiper-pagination !relative mt-8"></div>
+            </div>
         </div>
-    </section> --}}
+    </section>
+    @endif
 
-    <!-- New Arrivals - Pink tinted background -->
+    <!-- New Arrivals -->
     @if($newArrivals->isNotEmpty())
-        <section class="py-16 md:py-24 bg-gradient-to-b from-pink-50/40 to-white relative overflow-hidden">
-            <!-- Decorative elements -->
-            <div class="absolute top-20 right-10 w-20 h-20 bg-pink-200/30 rounded-full blur-2xl"></div>
-            <div class="absolute bottom-20 left-10 w-32 h-32 bg-purple-200/30 rounded-full blur-3xl"></div>
-            
-            <div class="container-responsive relative z-10">
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 md:mb-16">
-                    <div class="mb-6 md:mb-0">
-                        <h2 class="text-3xl md:text-5xl font-bold text-gray-900 mb-3 flex items-center gap-3">
-                            New Arrivals
-                            <span class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-yellow-400 to-orange-400 text-white text-sm font-bold rounded-full shadow-lg animate-pulse">
-                                NEW
-                            </span>
-                        </h2>
-                        <p class="text-gray-600 text-base md:text-lg">Fresh picks just for you</p>
+    <section class="py-20 lg:py-28 bg-white relative overflow-hidden">
+        <div class="container-responsive">
+            <!-- Section Header -->
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-14" data-aos="fade-up">
+                <div class="mb-6 md:mb-0">
+                    <div class="flex items-center gap-3 mb-4">
+                        <span class="inline-block px-4 py-1 bg-gold-100 text-gold-700 text-sm font-medium rounded-full">NEW ARRIVALS</span>
+                        <span class="inline-flex items-center px-3 py-1 bg-gradient-to-r from-gold-500 to-gold-600 text-white text-xs font-bold rounded-full shadow-gold animate-pulse-slow">
+                            JUST IN
+                        </span>
                     </div>
-                    <a href="{{ route('products.index', ['sort' => 'newest']) }}" 
-                       class="inline-flex items-center gap-2 text-pink-600 hover:text-purple-600 font-semibold group bg-white hover:bg-pink-50 px-6 py-3 rounded-full transition-all duration-300 shadow-md hover:shadow-lg">
-                        <span>View All</span>
-                        <svg class="w-5 h-5 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
-                        </svg>
-                    </a>
+                    <h2 class="font-display text-3xl md:text-4xl lg:text-5xl font-bold text-plum-900 mb-3">
+                        Fresh Arrivals
+                    </h2>
+                    <p class="text-plum-600 text-lg">The latest additions to our collection</p>
                 </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8">
-                    @foreach($newArrivals as $product)
-                        @include('components.shop.product-card', ['product' => $product])
-                    @endforeach
-                </div>
+                <a href="{{ route('products.index', ['sort' => 'newest']) }}"
+                   class="group inline-flex items-center gap-2 px-6 py-3 border-2 border-plum-800 text-plum-800 font-semibold rounded-full hover:bg-plum-800 hover:text-white transition-all duration-300">
+                    <span>View All</span>
+                    <svg class="w-5 h-5 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+                    </svg>
+                </a>
             </div>
-        </section>
+
+            <!-- Products Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-8">
+                @foreach($newArrivals as $index => $product)
+                    <div data-aos="fade-up" data-aos-delay="{{ $index * 50 }}">
+                        @include('components.shop.product-card', ['product' => $product])
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    </section>
     @endif
 
-    <!-- Best Sellers - Clean white background -->
+    <!-- Best Sellers -->
     @if($bestSellers->isNotEmpty())
-        <section class="py-16 md:py-24 bg-white">
-            <div class="container-responsive">
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 md:mb-16">
-                    <div class="mb-6 md:mb-0">
-                        <h2 class="text-3xl md:text-5xl font-bold text-gray-900 mb-3 flex items-center gap-3">
-                            Best Sellers
-                            <svg class="w-8 h-8 text-yellow-500" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                            </svg>
-                        </h2>
-                        <p class="text-gray-600 text-base md:text-lg">Top-rated products loved by our customers</p>
-                    </div>
-                    <a href="{{ route('products.index', ['sort' => 'popular']) }}" 
-                       class="inline-flex items-center gap-2 text-pink-600 hover:text-purple-600 font-semibold group bg-pink-50 hover:bg-purple-50 px-6 py-3 rounded-full transition-all duration-300">
-                        <span>View All</span>
-                        <svg class="w-5 h-5 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
-                        </svg>
-                    </a>
-                </div>
+    <section class="py-20 lg:py-28 bg-lilac-50 relative overflow-hidden">
+        <!-- Decorative Elements -->
+        <div class="absolute top-20 left-10 w-64 h-64 bg-plum-200/40 rounded-full blur-3xl"></div>
+        <div class="absolute bottom-20 right-10 w-80 h-80 bg-gold-200/30 rounded-full blur-3xl"></div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8">
-                    @foreach($bestSellers as $product)
-                        @include('components.shop.product-card', ['product' => $product])
-                    @endforeach
+        <div class="container-responsive relative z-10">
+            <!-- Section Header -->
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-14" data-aos="fade-up">
+                <div class="mb-6 md:mb-0">
+                    <div class="flex items-center gap-3 mb-4">
+                        <span class="inline-block px-4 py-1 bg-plum-200 text-plum-700 text-sm font-medium rounded-full">BEST SELLERS</span>
+                        <svg class="w-6 h-6 text-gold-500" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                        </svg>
+                    </div>
+                    <h2 class="font-display text-3xl md:text-4xl lg:text-5xl font-bold text-plum-900 mb-3">
+                        Customer Favorites
+                    </h2>
+                    <p class="text-plum-600 text-lg">Top-rated products loved by our customers</p>
                 </div>
+                <a href="{{ route('products.index', ['sort' => 'popular']) }}"
+                   class="group inline-flex items-center gap-2 px-6 py-3 bg-plum-800 text-white font-semibold rounded-full hover:bg-plum-900 transition-all duration-300 hover:shadow-elegant">
+                    <span>View All</span>
+                    <svg class="w-5 h-5 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+                    </svg>
+                </a>
             </div>
-        </section>
+
+            <!-- Products Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-8">
+                @foreach($bestSellers as $index => $product)
+                    <div data-aos="fade-up" data-aos-delay="{{ $index * 50 }}">
+                        @include('components.shop.product-card', ['product' => $product])
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    </section>
     @endif
 
-    <!-- Brand Showcase - Enhanced with gradients -->
+    <!-- Brand Showcase - Compact -->
     @if($brands->isNotEmpty())
-        <section class="py-16 md:py-24 bg-gradient-to-br from-gray-50 via-pink-50/20 to-white relative overflow-hidden">
-            <!-- Decorative background -->
-            <div class="absolute inset-0 opacity-5">
-                <div class="absolute top-0 right-0 w-96 h-96 bg-pink-300 rounded-full blur-3xl"></div>
-                <div class="absolute bottom-0 left-0 w-96 h-96 bg-purple-300 rounded-full blur-3xl"></div>
+    <section class="py-10 lg:py-14 bg-white">
+        <div class="container-responsive">
+            <!-- Section Header - Compact -->
+            <div class="text-center mb-8" data-aos="fade-up">
+                <h2 class="font-display text-2xl md:text-3xl font-bold text-plum-900 mb-2">
+                    Shop by Brand
+                </h2>
+                <p class="text-plum-600 text-sm md:text-base">
+                    Trusted beauty brands we carry
+                </p>
             </div>
-            
-            <div class="container-responsive relative z-10">
-                <div class="text-center mb-12 md:mb-16">
-                    <h2 class="text-3xl md:text-5xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent mb-4">Shop by Brand</h2>
-                    <p class="text-gray-600 text-base md:text-lg">Discover products from your favorite beauty brands</p>
-                </div>
 
-                <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4 md:gap-6">
+            <!-- Brands Swiper -->
+            <div class="swiper brands-swiper" data-aos="fade-up" data-aos-delay="50">
+                <div class="swiper-wrapper items-center">
                     @foreach($brands as $brand)
-                        <a href="{{ route('products.index', ['brands' => [$brand->id]]) }}" 
-                           class="group transform hover:scale-105 transition-all duration-300">
-                            <div class="bg-white/80 backdrop-blur-sm p-6 md:p-8 rounded-2xl border border-pink-100 hover:border-pink-300 hover:shadow-xl transition-all duration-300 text-center relative overflow-hidden">
-                                <!-- Hover gradient overlay -->
-                                <div class="absolute inset-0 bg-gradient-to-br from-pink-50 to-purple-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                                
-                                <div class="relative z-10">
-                                    @if($brand->logo)
-                                        <img src="{{ asset('storage/' . $brand->logo) }}" 
-                                             alt="{{ $brand->name }}" 
-                                             class="w-12 h-12 md:w-16 md:h-16 mx-auto mb-3 object-contain group-hover:scale-110 transition-transform duration-300">
-                                    @else
-                                        <div class="w-12 h-12 md:w-16 md:h-16 mx-auto mb-3 bg-gradient-to-br from-pink-100 to-purple-100 rounded-2xl flex items-center justify-center text-sm md:text-lg font-bold text-pink-700 group-hover:from-pink-200 group-hover:to-purple-200 transition-all duration-300">
-                                            {{ substr($brand->name, 0, 2) }}
-                                        </div>
-                                    @endif
-                                    <h3 class="font-medium text-gray-900 group-hover:text-pink-600 transition-colors text-xs md:text-sm truncate">
+                        <div class="swiper-slide">
+                            <a href="{{ route('products.index', ['brands' => [$brand->id]]) }}"
+                               class="group block">
+                                <div class="bg-gray-50 border border-gray-100 p-4 rounded-xl transition-all duration-300 text-center hover:bg-lilac-50 hover:border-plum-200 hover:shadow-sm">
+                                    <div class="w-12 h-12 mx-auto mb-2 bg-white rounded-lg flex items-center justify-center text-sm font-bold text-plum-600 group-hover:bg-plum-50 transition-colors duration-300 shadow-sm">
+                                        {{ strtoupper(substr($brand->name, 0, 2)) }}
+                                    </div>
+                                    <h3 class="font-medium text-gray-700 group-hover:text-plum-700 transition-colors duration-300 text-xs truncate">
                                         {{ $brand->name }}
                                     </h3>
-                                    <p class="text-xs text-gray-500 mt-1">{{ $brand->products_count }} items</p>
                                 </div>
-                            </div>
-                        </a>
+                            </a>
+                        </div>
                     @endforeach
-                </div>
-            </div>
-        </section>
-    @endif
-
-    <!-- Newsletter Signup - Enhanced gradient and styling -->
-    {{-- <section class="py-16 md:py-24 bg-gradient-to-br from-pink-600 via-purple-600 to-pink-700 relative overflow-hidden">
-        <!-- Animated Background Pattern -->
-        <div class="absolute inset-0 opacity-20">
-            <div class="absolute -top-24 -right-24 w-96 h-96 bg-white rounded-full blur-3xl animate-pulse"></div>
-            <div class="absolute -bottom-24 -left-24 w-96 h-96 bg-white rounded-full blur-3xl animate-pulse animation-delay-2000"></div>
-            <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-white rounded-full blur-3xl animate-pulse animation-delay-1000"></div>
-        </div>
-        
-        <div class="container-responsive relative z-10">
-            <div class="max-w-2xl mx-auto text-center">
-                <div class="inline-flex items-center justify-center w-20 h-20 bg-white/20 backdrop-blur-sm rounded-full mb-8 shadow-2xl">
-                    <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
-                    </svg>
-                </div>
-                <h2 class="text-3xl md:text-5xl font-bold text-white mb-4">Stay in the Loop</h2>
-                <p class="text-pink-100 mb-10 text-base md:text-lg max-w-xl mx-auto">Subscribe to our newsletter for exclusive offers, beauty tips, and new product launches</p>
-                
-                <form id="newsletter-form" class="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
-                    @csrf
-                    <input 
-                        type="email" 
-                        name="email"
-                        placeholder="Enter your email address" 
-                        class="flex-1 px-6 py-4 rounded-full border-2 border-white/30 bg-white/20 backdrop-blur-sm text-white placeholder-white/70 focus:outline-none focus:border-white focus:bg-white/30 transition-all duration-300"
-                        required
-                    >
-                    <button 
-                        type="submit" 
-                        class="px-8 py-4 bg-white text-pink-700 font-bold rounded-full hover:bg-pink-50 transition-all duration-300 hover:shadow-2xl transform hover:scale-105 group"
-                    >
-                        <span class="flex items-center gap-2">
-                            Subscribe
-                            <svg class="w-5 h-5 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
-                            </svg>
-                        </span>
-                    </button>
-                </form>
-            </div>
-        </div>
-    </section> --}}
-
-    <!-- Trust Badges - Enhanced with gradient backgrounds -->
-    <section class="py-16 md:py-20 bg-gradient-to-b from-white to-gray-50">
-        <div class="container-responsive">
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
-                <div class="group text-center transform hover:-translate-y-2 transition-all duration-300">
-                    <div class="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-pink-100 to-pink-200 rounded-3xl flex items-center justify-center mb-4 mx-auto group-hover:scale-110 transition-transform duration-300 shadow-lg group-hover:shadow-xl">
-                        <svg class="w-8 h-8 md:w-10 md:h-10 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
-                        </svg>
-                    </div>
-                    <h3 class="font-bold text-gray-900 mb-2 text-base md:text-lg">Fast Delivery</h3>
-                    <p class="text-sm md:text-base text-gray-600">Free shipping over Rs. 5,000</p>
-                </div>
-                
-                <div class="group text-center transform hover:-translate-y-2 transition-all duration-300">
-                    <div class="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-green-100 to-green-200 rounded-3xl flex items-center justify-center mb-4 mx-auto group-hover:scale-110 transition-transform duration-300 shadow-lg group-hover:shadow-xl">
-                        <svg class="w-8 h-8 md:w-10 md:h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                    </div>
-                    <h3 class="font-bold text-gray-900 mb-2 text-base md:text-lg">Authentic Products</h3>
-                    <p class="text-sm md:text-base text-gray-600">100% genuine beauty products</p>
-                </div>
-                
-                <div class="group text-center transform hover:-translate-y-2 transition-all duration-300">
-                    <div class="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-blue-100 to-blue-200 rounded-3xl flex items-center justify-center mb-4 mx-auto group-hover:scale-110 transition-transform duration-300 shadow-lg group-hover:shadow-xl">
-                        <svg class="w-8 h-8 md:w-10 md:h-10 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
-                        </svg>
-                    </div>
-                    <h3 class="font-bold text-gray-900 mb-2 text-base md:text-lg">Secure Payment</h3>
-                    <p class="text-sm md:text-base text-gray-600">Safe & secure transactions</p>
-                </div>
-                
-                <div class="group text-center transform hover:-translate-y-2 transition-all duration-300">
-                    <div class="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-purple-100 to-purple-200 rounded-3xl flex items-center justify-center mb-4 mx-auto group-hover:scale-110 transition-transform duration-300 shadow-lg group-hover:shadow-xl">
-                        <svg class="w-8 h-8 md:w-10 md:h-10 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
-                        </svg>
-                    </div>
-                    <h3 class="font-bold text-gray-900 mb-2 text-base md:text-lg">24/7 Support</h3>
-                    <p class="text-sm md:text-base text-gray-600">Expert beauty advice</p>
                 </div>
             </div>
         </div>
     </section>
+    @endif
 
-    <!-- Recently Viewed Products (if user has viewed products) -->
+    <!-- Recently Viewed Products -->
     @auth
         @if(session('recently_viewed_products'))
-            <section class="py-16 md:py-24 bg-white">
+            <section class="py-20 lg:py-24 bg-white">
                 <div class="container-responsive">
-                    <h2 class="text-2xl md:text-3xl font-bold text-gray-900 mb-8 md:mb-12">Recently Viewed</h2>
+                    <div class="flex justify-between items-center mb-10" data-aos="fade-up">
+                        <h2 class="font-display text-2xl md:text-3xl font-bold text-plum-900">Recently Viewed</h2>
+                    </div>
                     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
                         @foreach(session('recently_viewed_products') as $productId)
                             @php
-                                $recentProduct = \App\Models\Product::with(['brand', 'variants.inventory', 'reviews'])->find($productId);
+                                $recentProduct = \App\Models\Product::with(['brand', 'variants.inventory'])->find($productId);
                             @endphp
                             @if($recentProduct)
-                                @include('components.shop.product-card', ['product' => $recentProduct])
+                                <div data-aos="fade-up">
+                                    @include('components.shop.product-card', ['product' => $recentProduct])
+                                </div>
                             @endif
                         @endforeach
                     </div>
@@ -343,121 +366,116 @@
 @endsection
 
 @push('styles')
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@8/swiper-bundle.min.css" />
-    <style>
-        /* Animation delays */
-        .animation-delay-1000 {
-            animation-delay: 1s;
-        }
-        .animation-delay-2000 {
-            animation-delay: 2s;
-        }
-        
-        /* Custom animations */
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-20px); }
-        }
-        
-        .animate-float {
-            animation: float 6s ease-in-out infinite;
-        }
-    </style>
+<style>
+    /* Hero Background Slideshow - Crossfade Animation */
+    .hero-slide {
+        opacity: 0;
+        animation: heroFade 25s infinite;
+    }
+
+    @keyframes heroFade {
+        0% { opacity: 0; }
+        4% { opacity: 1; }
+        20% { opacity: 1; }
+        24% { opacity: 0; }
+        100% { opacity: 0; }
+    }
+
+    /* Swiper custom styles */
+    .swiper-pagination-bullet {
+        background-color: #D4BDD9;
+        opacity: 1;
+    }
+    .swiper-pagination-bullet-active {
+        background-color: #4A2D4F;
+    }
+
+    /* Custom scrollbar for swiper */
+    .swiper::-webkit-scrollbar {
+        display: none;
+    }
+</style>
 @endpush
 
 @push('scripts')
-    <script src="https://cdn.jsdelivr.net/npm/swiper@8/swiper-bundle.min.js"></script>
-    <script>
-        // Initialize hero banner swiper
-        document.addEventListener('DOMContentLoaded', function() {
-            const heroSwiper = new Swiper('.hero-swiper', {
-                loop: true,
-                autoplay: {
-                    delay: 5000,
-                    disableOnInteraction: false,
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Featured Products Swiper
+        new Swiper('.featured-products-swiper', {
+            slidesPerView: 1,
+            spaceBetween: 16,
+            grabCursor: true,
+            pagination: {
+                el: '.swiper-pagination',
+                clickable: true,
+            },
+            breakpoints: {
+                640: {
+                    slidesPerView: 2,
+                    spaceBetween: 20,
                 },
-                pagination: {
-                    el: '.swiper-pagination',
-                    clickable: true,
+                768: {
+                    slidesPerView: 3,
+                    spaceBetween: 24,
                 },
-                navigation: {
-                    nextEl: '.swiper-button-next',
-                    prevEl: '.swiper-button-prev',
+                1024: {
+                    slidesPerView: 4,
+                    spaceBetween: 24,
                 },
-                effect: 'fade',
-                fadeEffect: {
-                    crossFade: true
-                },
-            });
+            },
         });
 
-        // Newsletter subscription
-        document.getElementById('newsletter-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const formData = new FormData(this);
-            const email = formData.get('email');
-            
-            // Here you would typically send the email to your backend
-            fetch('/api/newsletter-subscribe', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                },
-                body: JSON.stringify({ email: email })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showToast('Thank you for subscribing! You will receive our latest updates and offers.', 'success');
-                    this.reset();
-                } else {
-                    showToast('Subscription failed. Please try again.', 'error');
-                }
-            })
-            .catch(error => {
-                console.log('Newsletter subscription for:', email);
-                showToast('Thank you for subscribing! You will receive our latest updates and offers.', 'success');
-                this.reset();
-            });
+        // Categories Swiper (Mobile)
+        new Swiper('.categories-swiper', {
+            slidesPerView: 'auto',
+            spaceBetween: 12,
+            grabCursor: true,
+            freeMode: true,
         });
 
-        // Lazy loading for images
-        if ('IntersectionObserver' in window) {
-            const imageObserver = new IntersectionObserver((entries, observer) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        const img = entry.target;
-                        img.src = img.dataset.src;
-                        img.classList.remove('lazy');
-                        imageObserver.unobserve(img);
-                    }
-                });
-            });
+        // Brands Swiper
+        new Swiper('.brands-swiper', {
+            slidesPerView: 3,
+            spaceBetween: 16,
+            grabCursor: true,
+            loop: true,
+            autoplay: {
+                delay: 3000,
+                disableOnInteraction: false,
+            },
+            breakpoints: {
+                640: {
+                    slidesPerView: 4,
+                    spaceBetween: 20,
+                },
+                768: {
+                    slidesPerView: 5,
+                    spaceBetween: 20,
+                },
+                1024: {
+                    slidesPerView: 6,
+                    spaceBetween: 24,
+                },
+                1280: {
+                    slidesPerView: 8,
+                    spaceBetween: 24,
+                },
+            },
+        });
 
-            document.querySelectorAll('img[data-src]').forEach(img => {
-                imageObserver.observe(img);
-            });
-        }
-
-        // Track product clicks for analytics
-        document.querySelectorAll('a[href*="/products/"]').forEach(link => {
-            link.addEventListener('click', function() {
-                const productSlug = this.href.split('/products/')[1];
-                if (productSlug) {
-                    // Track product view
-                    fetch('/api/track-product-view', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                        },
-                        body: JSON.stringify({ product_slug: productSlug })
-                    }).catch(error => {
-                        console.log('Analytics tracking failed:', error);
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
                     });
                 }
             });
         });
-    </script>
+    });
+</script>
 @endpush

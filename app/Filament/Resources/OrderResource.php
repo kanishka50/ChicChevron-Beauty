@@ -199,7 +199,7 @@ class OrderResource extends Resource
                     ->visible(fn ($record) => $record->status === 'processing')
                     ->requiresConfirmation()
                     ->action(function ($record) {
-                        $adminId = auth()->guard('admin')->id();
+                        $adminId = auth()->id();
                         $record->updateStatus('shipping', 'Order shipped', $adminId);
 
                         Notification::make()
@@ -215,7 +215,7 @@ class OrderResource extends Resource
                     ->visible(fn ($record) => $record->status === 'shipping')
                     ->requiresConfirmation()
                     ->action(function ($record) {
-                        $adminId = auth()->guard('admin')->id();
+                        $adminId = auth()->id();
                         DB::transaction(function () use ($record, $adminId) {
                             // Convert reserved stock to sold
                             foreach ($record->items as $item) {
@@ -254,7 +254,7 @@ class OrderResource extends Resource
                             ->required(),
                     ])
                     ->action(function ($record, array $data) {
-                        $adminId = auth()->guard('admin')->id();
+                        $adminId = auth()->id();
                         DB::transaction(function () use ($record, $data, $adminId) {
                             // Release reserved stock
                             foreach ($record->items as $item) {

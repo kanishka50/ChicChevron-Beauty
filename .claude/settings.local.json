@@ -22,7 +22,10 @@
       "Bash(del \"h:\\ChicChevron 3\\chicchevron-beauty\\check_db.php\")",
       "Bash(php:*)",
       "Bash(del:*)",
-      "Bash(composer dump-autoload:*)"
+      "Bash(composer dump-autoload:*)",
+      "Bash(copy \"h:\\ChicChevron 3\\chicchevron-beauty\\logo\\Asset 11@4x.png\" \"h:\\ChicChevron 3\\chicchevron-beauty\\public\\images\\logo\\logo-purple.png\")",
+      "Bash(powershell -Command \"Get-ChildItem -Path ''storage\\app\\public'' -Recurse -Directory | Select-Object -ExpandProperty FullName\")",
+      "Bash(powershell -Command:*)"
     ],
     "deny": [],
     "ask": []

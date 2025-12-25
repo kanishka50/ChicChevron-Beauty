@@ -88,10 +88,7 @@ class OrderController extends BaseController
         // Check if order can be marked as completed by customer
         $canComplete = $order->status === 'shipping';
 
-        // Check if customer can leave reviews (order must be completed)
-        $canReview = $order->status === 'completed';
-
-        return view('user.orders.show', compact('order', 'canCancel', 'canComplete', 'canReview'));
+        return view('user.orders.show', compact('order', 'canCancel', 'canComplete'));
     }
 
     /**

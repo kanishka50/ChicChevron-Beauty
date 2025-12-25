@@ -75,14 +75,6 @@ class Order extends Model
     }
 
     /**
-     * Get the reviews for products in this order.
-     */
-    public function reviews()
-    {
-        return $this->hasMany(Review::class);
-    }
-
-    /**
      * Generate a unique order number.
      */
     public static function generateOrderNumber()

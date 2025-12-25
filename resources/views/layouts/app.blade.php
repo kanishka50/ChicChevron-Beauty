@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <meta name="theme-color" content="#ec4899">
+    <meta name="theme-color" content="#4A2D4F">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
 
@@ -23,7 +23,13 @@
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700|playfair-display:400,500,600,700,800&display=swap" rel="stylesheet" />
+
+    <!-- AOS Animation Library -->
+    <link href="https://unpkg.com/aos@2.3.4/dist/aos.css" rel="stylesheet">
+
+    <!-- Swiper.js for Carousels -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
 
     <!-- Styles -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -33,7 +39,7 @@
     @stack('schema')
 </head>
 
-<body class="font-sans antialiased bg-gray-50" >
+<body class="font-body antialiased bg-lilac-100" >
     <div id="app" class="min-h-screen flex flex-col">
 
         
@@ -106,10 +112,24 @@
     <!-- Toast Container -->
     <div id="toast-container" class="fixed bottom-4 right-4 z-50 space-y-2"></div>
 
+<!-- AOS Animation Library -->
+<script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
+
+<!-- Swiper.js -->
+<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+
 <!-- Scripts -->
 @stack('scripts')
 
 <script>
+    // Initialize AOS
+    AOS.init({
+        duration: 800,
+        easing: 'ease-out-cubic',
+        once: true,
+        offset: 50,
+    });
+
     // Global flag for checkout
     window._isCheckoutInProgress = false;
 

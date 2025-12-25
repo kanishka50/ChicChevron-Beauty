@@ -17,25 +17,23 @@ class LoginController extends Controller
     public function store(LoginRequest $request)
     {
         $request->authenticate();
-        
+
         $request->session()->regenerate();
 
-        // Redirect based on which guard was authenticated
-        if ($request->getAuthenticatedGuard() === 'admin') {
-            return redirect()->route('admin.dashboard');
+        // Get the intended URL, but filter out API/AJAX routes
+        $intended = session()->pull('url.intended', '/');
+
+        // If intended URL is an API route or cart count, redirect to home instead
+        if (str_contains($intended, '/count') || str_contains($intended, '/api/')) {
+            $intended = '/';
         }
 
-        // For regular users
-        return redirect('/');
+        return redirect($intended);
     }
 
     public function destroy(Request $request)
     {
-        if (Auth::guard('admin')->check()) {
-            Auth::guard('admin')->logout();
-        } else {
-            Auth::guard('web')->logout();
-        }
+        Auth::logout();
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();

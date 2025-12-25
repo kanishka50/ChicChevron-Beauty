@@ -46,11 +46,6 @@ class CategoryResource extends Resource
                             ->searchable()
                             ->preload(),
 
-                        Forms\Components\FileUpload::make('image')
-                            ->image()
-                            ->directory('categories')
-                            ->imageEditor(),
-
                         Forms\Components\TextInput::make('sort_order')
                             ->numeric()
                             ->default(0),
@@ -66,9 +61,6 @@ class CategoryResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\ImageColumn::make('image')
-                    ->circular(),
-
                 Tables\Columns\TextColumn::make('name')
                     ->searchable()
                     ->sortable(),

@@ -51,21 +51,8 @@ public function index(Request $request)
     // Apply sorting
     $this->applySorting($query, $request);
 
-    // Paginate results FIRST
+    // Paginate results
     $products = $query->paginate(20)->withQueryString();
-
-    // THEN load reviews with proper aggregation
-    $products->getCollection()->load([
-        'reviews' => function($query) {
-            $query->where('is_approved', true);
-        }
-    ]);
-
-    // Calculate averages manually to avoid GROUP BY issues
-    $products->getCollection()->each(function ($product) {
-        $product->reviews_avg_rating = $product->reviews->avg('rating') ?: 0;
-        $product->reviews_count = $product->reviews->count();
-    });
 
     // Get filter data
     $filterData = $this->getFilterData($request);
@@ -92,10 +79,6 @@ public function index(Request $request)
         'variants' => function ($query) {
             $query->where('is_active', true)->with('inventory');
         },
-        'reviews' => function ($query) {
-            $query->where('is_approved', true)->latest();
-        },
-        'reviews.user'
     ]);
 
     // Get related products (same category, excluding current product)
@@ -132,19 +115,6 @@ public function categoryProducts(Request $request, Category $category)
 
     // Paginate results
     $products = $query->paginate(20)->withQueryString();
-
-    // Load reviews
-    $products->getCollection()->load([
-        'reviews' => function($query) {
-            $query->where('is_approved', true);
-        }
-    ]);
-
-    // Calculate averages
-    $products->getCollection()->each(function ($product) {
-        $product->reviews_avg_rating = $product->reviews->avg('rating') ?: 0;
-        $product->reviews_count = $product->reviews->count();
-    });
 
     // Get filter data
     $filterData = $this->getFilterData($request);
@@ -211,13 +181,6 @@ public function categoryProducts(Request $request, Category $category)
 
         // Paginate results
         $products = $productQuery->paginate(20)->withQueryString();
-
-        // Load reviews separately and calculate averages
-        $products->getCollection()->load('reviews');
-        $products->getCollection()->each(function ($product) {
-            $product->reviews_avg_rating = $product->reviews->avg('rating') ?: 0;
-            $product->reviews_count = $product->reviews->count();
-        });
 
         // Get filter data
         $filterData = $this->getFilterData($request);
@@ -303,15 +266,6 @@ public function categoryProducts(Request $request, Category $category)
             if ($request->filled('max_price')) {
                 $variantQuery->where('price', '<=', $request->max_price);
             }
-        });
-    }
-
-    // Rating filter
-    if ($request->filled('min_rating')) {
-        $query->whereHas('reviews', function ($reviewQuery) use ($request) {
-            $reviewQuery->where('is_approved', true)
-                ->groupBy('product_id')
-                ->havingRaw('AVG(rating) >= ?', [$request->min_rating]);
         });
     }
 

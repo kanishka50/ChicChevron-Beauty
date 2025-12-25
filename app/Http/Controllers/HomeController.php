@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\Category;
+use App\Models\MainCategory;
 use App\Models\Brand;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -19,7 +20,7 @@ class HomeController extends Controller
         // Cache homepage data for better performance (cache for 30 minutes)
         $data = Cache::remember('homepage_data', 1800, function () {
             
-            // Get featured products without withAvg
+            // Get featured products
             $featuredProducts = Product::active()
                 ->with(['brand', 'category', 'variants.inventory'])
                 ->featured()
@@ -27,14 +28,7 @@ class HomeController extends Controller
                 ->limit(8)
                 ->get();
 
-            // Load reviews separately and calculate averages
-            $featuredProducts->load('reviews');
-            $featuredProducts->each(function ($product) {
-                $product->reviews_avg_rating = $product->reviews->avg('rating') ?: 0;
-                $product->reviews_count = $product->reviews->count();
-            });
-            
-            // Get new arrivals without withAvg
+            // Get new arrivals
             $newArrivals = Product::active()
                 ->with(['brand', 'category', 'variants.inventory'])
                 ->latest('created_at')
@@ -42,25 +36,15 @@ class HomeController extends Controller
                 ->limit(8)
                 ->get();
 
-            // Load reviews separately
-            $newArrivals->load('reviews');
-            $newArrivals->each(function ($product) {
-                $product->reviews_avg_rating = $product->reviews->avg('rating') ?: 0;
-                $product->reviews_count = $product->reviews->count();
-            });
-            
-            // Get best sellers without withAvg and withCount
+            // Get best sellers
             $bestSellers = Product::active()
-                ->with(['brand', 'category', 'variants.inventory'])
+                ->with(['brand', 'category', 'variants.inventory', 'orderItems'])
                 ->inStock()
                 ->limit(8)
                 ->get();
 
-            // Load reviews and order items separately
-            $bestSellers->load(['reviews', 'orderItems']);
+            // Load order items and sort by count
             $bestSellers->each(function ($product) {
-                $product->reviews_avg_rating = $product->reviews->avg('rating') ?: 0;
-                $product->reviews_count = $product->reviews->count();
                 $product->order_items_count = $product->orderItems->count();
             });
 
@@ -74,24 +58,17 @@ class HomeController extends Controller
                 
                 'categories' => Category::active()
                     ->ordered()
-                    ->whereHas('products', function ($query) {
-                        $query->active()->inStock();
-                    })
-                    ->withCount(['products' => function ($query) {
-                        $query->active()->inStock();
-                    }])
-                    ->limit(6)
+                    ->limit(12)
                     ->get(),
-                
-                'brands' => Brand::active()
-                    ->whereHas('products', function ($query) {
-                        $query->active()->inStock();
-                    })
-                    ->withCount(['products' => function ($query) {
-                        $query->active()->inStock();
+
+                'mainCategories' => MainCategory::with(['categories' => function($query) {
+                        $query->active()->ordered();
                     }])
+                    ->get(),
+
+                'brands' => Brand::active()
                     ->orderBy('name')
-                    ->limit(8)
+                    ->limit(12)
                     ->get(),
             ];
         });
@@ -168,7 +145,7 @@ public function searchSuggestions(Request $request)
                     'text' => $brand->name,
                     'subtitle' => $brand->products_count . ' products',
                     'url' => route('products.index', ['brands' => [$brand->id]]),
-                    'image' => $brand->logo ? asset('storage/' . $brand->logo) : null,
+                    'image' => null,
                 ];
             });
 
@@ -187,7 +164,7 @@ public function searchSuggestions(Request $request)
                     'text' => $category->name,
                     'subtitle' => $category->products_count . ' products',
                     'url' => route('products.index', ['category' => $category->id]),
-                    'image' => $category->image ? asset('storage/' . $category->image) : null,
+                    'image' => null,
                 ];
             });
 

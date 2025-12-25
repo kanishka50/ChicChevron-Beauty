@@ -30,7 +30,7 @@ class ViewComplaint extends ViewRecord
                 ->action(function (array $data) {
                     ComplaintResponse::create([
                         'complaint_id' => $this->record->id,
-                        'admin_id' => auth()->guard('admin')->id(),
+                        'admin_id' => auth()->id(),
                         'message' => $data['message'],
                         'is_admin_response' => true,
                     ]);

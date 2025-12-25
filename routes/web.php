@@ -16,7 +16,6 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\UserAccountController;
 use App\Http\Controllers\ComplaintController;
-use App\Http\Controllers\ReviewController;
 
 // Public routes (accessible by everyone)
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -300,16 +299,6 @@ Route::middleware(['auth', 'verified'])->prefix('account')->name('user.account.'
     Route::delete('/delete-account', [UserAccountController::class, 'deleteAccount'])->name('delete'); // ADD THIS
 });
 
-
-
-// Reviews routes
-Route::middleware(['auth', 'verified'])->prefix('reviews')->name('user.reviews.')->group(function () {
-    Route::get('/', [ReviewController::class, 'index'])->name('index');
-    Route::get('/create/{order}/{product}', [ReviewController::class, 'createSingle'])->name('create.single');
-    Route::post('/create/{order}/{product}', [ReviewController::class, 'storeSingle'])->name('store.single');
-    Route::put('/{review}', [ReviewController::class, 'update'])->name('update');
-    Route::delete('/{review}', [ReviewController::class, 'destroy'])->name('destroy');
-});
 
 
 // Simplified Complaints routes 

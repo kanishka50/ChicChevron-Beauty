@@ -99,9 +99,6 @@
                                 @php
                                     $firstItem = $productItems->first();
                                     $product = $firstItem->product;
-                                    $hasReviewed = \App\Models\Review::where('user_id', auth()->id())
-                                        ->where('product_id', $product->id)
-                                        ->exists();
                                 @endphp
 
                                 <div class="border border-gray-200 rounded-xl p-4 {{ $productItems->count() > 1 ? 'bg-gradient-to-r from-gray-50 to-white' : 'bg-white' }} hover:shadow-sm transition-shadow duration-200">
@@ -170,34 +167,6 @@
                                         </div>
                                     @endforeach
 
-                                    @if($order->status === 'completed' && $product)
-                                        <div class="mt-3 pt-3 border-t border-gray-100 {{ $productItems->count() > 1 ? 'bg-gradient-to-r from-primary-50 to-white -mx-4 -mb-4 px-4 pb-4 rounded-b-xl' : '' }}">
-                                            @if(!$hasReviewed)
-                                                <a href="{{ route('user.reviews.create.single', [$order, $product]) }}" 
-                                                   class="inline-flex items-center text-sm text-primary-600 hover:text-primary-700 font-medium transition-colors group">
-                                                    <svg class="w-4 h-4 mr-1 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path>
-                                                    </svg>
-                                                    Write a Review for This Product
-                                                </a>
-                                                @if($productItems->count() > 1)
-                                                    <p class="text-xs text-gray-500 mt-1">
-                                                        <svg class="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                                        </svg>
-                                                        Your review will apply to all variants of this product
-                                                    </p>
-                                                @endif
-                                            @else
-                                                <span class="inline-flex items-center text-sm text-green-600">
-                                                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                                                    </svg>
-                                                    Product Reviewed
-                                                </span>
-                                            @endif
-                                        </div>
-                                    @endif
                                 </div>
                             @endforeach
                         </div>

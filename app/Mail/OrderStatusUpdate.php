@@ -110,7 +110,7 @@ class OrderStatusUpdate extends Mailable
                 'message' => 'Thank you for your purchase!',
                 'icon' => '✅',
                 'color' => '#10B981',
-                'description' => 'We hope you love your new beauty products! Please don\'t hesitate to leave a review and let us know about your experience.'
+                'description' => 'We hope you love your new beauty products! Thank you for shopping with ChicChevron Beauty.'
             ],
             'cancelled' => [
                 'title' => 'Order Cancelled',
@@ -154,9 +154,9 @@ class OrderStatusUpdate extends Mailable
             ],
             'completed' => [
                 'We hope you enjoy your purchase!',
-                'You can now leave a review for the products you bought.',
                 'Keep your receipt for warranty purposes.',
-                'Consider joining our loyalty program for exclusive offers.'
+                'Consider joining our loyalty program for exclusive offers.',
+                'Shop again with ChicChevron Beauty for more amazing products!'
             ],
             'cancelled' => [
                 'If you paid online, your refund will be processed within 5-7 business days.',
